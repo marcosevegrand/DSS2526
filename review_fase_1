@@ -1,0 +1,7 @@
+Sobre o domínio, notação correta mas algumas associações estranhas - o Cliente interage com um Terminal que emite um Pedido, mas o Cliente não faz um Pedido? Pensaram se a nota poderia ser sobre o pedido inteiro? (Ambas as visões são legítimas).
+Poderiam explorar o domínio por mais algumas entidades como os tipos de pagamento, mas o principal está identificado. 
+Sobre os use-cases, no “Fazer Pedido”, o que são aqueles passos indentados 4.1 e 4.2? O ponto 1 é o trigger do use-case, e por isso não faz parte do que acontece no mesmo - já aconteceu antes. O passo 8 poderia ser decomposto.
+Numeração estranha dos fluxos alternativos e excepcionais, mas legítima por cada passo ter um número globalmente único. 
+No “Levantar Pedido”, novamente, não vos faz mais sentido dizer que o pedido está pronto e o nr está no ecrã da tal secção de prontos como pré-condições? 
+Há um erro no “Preparar Pedido”: o fluxo excecional volta ao fluxo normal, o que implica ter de garantir a pós-condição, mas isso é o oposto de ser uma exceção.
+Para a próxima incluam os diagramas todos num só .vpp e as descrições num só Excel, facilita a avaliação.
