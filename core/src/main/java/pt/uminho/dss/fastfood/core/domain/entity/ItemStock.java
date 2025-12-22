@@ -1,4 +1,4 @@
-package pt.uminho.dss.fastfood.core.domain;
+package pt.uminho.dss.fastfood.core.domain.entity;
 
 public class ItemStock {
 

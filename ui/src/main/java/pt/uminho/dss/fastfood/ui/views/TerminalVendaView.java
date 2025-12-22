@@ -1,20 +1,18 @@
-package pt.uminho.dss.fastfood.ui.terminal;
+package pt.uminho.dss.fastfood.ui.views;
 
+import pt.uminho.dss.fastfood.core.domain.entity.Pedido;
+import pt.uminho.dss.fastfood.core.domain.entity.Talao;
+import pt.uminho.dss.fastfood.core.domain.enumeration.ModoConsumo;
 import pt.uminho.dss.fastfood.venda.IVenda;
-import pt.uminho.dss.fastfood.core.domain.Pedido;
-import pt.uminho.dss.fastfood.core.domain.enums.ModoConsumo;
-import pt.uminho.dss.fastfood.core.domain.dto.DadosPagamentoDTO;
-import pt.uminho.dss.fastfood.core.domain.dto.PagamentoDTO;
-import pt.uminho.dss.fastfood.core.domain.Talao;
 
-public class TerminalVendaUI {
+public class TerminalVendaView {
 
     private final IVenda venda;
     private final int idTerminal;
 
     private Pedido pedidoAtual;
 
-    public TerminalVendaUI(IVenda venda, int idTerminal) {
+    public TerminalVendaView(IVenda venda, int idTerminal) {
         this.venda = venda;
         this.idTerminal = idTerminal;
     }
@@ -52,33 +50,38 @@ public class TerminalVendaUI {
         actualizarResumoNaUI();
     }
 
-    public void adicionarItem(int idProdutoOuMenu, String personalizacao, int quantidade) {
+    public void adicionarItem(
+        int idProdutoOuMenu,
+        String personalizacao,
+        int quantidade
+    ) {
         garantirPedidoAtual();
         this.pedidoAtual = venda.adicionarItem(
-                pedidoAtual.getId(),
-                idProdutoOuMenu,
-                personalizacao,
-                quantidade
+            pedidoAtual.getId(),
+            idProdutoOuMenu,
+            personalizacao,
+            quantidade
         );
         actualizarResumoNaUI();
     }
 
     public void removerItem(int idLinha) {
         garantirPedidoAtual();
-        this.pedidoAtual = venda.removerItem(
-                pedidoAtual.getId(),
-                idLinha
-        );
+        this.pedidoAtual = venda.removerItem(pedidoAtual.getId(), idLinha);
         actualizarResumoNaUI();
     }
 
-    public void editarItem(int idLinha, int novaQuantidade, String novaPersonalizacao) {
+    public void editarItem(
+        int idLinha,
+        int novaQuantidade,
+        String novaPersonalizacao
+    ) {
         garantirPedidoAtual();
         this.pedidoAtual = venda.editarItem(
-                pedidoAtual.getId(),
-                idLinha,
-                novaPersonalizacao,
-                novaQuantidade
+            pedidoAtual.getId(),
+            idLinha,
+            novaPersonalizacao,
+            novaQuantidade
         );
         actualizarResumoNaUI();
     }
@@ -155,7 +158,9 @@ public class TerminalVendaUI {
 
     private void garantirPedidoAtual() {
         if (pedidoAtual == null) {
-            throw new IllegalStateException("Não existe pedido em curso no terminal " + idTerminal);
+            throw new IllegalStateException(
+                "Não existe pedido em curso no terminal " + idTerminal
+            );
         }
     }
 }

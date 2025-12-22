@@ -1,4 +1,4 @@
-package pt.uminho.dss.fastfood.core.domain;
+package pt.uminho.dss.fastfood.core.domain.entity;
 
 public class Produto {
 
@@ -15,8 +15,14 @@ public class Produto {
     // Construtores
     // -------------------------------------------------
 
-    public Produto(int id, String nome, String descricao,
-                   float precoBase, int tempoPreparacaoBase, String categoria) {
+    public Produto(
+        int id,
+        String nome,
+        String descricao,
+        float precoBase,
+        int tempoPreparacaoBase,
+        String categoria
+    ) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
@@ -25,14 +31,18 @@ public class Produto {
         this.categoria = categoria;
     }
 
-    public Produto(String nome, String descricao,
-                   float precoBase, int tempoPreparacaoBase, String categoria) {
+    public Produto(
+        String nome,
+        String descricao,
+        float precoBase,
+        int tempoPreparacaoBase,
+        String categoria
+    ) {
         this(0, nome, descricao, precoBase, tempoPreparacaoBase, categoria);
     }
 
     // Construtor vazio para ORM / frameworks
-    protected Produto() {
-    }
+    protected Produto() {}
 
     // -------------------------------------------------
     // Lógica simples
@@ -56,7 +66,8 @@ public class Produto {
         return id;
     }
 
-    public void setId(int id) { // opcional, se o ID vier da BD
+    public void setId(int id) {
+        // opcional, se o ID vier da BD
         this.id = id;
     }
 

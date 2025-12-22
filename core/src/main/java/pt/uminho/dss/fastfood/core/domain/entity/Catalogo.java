@@ -1,4 +1,4 @@
-package pt.uminho.dss.fastfood.core.domain;
+package pt.uminho.dss.fastfood.core.domain.entity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,15 +54,17 @@ public class Catalogo {
     }
 
     public Optional<Produto> obterProdutoPorId(int idProduto) {
-        return produtos.stream()
-                .filter(p -> p.getId() == idProduto)
-                .findFirst();
+        return produtos
+            .stream()
+            .filter(p -> p.getId() == idProduto)
+            .findFirst();
     }
 
     public Optional<Menu> obterMenuPorId(int idMenu) {
-        return menus.stream()
-                .filter(m -> m.getId() == idMenu)
-                .findFirst();
+        return menus
+            .stream()
+            .filter(m -> m.getId() == idMenu)
+            .findFirst();
     }
 
     /**

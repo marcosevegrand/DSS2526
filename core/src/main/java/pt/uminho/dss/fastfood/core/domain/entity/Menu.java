@@ -1,8 +1,9 @@
-package pt.uminho.dss.fastfood.core.domain;
+package pt.uminho.dss.fastfood.core.domain.entity;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import pt.uminho.dss.fastfood.core.domain.entity.Produto;
 
 public class Menu {
 
@@ -41,7 +42,9 @@ public class Menu {
 
     public void adicionarComponente(Produto produto) {
         if (produto == null) {
-            throw new IllegalArgumentException("Produto do menu não pode ser null.");
+            throw new IllegalArgumentException(
+                "Produto do menu não pode ser null."
+            );
         }
         componentes.add(produto);
     }
@@ -75,7 +78,8 @@ public class Menu {
         return id;
     }
 
-    public void setId(int id) {           // opcional, se o ID vier da BD
+    public void setId(int id) {
+        // opcional, se o ID vier da BD
         this.id = id;
     }
 

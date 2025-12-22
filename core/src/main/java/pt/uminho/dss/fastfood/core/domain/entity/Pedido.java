@@ -1,11 +1,12 @@
-package pt.uminho.dss.fastfood.core.domain;
+package pt.uminho.dss.fastfood.core.domain.entity;
 
-import pt.uminho.dss.fastfood.core.domain.enums.ModoConsumo;
-import pt.uminho.dss.fastfood.core.domain.enums.EstadoPedido;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import pt.uminho.dss.fastfood.core.domain.entity.LinhaPedido;
+import pt.uminho.dss.fastfood.core.domain.enumeration.EstadoPedido;
+import pt.uminho.dss.fastfood.core.domain.enumeration.ModoConsumo;
 
 public class Pedido {
 
@@ -40,13 +41,17 @@ public class Pedido {
     }
 
     // Construtor vazio para ORM, se precisares
-    protected Pedido() { }
+    protected Pedido() {}
 
     // --------------------------------------------------
     // Métodos de negócio
     // --------------------------------------------------
 
-    public void adicionarLinha(ProdutoOuMenu item, int quantidade, String personalizacao) {
+    public void adicionarLinha(
+        ProdutoOuMenu item,
+        int quantidade,
+        String personalizacao
+    ) {
         validarEstadoEditavel();
         LinhaPedido linha = new LinhaPedido(item, quantidade, personalizacao);
         linhas.add(linha);
@@ -59,7 +64,11 @@ public class Pedido {
         recalcularTotais();
     }
 
-    public void editarLinha(int idLinha, int novaQuantidade, String novaPersonalizacao) {
+    public void editarLinha(
+        int idLinha,
+        int novaQuantidade,
+        String novaPersonalizacao
+    ) {
         validarEstadoEditavel();
         for (LinhaPedido l : linhas) {
             if (l.getId() == idLinha) {
@@ -74,7 +83,9 @@ public class Pedido {
 
     public void confirmar() {
         if (linhas.isEmpty()) {
-            throw new IllegalStateException("Não é possível confirmar um pedido vazio.");
+            throw new IllegalStateException(
+                "Não é possível confirmar um pedido vazio."
+            );
         }
         validarEstadoEditavel();
         this.estado = EstadoPedido.AGUARDA_PAGAMENTO;
@@ -82,7 +93,9 @@ public class Pedido {
 
     public void marcarComoPago() {
         if (estado != EstadoPedido.AGUARDA_PAGAMENTO) {
-            throw new IllegalStateException("Pedido não está a aguardar pagamento.");
+            throw new IllegalStateException(
+                "Pedido não está a aguardar pagamento."
+            );
         }
         this.estado = EstadoPedido.PAGO;
         this.dataHoraPagamento = LocalDateTime.now();
@@ -91,14 +104,18 @@ public class Pedido {
 
     public void cancelar() {
         if (estado == EstadoPedido.PAGO) {
-            throw new IllegalStateException("Não é possível cancelar um pedido já pago.");
+            throw new IllegalStateException(
+                "Não é possível cancelar um pedido já pago."
+            );
         }
         this.estado = EstadoPedido.CANCELADO;
     }
 
     private void validarEstadoEditavel() {
         if (estado != EstadoPedido.EM_CONSTRUCAO) {
-            throw new IllegalStateException("Pedido não pode ser alterado no estado atual: " + estado);
+            throw new IllegalStateException(
+                "Pedido não pode ser alterado no estado atual: " + estado
+            );
         }
     }
 

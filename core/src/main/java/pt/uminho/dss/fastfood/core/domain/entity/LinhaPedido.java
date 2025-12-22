@@ -1,14 +1,16 @@
-package pt.uminho.dss.fastfood.core.domain;
+package pt.uminho.dss.fastfood.core.domain.entity;
+
+import pt.uminho.dss.fastfood.core.domain.entity.Produto;
 
 public class LinhaPedido {
 
     private int id;
-    private Produto item;          // ou Menu/ProdutoOuMenu, conforme tiveres
+    private Produto item; // ou Menu/ProdutoOuMenu, conforme tiveres
     private int quantidade;
     private String personalizacao; // ex.: "sem tomate; topping chocolate"
 
     private float precoLinha;
-    private int tempoPreparacao;   // em minutos
+    private int tempoPreparacao; // em minutos
 
     public LinhaPedido(Produto item, int quantidade, String personalizacao) {
         this.item = item;
@@ -17,12 +19,12 @@ public class LinhaPedido {
         recalcularTotais();
     }
 
-    protected LinhaPedido() { }
+    protected LinhaPedido() {}
 
     public void recalcularTotais() {
         // Ajusta isto à tua lógica real
         this.precoLinha = item.getPrecoBase() * quantidade;
-        this.tempoPreparacao = item.getTempoPreparacaoBase(); 
+        this.tempoPreparacao = item.getTempoPreparacaoBase();
     }
 
     // Getters e setters
@@ -31,7 +33,8 @@ public class LinhaPedido {
         return id;
     }
 
-    public void setId(int id) {      // se o ID for gerido pela BD/ORM, podes remover este setter
+    public void setId(int id) {
+        // se o ID for gerido pela BD/ORM, podes remover este setter
         this.id = id;
     }
 
@@ -66,7 +69,8 @@ public class LinhaPedido {
         return precoLinha;
     }
 
-    public void setPrecoLinha(float precoLinha) { // normalmente não precisas deste setter
+    public void setPrecoLinha(float precoLinha) {
+        // normalmente não precisas deste setter
         this.precoLinha = precoLinha;
     }
 
@@ -74,7 +78,8 @@ public class LinhaPedido {
         return tempoPreparacao;
     }
 
-    public void setTempoPreparacao(int tempoPreparacao) { // idem, pode ser só calculado
+    public void setTempoPreparacao(int tempoPreparacao) {
+        // idem, pode ser só calculado
         this.tempoPreparacao = tempoPreparacao;
     }
 }

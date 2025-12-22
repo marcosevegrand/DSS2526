@@ -1,9 +1,10 @@
-package pt.uminho.dss.fastfood.core.domain;
+package pt.uminho.dss.fastfood.core.domain.entity;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import pt.uminho.dss.fastfood.core.domain.entity.Produto;
 
 public class Stock {
 
@@ -30,10 +31,14 @@ public class Stock {
             throw new IllegalArgumentException("Produto não pode ser null.");
         }
         if (quantidade < 0) {
-            throw new IllegalArgumentException("Quantidade não pode ser negativa.");
+            throw new IllegalArgumentException(
+                "Quantidade não pode ser negativa."
+            );
         }
 
-        Optional<ItemStock> existente = encontrarItemPorProdutoId(produto.getId());
+        Optional<ItemStock> existente = encontrarItemPorProdutoId(
+            produto.getId()
+        );
         if (existente.isPresent()) {
             existente.get().aumentar(quantidade);
         } else {
@@ -46,8 +51,9 @@ public class Stock {
             throw new IllegalArgumentException("Quantidade deve ser positiva.");
         }
 
-        ItemStock item = encontrarItemPorProdutoId(idProduto)
-                .orElseThrow(() -> new IllegalStateException("Produto não existe no stock."));
+        ItemStock item = encontrarItemPorProdutoId(idProduto).orElseThrow(() ->
+            new IllegalStateException("Produto não existe no stock.")
+        );
 
         item.diminuir(quantidade);
 
@@ -58,8 +64,8 @@ public class Stock {
 
     public int consultarQuantidade(int idProduto) {
         return encontrarItemPorProdutoId(idProduto)
-                .map(ItemStock::getQuantidade)
-                .orElse(0);
+            .map(ItemStock::getQuantidade)
+            .orElse(0);
     }
 
     public boolean temDisponivel(int idProduto, int quantidadeNecessaria) {
@@ -67,9 +73,10 @@ public class Stock {
     }
 
     private Optional<ItemStock> encontrarItemPorProdutoId(int idProduto) {
-        return itens.stream()
-                .filter(i -> i.getProduto().getId() == idProduto)
-                .findFirst();
+        return itens
+            .stream()
+            .filter(i -> i.getProduto().getId() == idProduto)
+            .findFirst();
     }
 
     // ------------------------------
@@ -80,7 +87,9 @@ public class Stock {
         return id;
     }
 
-    public void setId(int id) { this.id = id; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getIdRestaurante() {
         return idRestaurante;
@@ -95,6 +104,8 @@ public class Stock {
     }
 
     public void setItens(List<ItemStock> itens) {
-        this.itens = (itens == null) ? new ArrayList<>() : new ArrayList<>(itens);
+        this.itens = (itens == null)
+            ? new ArrayList<>()
+            : new ArrayList<>(itens);
     }
 }
