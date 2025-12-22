@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(':core')
+    // implementation 'org.hibernate:hibernate-core:6.x'
+    // implementation 'com.mysql:mysql-connector-j:x.x'
+}
