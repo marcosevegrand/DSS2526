@@ -1,5 +1,40 @@
-# Ignore Gradle project-specific cache directory
-.gradle
+# --- Build Systems ---
+.gradle/
+build/
+bin/
+out/
 
-# Ignore Gradle build output directory
-build
+# Add these lines to ensure the config files are NEVER ignored
+!build.gradle
+!settings.gradle
+
+# --- IDE Specific (Eclipse) ---
+.project
+.classpath
+.settings/
+*.launch
+
+# --- IDE Specific (IntelliJ IDEA) ---
+.idea/
+*.iml
+*.iws
+out/
+
+# --- IDE Specific (VS Code) ---
+.vscode/
+
+# --- Compiled Java Files ---
+*.class
+*.jar
+*.war
+*.ear
+
+# --- Log files ---
+*.log
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Environment Secrets ---
+.env
