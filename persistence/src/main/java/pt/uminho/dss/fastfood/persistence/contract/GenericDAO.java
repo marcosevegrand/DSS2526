@@ -1,9 +1,8 @@
-package pt.uminho.dss.fastfood.persistence;
+package pt.uminho.dss.fastfood.persistence.contract;
 
 import java.util.List;
 
 public interface GenericDAO<T, K> {
-
     /**
      * Guarda uma nova entidade na base de dados.
      * Se a chave ainda não existir, insere; caso exista, podes decidir lançar exceção.

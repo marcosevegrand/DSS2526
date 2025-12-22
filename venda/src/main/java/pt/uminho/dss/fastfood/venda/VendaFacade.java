@@ -1,12 +1,12 @@
 package pt.uminho.dss.fastfood.venda;
 
-import pt.uminho.dss.fastfood.core.domain.Menu;
-import pt.uminho.dss.fastfood.core.domain.Pedido;
-import pt.uminho.dss.fastfood.core.domain.Produto;
-import pt.uminho.dss.fastfood.core.domain.enums.ModoConsumo;
-import pt.uminho.dss.fastfood.persistence.MenuDAO;
-import pt.uminho.dss.fastfood.persistence.PedidoDAO;
-import pt.uminho.dss.fastfood.persistence.ProdutoDAO;
+import pt.uminho.dss.fastfood.core.domain.entity.Menu;
+import pt.uminho.dss.fastfood.core.domain.entity.Pedido;
+import pt.uminho.dss.fastfood.core.domain.entity.Produto;
+import pt.uminho.dss.fastfood.core.domain.enumeration.ModoConsumo;
+import pt.uminho.dss.fastfood.persistence.contract.MenuDAO;
+import pt.uminho.dss.fastfood.persistence.contract.PedidoDAO;
+import pt.uminho.dss.fastfood.persistence.contract.ProdutoDAO;
 
 public class VendaFacade implements IVenda {
 
@@ -14,9 +14,11 @@ public class VendaFacade implements IVenda {
     private final ProdutoDAO produtoDAO;
     private final MenuDAO menuDAO;
 
-    public VendaFacade(PedidoDAO pedidoDAO,
-                       ProdutoDAO produtoDAO,
-                       MenuDAO menuDAO) {
+    public VendaFacade(
+        PedidoDAO pedidoDAO,
+        ProdutoDAO produtoDAO,
+        MenuDAO menuDAO
+    ) {
         this.pedidoDAO = pedidoDAO;
         this.produtoDAO = produtoDAO;
         this.menuDAO = menuDAO;
@@ -27,17 +29,28 @@ public class VendaFacade implements IVenda {
     // -------------------------------------------------
 
     @Override
-    public Pedido iniciarPedido(ModoConsumo modoConsumo, int idTerminal, int idFuncionario) {
+    public Pedido iniciarPedido(
+        ModoConsumo modoConsumo,
+        int idTerminal,
+        int idFuncionario
+    ) {
         Pedido p = new Pedido(modoConsumo, idTerminal, idFuncionario);
         pedidoDAO.save(p);
         return p;
     }
 
     @Override
-    public Pedido adicionarItem(int idPedido, int idProdutoOuMenu, String personalizacao, int quantidade) {
+    public Pedido adicionarItem(
+        int idPedido,
+        int idProdutoOuMenu,
+        String personalizacao,
+        int quantidade
+    ) {
         Pedido p = pedidoDAO.findById(idPedido);
         if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + idPedido);
+            throw new IllegalArgumentException(
+                "Pedido não encontrado: " + idPedido
+            );
         }
 
         // 1º tenta como produto
@@ -48,7 +61,9 @@ public class VendaFacade implements IVenda {
             // se não for produto, tenta como menu
             Menu menu = menuDAO.findById(idProdutoOuMenu);
             if (menu == null) {
-                throw new IllegalArgumentException("Produto/Menu não encontrado: " + idProdutoOuMenu);
+                throw new IllegalArgumentException(
+                    "Produto/Menu não encontrado: " + idProdutoOuMenu
+                );
             }
             p.adicionarLinha(menu, quantidade, personalizacao);
         }
@@ -61,7 +76,9 @@ public class VendaFacade implements IVenda {
     public Pedido removerItem(int idPedido, int idLinhaPedido) {
         Pedido p = pedidoDAO.findById(idPedido);
         if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + idPedido);
+            throw new IllegalArgumentException(
+                "Pedido não encontrado: " + idPedido
+            );
         }
 
         p.removerLinha(idLinhaPedido);
@@ -70,13 +87,17 @@ public class VendaFacade implements IVenda {
     }
 
     @Override
-    public Pedido editarItem(int idPedido,
-                             int idLinhaPedido,
-                             String novaPersonalizacao,
-                             int novaQuantidade) {
+    public Pedido editarItem(
+        int idPedido,
+        int idLinhaPedido,
+        String novaPersonalizacao,
+        int novaQuantidade
+    ) {
         Pedido p = pedidoDAO.findById(idPedido);
         if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + idPedido);
+            throw new IllegalArgumentException(
+                "Pedido não encontrado: " + idPedido
+            );
         }
 
         p.editarLinha(idLinhaPedido, novaQuantidade, novaPersonalizacao);
@@ -88,7 +109,9 @@ public class VendaFacade implements IVenda {
     public Pedido cancelarPedido(int idPedido) {
         Pedido p = pedidoDAO.findById(idPedido);
         if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + idPedido);
+            throw new IllegalArgumentException(
+                "Pedido não encontrado: " + idPedido
+            );
         }
 
         p.cancelar();
@@ -100,7 +123,9 @@ public class VendaFacade implements IVenda {
     public Pedido confirmarPedido(int idPedido) {
         Pedido p = pedidoDAO.findById(idPedido);
         if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + idPedido);
+            throw new IllegalArgumentException(
+                "Pedido não encontrado: " + idPedido
+            );
         }
 
         p.confirmar();
@@ -112,7 +137,9 @@ public class VendaFacade implements IVenda {
     public Pedido obterPedido(int idPedido) {
         Pedido p = pedidoDAO.findById(idPedido);
         if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + idPedido);
+            throw new IllegalArgumentException(
+                "Pedido não encontrado: " + idPedido
+            );
         }
         return p;
     }
@@ -125,7 +152,9 @@ public class VendaFacade implements IVenda {
     public PagamentoDTO pagar(int idPedido, DadosPagamentoDTO dadosPagamento) {
         Pedido p = pedidoDAO.findById(idPedido);
         if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + idPedido);
+            throw new IllegalArgumentException(
+                "Pedido não encontrado: " + idPedido
+            );
         }
 
         // chamar módulo de pagamento, validar, etc.
@@ -144,7 +173,9 @@ public class VendaFacade implements IVenda {
     public Talao emitirTalao(int idPedido) {
         Pedido p = obterPedido(idPedido);
         if (p.getEstado() != EstadoPedido.PAGO) {
-            throw new IllegalStateException("Só é possível emitir talão para pedidos pagos.");
+            throw new IllegalStateException(
+                "Só é possível emitir talão para pedidos pagos."
+            );
         }
         Talao t = new Talao(p);
         talaoDAO.save(t);

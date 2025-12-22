@@ -1,11 +1,9 @@
-package pt.uminho.dss.fastfood.persistence;
-
-import pt.uminho.dss.fastfood.core.domain.ItemStock;
+package pt.uminho.dss.fastfood.persistence.contract;
 
 import java.util.List;
+import pt.uminho.dss.fastfood.core.domain.ItemStock;
 
 public interface ItemStockDAO extends GenericDAO<ItemStock, Integer> {
-
     /**
      * Devolve todos os itens de stock de um restaurante.
      */
