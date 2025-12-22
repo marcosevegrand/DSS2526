@@ -8,12 +8,19 @@ public class Produto {
     private String nome;
     private float preco;
     private String descricao;
+    private String tipo;  // ← NOVO CAMPO: "HAMBURGUER", "GELADO", "BEBIDA", etc.
     
-    public Produto(int id, String nome, float preco) {
+    public Produto(int id, String nome, float preco, String tipo) {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
         this.descricao = "";
+        this.tipo = tipo;
+    }
+    
+    // Construtor compatível com código existente (tipo por defeito)
+    public Produto(int id, String nome, float preco) {
+        this(id, nome, preco, "GERAL");  // tipo padrão
     }
     
     public int getId() {
@@ -46,5 +53,13 @@ public class Produto {
     
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+    
+    public String getTipo() {
+        return tipo;
+    }
+    
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
     }
 }

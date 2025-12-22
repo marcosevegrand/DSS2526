@@ -78,7 +78,7 @@ public class Pedido {
         recalcularPreco();
     }
     
-    private void recalcularPreco() {
+    public void recalcularPreco() {
         this.preco = 0.0f;
         for (ItemPedido item : items) {
             this.preco += item.getPreco();
