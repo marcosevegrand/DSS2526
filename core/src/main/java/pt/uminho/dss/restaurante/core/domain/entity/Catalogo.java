@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import pt.uminho.dss.restaurante.core.domain.enumeration.TipoItem;
+import pt.uminho.dss.restaurante.core.domain.contract.Item;
 
 public class Catalogo {
 
-    private final List<Produto> produtos;
-    private final List<Menu> menus;
+    private final Map<Integer, Item> items; // ou Array, não tenho a certeza
 
     public Catalogo() {
         this.produtos = new ArrayList<>();
@@ -66,20 +65,5 @@ public class Catalogo {
             .stream()
             .filter(m -> m.getId() == idMenu)
             .findFirst();
-    }
-
-    /**
-     * Se quiseres tratar Produto/Menu de forma genérica
-     * usando um único id vindo da UI.
-     */
-    public Object obterItemCatalogo(int idItem, TipoItem tipo) {
-        switch (tipo) {
-            case PRODUTO:
-                return obterProdutoPorId(idItem).orElse(null);
-            case MENU:
-                return obterMenuPorId(idItem).orElse(null);
-            default:
-                return null;
-        }
     }
 }

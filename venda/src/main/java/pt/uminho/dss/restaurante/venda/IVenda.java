@@ -1,4 +1,4 @@
-package pt.uminho.dss.fastfood.venda;
+package pt.uminho.dss.restaurante.venda;
 
 import pt.uminho.dss.restaurante.core.domain.entity.Pedido;
 import pt.uminho.dss.restaurante.core.domain.enumeration.ModoConsumo;
@@ -7,18 +7,9 @@ import pt.uminho.dss.restaurante.core.domain.enumeration.ModoConsumo;
 
 public interface IVenda {
     // Ciclo de vida do pedido
-    Pedido iniciarPedido(
-        ModoConsumo modoConsumo,
-        int idTerminal,
-        int idFuncionario
-    );
+    Pedido iniciarPedido();
 
-    Pedido adicionarItem(
-        int idPedido,
-        int idProdutoOuMenu,
-        String personalizacao, // ou um DTO próprio
-        int quantidade
-    );
+    Pedido adicionarItem(int idItem, int quantidade);
 
     Pedido removerItem(int idPedido, int idLinhaPedido);
 
@@ -26,13 +17,12 @@ public interface IVenda {
         int idPedido,
         int idLinhaPedido,
         String novaPersonalizacao,
-        int novaQuantidade
+        int novaQuantidadeidLinhaPedido
     );
 
     Pedido cancelarPedido(int idPedido);
 
     Pedido confirmarPedido(int idPedido);
 
-    // Consulta
     Pedido obterPedido(int idPedido);
 }

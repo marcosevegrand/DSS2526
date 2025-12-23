@@ -5,7 +5,7 @@ public interface Item {
 
     String getNome();
 
-    float calcularPreco(int quantidade, String personalizacao);
+    float getPreco();
 
-    int calcularTempoPreparacao(int quantidade, String personalizacao);
+    int getTempoPreparacao();
 }
