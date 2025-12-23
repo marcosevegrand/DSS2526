@@ -5,7 +5,6 @@ import java.util.List;
 import pt.uminho.dss.restaurante.domain.entity.Pedido;
 import pt.uminho.dss.restaurante.domain.entity.Produto;
 import pt.uminho.dss.restaurante.domain.entity.Menu;
-import pt.uminho.dss.restaurante.domain.enumeration.ModoConsumo;
 
 /**
  * API mínima utilizada pela UI do terminal de vendas.

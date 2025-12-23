@@ -9,7 +9,6 @@ import pt.uminho.dss.restaurante.domain.entity.Pedido;
 import pt.uminho.dss.restaurante.domain.entity.Produto;
 import pt.uminho.dss.restaurante.domain.entity.Menu;
 import pt.uminho.dss.restaurante.domain.entity.LinhaPedido;
-import pt.uminho.dss.restaurante.domain.enumeration.ModoConsumo;
 import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
 import pt.uminho.dss.restaurante.persistence.contract.ProdutoDAO;
 import pt.uminho.dss.restaurante.persistence.contract.MenuDAO;
@@ -18,7 +17,7 @@ import pt.uminho.dss.restaurante.persistence.contract.PedidoDAO;
 /**
  * Fachada de venda — versão que usa Optional no findById e métodos de Pedido addLinha/removeLinhaPorItem.
  */
-public class VendaFacade implements IVenda {
+public class VendaFacade {
 
     private final ProdutoDAO produtoDAO;
     private final MenuDAO menuDAO;
@@ -30,9 +29,8 @@ public class VendaFacade implements IVenda {
         this.pedidoDAO = Objects.requireNonNull(pedidoDAO);
     }
 
-    @Override
-    public Pedido criarPedido(ModoConsumo modo, int idTerminal, int idFuncionario) {
-        Pedido p = new Pedido(modo, idTerminal, idFuncionario);
+    public Pedido criarPedido(Boolean takeaway, int idTerminal, int idFuncionario) {
+        Pedido p = new Pedido(takeaway, idTerminal, idFuncionario);
         pedidoDAO.save(p);
         return p;
     }
