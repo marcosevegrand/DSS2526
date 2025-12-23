@@ -1,112 +1,107 @@
 package dss2526.ui.view;
 
-import dss2526.ui.controller.GestaoController;
-import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.control.*;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.ToolBar;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class GestaoView extends BorderPane {
+// Assumindo classes de domínio para preencher a tabela (ajuste conforme os seus nomes reais)
+import dss2526.domain.entity.Ingrediente;
+import dss2526.domain.entity.Produto;
 
-    public GestaoView(GestaoController controller) {
-        initUI();
+public class GestaoView {
+
+    private BorderPane root;
+
+    public GestaoView() {
+        this.root = new BorderPane();
+        inicializarComponentes();
     }
 
-    private void initUI() {
-        TabPane tabs = new TabPane();
-        tabs.setStyle("-fx-background-color: #2b2d30;");
+    private void inicializarComponentes() {
+        TabPane tabPane = new TabPane();
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
-        tabs.getTabs().add(createTab("Produtos", createCrudPanel("Produto")));
-        tabs.getTabs().add(createTab("Ingredientes", createCrudPanel("Ingrediente")));
-        tabs.getTabs().add(createTab("Categorias", createCrudPanel("Categoria")));
-        tabs.getTabs().add(createTab("Estatísticas", createStatsPanel()));
+        // --- Aba 1: Inventário (Ingredientes) ---
+        Tab tabStock = new Tab("Inventário / Stock");
+        tabStock.setContent(criarTabelaStock());
 
-        setCenter(tabs);
+        // --- Aba 2: Catálogo (Produtos/Menu) ---
+        Tab tabMenu = new Tab("Catálogo / Menu");
+        tabMenu.setContent(criarTabelaMenu());
+
+        // --- Aba 3: Pessoal (Opcional) ---
+        Tab tabPessoal = new Tab("Funcionários");
+        // tabPessoal.setContent(...);
+
+        tabPane.getTabs().addAll(tabStock, tabMenu, tabPessoal);
+        root.setCenter(tabPane);
     }
 
-    private Tab createTab(String title, javafx.scene.Node content) {
-        Tab t = new Tab(title);
-        t.setContent(content);
-        t.setClosable(false);
-        return t;
-    }
+    private VBox criarTabelaStock() {
+        // Toolbar de ações simples
+        Button btnAdd = new Button("+ Adicionar Registo");
+        Button btnEdit = new Button("Editar Selecionado");
+        Button btnDel = new Button("X Remover");
+        ToolBar toolBar = new ToolBar(btnAdd, btnEdit, btnDel);
 
-    private VBox createCrudPanel(String entityName) {
-        VBox panel = new VBox(15);
-        panel.setPadding(new Insets(20));
+        // Tabela Estilo Base de Dados
+        TableView<Ingrediente> tabela = new TableView<>();
+        tabela.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        HBox toolbar = new HBox(10);
-        Button btnAdd = new Button("Adicionar " + entityName);
-        btnAdd.getStyleClass().add("btn-success");
-        Button btnEdit = new Button("Editar");
-        btnEdit.getStyleClass().add("btn-warning");
-        Button btnDel = new Button("Remover");
-        btnDel.getStyleClass().add("btn-danger");
+        TableColumn<Ingrediente, String> colId = new TableColumn<>("ID");
+        // Ajuste "nome" para o getter real da sua classe Ingrediente (ex: getNome)
+        colId.setCellValueFactory(new PropertyValueFactory<>("id")); 
         
-        toolbar.getChildren().addAll(btnAdd, btnEdit, btnDel);
+        TableColumn<Ingrediente, String> colNome = new TableColumn<>("Ingrediente");
+        colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
 
-        // Tabela
-        TableView<MockItem> table = new TableView<>();
-        TableColumn<MockItem, String> colName = new TableColumn<>("Nome");
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colName.setPrefWidth(200);
+        TableColumn<Ingrediente, Double> colQtd = new TableColumn<>("Quantidade Atual");
+        colQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
+
+        TableColumn<Ingrediente, String> colUnidade = new TableColumn<>("Unidade");
+        colUnidade.setCellValueFactory(new PropertyValueFactory<>("unidade"));
+
+        tabela.getColumns().addAll(colId, colNome, colQtd, colUnidade);
+
+        // Adicionar dados mockados para visualização
+        // tabela.setItems(service.getIngredientes()); 
+
+        VBox container = new VBox(toolBar, tabela);
+        container.setFillWidth(true);
+        // Tabela cresce para ocupar espaço
+        javafx.scene.layout.VBox.setVgrow(tabela, javafx.scene.layout.Priority.ALWAYS);
         
-        TableColumn<MockItem, String> colVal = new TableColumn<>("Valor/Detalhe");
-        colVal.setCellValueFactory(new PropertyValueFactory<>("detail"));
-        colVal.setPrefWidth(150);
-
-        table.getColumns().addAll(colName, colVal);
-        table.setItems(FXCollections.observableArrayList(
-            new MockItem(entityName + " A", "10.00"),
-            new MockItem(entityName + " B", "15.50"),
-            new MockItem(entityName + " C", "5.00")
-        ));
-        
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        panel.getChildren().addAll(toolbar, table);
-        return panel;
+        return container;
     }
 
-    private VBox createStatsPanel() {
-        VBox panel = new VBox(20);
-        panel.setPadding(new Insets(20));
+    private VBox criarTabelaMenu() {
+        Button btnAdd = new Button("+ Novo Prato");
+        ToolBar toolBar = new ToolBar(btnAdd);
 
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis();
-        BarChart<String, Number> bc = new BarChart<>(xAxis, yAxis);
-        bc.setTitle("Vendas por Categoria (Hoje)");
-        xAxis.setLabel("Categoria");
-        yAxis.setLabel("Total (€)");
+        TableView<Produto> tabela = new TableView<>();
+        tabela.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        XYChart.Series<String, Number> series1 = new XYChart.Series<>();
-        series1.setName("2025");
-        series1.getData().add(new XYChart.Data<>("Bebidas", 250));
-        series1.getData().add(new XYChart.Data<>("Hambúrgueres", 1200));
-        series1.getData().add(new XYChart.Data<>("Sobremesas", 300));
+        TableColumn<Produto, String> colNome = new TableColumn<>("Nome do Prato");
+        colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
 
-        bc.getData().add(series1);
-        
-        bc.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;");
-        xAxis.lookup(".axis-label").setStyle("-fx-text-fill: white;");
-        yAxis.lookup(".axis-label").setStyle("-fx-text-fill: white;");
+        TableColumn<Produto, Double> colPreco = new TableColumn<>("Preço (€)");
+        colPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
 
-        panel.getChildren().add(bc);
-        return panel;
+        tabela.getColumns().addAll(colNome, colPreco);
+
+        VBox container = new VBox(toolBar, tabela);
+        javafx.scene.layout.VBox.setVgrow(tabela, javafx.scene.layout.Priority.ALWAYS);
+        return container;
     }
 
-    public static class MockItem {
-        private String name;
-        private String detail;
-        public MockItem(String n, String d) { this.name = n; this.detail = d; }
-        public String getName() { return name; }
-        public String getDetail() { return detail; }
+    public Parent getView() {
+        return root;
     }
 }
