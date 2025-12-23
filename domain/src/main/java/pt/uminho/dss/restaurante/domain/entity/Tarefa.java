@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * O Lazy Loading de 'pedido' ou 'produto' será gerido externamente pelo ORM.
  */
 public class Tarefa implements Serializable {
-    private Long id;
+    private Integer id;
     private Pedido pedido;
     private Produto produto;
     private PassoProducao passo;
@@ -30,8 +30,8 @@ public class Tarefa implements Serializable {
 
     // Getters e Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
     
     public Pedido getPedido() { return pedido; }
     public void setPedido(Pedido pedido) { this.pedido = pedido; }

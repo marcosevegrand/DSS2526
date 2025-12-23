@@ -3,8 +3,7 @@ package pt.uminho.dss.restaurante.venda;
 import java.util.List;
 
 import pt.uminho.dss.restaurante.domain.entity.Pedido;
-import pt.uminho.dss.restaurante.domain.entity.Produto;
-import pt.uminho.dss.restaurante.domain.entity.Menu;
+import pt.uminho.dss.restaurante.domain.contract.Item;
 
 /**
  * API mínima utilizada pela UI do terminal de vendas.
@@ -15,34 +14,33 @@ public interface IVenda {
     /**
      * Cria e persiste um novo pedido. Retorna o pedido criado.
      */
-    Pedido criarPedido(Boolean takeaway);
+    Pedido criarPedido(boolean paraLevar);
 
     /**
      * Adiciona uma quantidade de um item (produto/menu) ao pedido.
      * Implementação concreta decide como mapear idItem para Produto/Menu e como persistir.
      */
-    void adicionarItem(int idPedido, int idItem);
+    void adicionarItem(int idPedido, int idItem, int quantidade);
 
     /**
      * Remove uma quantidade de um item do pedido.
      */
-    void removerItem(int idPedido, int idItem);
+    void removerItem(int idPedido, int idItem, int quantidade);
+
+    /**
+     * Adiciona uma nota/observação ao pedido.
+     */
+    void adicionarNota(int idPedido, String nota);
 
     /**
      * Marca o pedido como pago (ou inicia fluxo de pagamento).
      */
-    void pagarPedido(int idPedido);
+    void confirmarPedido(int idPedido);
 
     /**
      * Cancela o pedido.
      */
     void cancelarPedido(int idPedido);
-
-    // Altera a assinatura do adicionarItem
-    void adicionarItem(int idPedido, int idItem, int quantidade, String observacao);
-
-    // Adiciona o novo método para a nota geral do pedido
-    void adicionarNotaAoPedido(int idPedido, String nota);
 
     /**
      * Obtém o pedido (pode retornar null se não existir).
@@ -50,12 +48,7 @@ public interface IVenda {
     Pedido obterPedido(int idPedido);
 
     /**
-     * Lista produtos disponíveis.
+     * Lista items disponíveis.
      */
-    List<Produto> listarProdutos();
-
-    /**
-     * Lista menus disponíveis.
-     */
-    List<Menu> listarMenus();
+    List<Item> obterItemsDisponiveis();
 }

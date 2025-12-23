@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class LinhaPedido implements Serializable {
-    private Long id;
+    private Integer id;
     private Item item;
     private Integer quantidade;
     private BigDecimal precoUnitario;
@@ -29,8 +29,8 @@ public class LinhaPedido implements Serializable {
 
     // Getters e Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
     public Item getItem() { return item; }
     public void setItem(Item item) { this.item = item; }

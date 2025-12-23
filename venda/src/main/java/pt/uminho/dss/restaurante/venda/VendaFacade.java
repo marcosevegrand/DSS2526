@@ -5,14 +5,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import pt.uminho.dss.restaurante.domain.entity.Pedido;
-import pt.uminho.dss.restaurante.domain.entity.Produto;
-import pt.uminho.dss.restaurante.domain.entity.Menu;
-import pt.uminho.dss.restaurante.domain.entity.LinhaPedido;
-import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
-import pt.uminho.dss.restaurante.persistence.contract.ProdutoDAO;
-import pt.uminho.dss.restaurante.persistence.contract.MenuDAO;
-import pt.uminho.dss.restaurante.persistence.contract.PedidoDAO;
+import pt.uminho.dss.restaurante.domain.entity.*;
+import pt.uminho.dss.restaurante.domain.enumeration.*;
+import pt.uminho.dss.restaurante.persistence.contract.*;
 
 /**
  * Fachada de venda — versão que usa Optional no findById e métodos de Pedido addLinha/removeLinhaPorItem.
@@ -23,14 +18,18 @@ public class VendaFacade {
     private final MenuDAO menuDAO;
     private final PedidoDAO pedidoDAO;
 
+    private Catalogo catalogo;
+
     public VendaFacade(ProdutoDAO produtoDAO, MenuDAO menuDAO, PedidoDAO pedidoDAO) {
         this.produtoDAO = Objects.requireNonNull(produtoDAO);
         this.menuDAO = Objects.requireNonNull(menuDAO);
         this.pedidoDAO = Objects.requireNonNull(pedidoDAO);
+        this.catalogo = new Catalogo(produtoDAO, menuDAO);
     }
 
-    public Pedido criarPedido(Boolean takeaway, int idTerminal, int idFuncionario) {
-        Pedido p = new Pedido(takeaway, idTerminal, idFuncionario);
+    public Pedido criarPedido(boolean paraLevar) {
+        Pedido p = new Pedido();
+        p.setParaLevar(paraLevar);
         pedidoDAO.save(p);
         return p;
     }
@@ -41,7 +40,7 @@ public class VendaFacade {
     }
 
     @Override
-    public void adicionarItem(int idPedido, int idItem, int quantidade, String observacao) {
+    public void adicionarItem(int idPedido, int idItem, int quantidade) {
         Pedido pedido = findPedidoOrThrow(idPedido);
 
         // Tenta encontrar como Produto

@@ -102,7 +102,7 @@ public class EstatisticaFacade implements IEstatistica {
                 return (!d.isBefore(dataInicio)) && (!d.isAfter(dataFim));
             }).collect(Collectors.toList());
         if (todosNoPeriodo.isEmpty()) return 0f;
-        long cancelados = todosNoPeriodo.stream().filter(p -> p.getEstado() == EstadoPedido.CANCELADO).count();
+        Integer cancelados = todosNoPeriodo.stream().filter(p -> p.getEstado() == EstadoPedido.CANCELADO).count();
         return (float) cancelados / todosNoPeriodo.size() * 100f;
     }
 

@@ -12,8 +12,8 @@ import java.util.Optional;
  */
 public class IngredienteDAOImpl implements IngredienteDAO {
 
-    private static final Map<Long, Ingrediente> INGREDIENTES = new ConcurrentHashMap<>();
-    private static long nextId = 1L;
+    private static final Map<Integer, Ingrediente> INGREDIENTES = new ConcurrentHashMap<>();
+    private static Integer nextId = 1L;
 
     static {
         // exemplos iniciais

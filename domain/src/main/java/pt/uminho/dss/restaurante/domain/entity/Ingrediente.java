@@ -9,7 +9,7 @@ import pt.uminho.dss.restaurante.domain.enumeration.Alergenico;
  * Entidade pura representando um ingrediente.
  */
 public class Ingrediente implements Serializable {
-    private Long id;
+    private Integer id;
     private String nome;
     private String unidadeMedida;
     private Alergenico alergenico;
@@ -26,8 +26,8 @@ public class Ingrediente implements Serializable {
 
     // Getters e Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }

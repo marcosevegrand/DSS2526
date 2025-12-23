@@ -14,5 +14,5 @@ import pt.uminho.dss.restaurante.domain.enumeration.EstacaoTrabalho;
 public interface IProducao {
     List<Tarefa> listarTarefas(EstacaoTrabalho estacao);
     Tarefa criarTarefa(Pedido pedido, Produto produto, EstacaoTrabalho estacao);
-    void marcarConcluida(Long id);
+    void marcarConcluida(Integer id);
 }

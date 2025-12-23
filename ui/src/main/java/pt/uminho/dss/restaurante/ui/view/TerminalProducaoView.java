@@ -22,7 +22,7 @@ public class TerminalProducaoView extends JPanel {
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private final JList<String> lista = new JList<>(listModel);
     // Mapa índice -> id da tarefa
-    private final Map<Integer, Long> indexToId = new HashMap<>();
+    private final Map<Integer, Integer> indexToId = new HashMap<>();
 
     public TerminalProducaoView(ProducaoController controller, EstacaoTrabalho estacao) {
         this.controller = controller;
@@ -73,7 +73,7 @@ public class TerminalProducaoView extends JPanel {
             JOptionPane.showMessageDialog(this, "Selecione uma tarefa primeiro.");
             return;
         }
-        Long id = indexToId.get(sel);
+        Integer id = indexToId.get(sel);
         controller.concluirTarefa(id);
         JOptionPane.showMessageDialog(this, "Tarefa #" + id + " marcada como concluída.");
         atualizarLista();

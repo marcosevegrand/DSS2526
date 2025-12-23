@@ -22,7 +22,7 @@ public class ProducaoController {
         return producao.listarTarefas(estacao);
     }
 
-    public void concluirTarefa(Long id) {
+    public void concluirTarefa(Integer id) {
         producao.marcarConcluida(id);
     }
 }

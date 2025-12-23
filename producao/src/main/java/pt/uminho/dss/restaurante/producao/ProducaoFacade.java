@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import pt.uminho.dss.restaurante.domain.entity.Tarefa;
@@ -19,8 +19,8 @@ import pt.uminho.dss.restaurante.domain.enumeration.EstacaoTrabalho;
  */
 public class ProducaoFacade implements IProducao {
 
-    private final Map<Long, Tarefa> tarefas = new ConcurrentHashMap<>();
-    private final AtomicLong nextId = new AtomicLong(1);
+    private final Map<Integer, Tarefa> tarefas = new ConcurrentHashMap<>();
+    private final AtomicInteger nextId = new AtomicInteger(1);
 
     @Override
     public List<Tarefa> listarTarefas(EstacaoTrabalho estacao) {
@@ -44,7 +44,7 @@ public class ProducaoFacade implements IProducao {
     }
 
     @Override
-    public void marcarConcluida(Long id) {
+    public void marcarConcluida(Integer id) {
         Tarefa t = tarefas.get(id);
         if (t != null && (t.getConcluida() == null || !t.getConcluida())) {
             t.setConcluida(true);

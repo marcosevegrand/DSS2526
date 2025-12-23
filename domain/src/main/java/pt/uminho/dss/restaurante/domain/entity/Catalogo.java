@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import pt.uminho.dss.restaurante.domain.contract.Item;
 
 public class Catalogo implements Serializable {
-    private Long id;
+    private Integer id;
     private List<Item> items = new ArrayList<>();
     private List<Ingrediente> ingredientes = new ArrayList<>();
     private List<Alergenico> alergenicos = new ArrayList<>();
@@ -52,8 +52,8 @@ public class Catalogo implements Serializable {
 
     // Getters e Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
     
     public List<Item> getItems() { return items; }
     public void setItems(List<Item> items) { this.items = items; }

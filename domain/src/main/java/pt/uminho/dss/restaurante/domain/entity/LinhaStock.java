@@ -1,7 +1,7 @@
 package pt.uminho.dss.restaurante.domain.entity;
 
 public class LinhaStock {
-    private Long id;
+    private Integer id;
     private Ingrediente ingrediente;
     private Double quantidade;
 
@@ -16,8 +16,8 @@ public class LinhaStock {
 
     // Getters e Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
     public Ingrediente getIngrediente() { return ingrediente; }
     public void setIngrediente(Ingrediente ingrediente) { this.ingrediente = ingrediente; }
