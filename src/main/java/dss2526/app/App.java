@@ -21,7 +21,6 @@ public class App extends Application {
         
         Scene scene = new Scene(mainView, 1280, 800);
         
-        // Carregar CSS
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
 
         primaryStage.setTitle("DSS Restaurante 2.0");
