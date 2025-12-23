@@ -60,19 +60,19 @@ public class Produto implements Item {
         this.nome = nome;
     }
 
-    public float getPrecoBase() {
+    public float getPreco() {
         return preco;
     }
 
-    public void setPrecoBase(float preco) {
+    public void setPreco(float preco) {
         this.preco = preco;
     }
 
-    public int getTempoPreparacaoBase() {
+    public int getTempoPreparacao() {
         return tempoPreparacao;
     }
 
-    public void setTempoPreparacaoBase(int tempoPreparacaoBase) {
+    public void setTempoPreparacao(int tempoPreparacaoBase) {
         this.tempoPreparacao = tempoPreparacaoBase;
     }
 }
