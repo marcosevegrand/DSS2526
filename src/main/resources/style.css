@@ -1,0 +1,141 @@
+/* --- Definições Globais --- */
+.root {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-background-color: #2b2d30; /* Fundo cinzento escuro */
+    -fx-font-size: 14px;
+}
+
+.label {
+    -fx-text-fill: #e0e0e0;
+}
+
+.h1 {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.h2 {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #aaaaaa;
+}
+
+/* --- Botões --- */
+.button {
+    -fx-background-color: #3c3f41;
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+    -fx-padding: 8 15 8 15;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 1);
+}
+
+.button:hover {
+    -fx-background-color: #4e5254;
+}
+
+.button:pressed {
+    -fx-background-color: #323537;
+}
+
+/* Variantes de Botões */
+.btn-primary { -fx-background-color: #365880; } /* Azul */
+.btn-primary:hover { -fx-background-color: #4b7aa6; }
+
+.btn-success { -fx-background-color: #2e7d32; } /* Verde */
+.btn-success:hover { -fx-background-color: #43a047; }
+
+.btn-danger { -fx-background-color: #c62828; } /* Vermelho */
+.btn-danger:hover { -fx-background-color: #d32f2f; }
+
+.btn-warning { -fx-background-color: #f57f17; -fx-text-fill: white; } /* Laranja */
+.btn-warning:hover { -fx-background-color: #fbc02d; }
+
+/* Azulejos do Menu Principal */
+.menu-tile {
+    -fx-background-color: #3c3f41;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 5);
+    -fx-alignment: center;
+    -fx-min-width: 200;
+    -fx-min-height: 200;
+    -fx-padding: 20;
+    -fx-cursor: hand;
+}
+.menu-tile:hover {
+    -fx-background-color: #45494c;
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+/* --- Tabelas Modernas --- */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-base: #2b2d30; /* Base para o header */
+    -fx-control-inner-background: #2b2d30; /* Fundo das linhas */
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #3c3f41;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #555;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 35;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #aaa;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: #2b2d30;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #333;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #2f3235;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #365880;
+    -fx-text-fill: white;
+}
+
+.table-row-cell .text {
+    -fx-fill: white;
+}
+
+/* --- Cartões KDS (Cozinha) --- */
+.task-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 5, 0, 0, 2);
+    -fx-padding: 10;
+}
+/* Labels dentro do cartão branco devem ser escuras */
+.task-card .label {
+    -fx-text-fill: #333; 
+}
+.task-header {
+    -fx-background-color: #fbc02d; /* Amarelo aviso */
+    -fx-padding: 5;
+    -fx-background-radius: 5 5 0 0;
+}
+
+/* --- ScrollBar Discreta --- */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #555;
+    -fx-background-radius: 5;
+}

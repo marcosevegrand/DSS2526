@@ -1,55 +1,37 @@
 package dss2526.app;
 
-import com.formdev.flatlaf.FlatLightLaf;
-import dss2526.ui.controller.*;
+import dss2526.ui.controller.GestaoController;
+import dss2526.ui.controller.ProducaoController;
+import dss2526.ui.controller.VendaController;
 import dss2526.ui.view.MainView;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-import javax.swing.*;
-import java.awt.*;
+public class App extends Application {
 
-public class App {
-
-    // Instanciação dos Controllers
-    // Nota: Em uma aplicação real, estes poderiam receber DAOs ou Facades no construtor
-    private final VendaController vendaController = new VendaController();
-    private final ProducaoController producaoController = new ProducaoController();
-    private final GestaoController gestaoController = new GestaoController();
-
-    public static void main(String[] args) {
-        // Configuração do FlatLaf para uma UI moderna
-        try {
-            // Inicializa o FlatLaf Light (podes usar FlatDarkLaf.setup() para tema escuro)
-            FlatLightLaf.setup();
-        } catch (Exception e) {
-            // Fallback para o sistema caso o FlatLaf não esteja disponível ou ocorra erro
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ex) {
-                System.err.println("Falha ao inicializar LookAndFeel: " + ex.getMessage());
-            }
-        }
+    @Override
+    public void start(Stage primaryStage) {
         
-        // Definições globais de UI para melhorar a renderização de texto
-        System.setProperty("awt.useSystemAAFontSettings", "on");
-        System.setProperty("swing.aatext", "true");
-        
-        // Personalização extra (opcional) - Ex: Arredondar botões globalmente
-        UIManager.put("Button.arc", 12);
-        UIManager.put("Component.arc", 12);
+        VendaController vendaController = new VendaController();
+        ProducaoController producaoController = new ProducaoController();
+        GestaoController gestaoController = new GestaoController();
 
-        SwingUtilities.invokeLater(() -> new App().iniciar());
+        MainView mainView = new MainView(gestaoController, vendaController, producaoController);
+        
+        Scene scene = new Scene(mainView, 1280, 800);
+        
+        // Carregar CSS
+        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+
+        primaryStage.setTitle("DSS Restaurante 2.0");
+        primaryStage.setScene(scene);
+        primaryStage.setMinWidth(1024);
+        primaryStage.setMinHeight(768);
+        primaryStage.show();
     }
 
-    public void iniciar() {
-        JFrame frame = new JFrame("DSS FOOD - Sistema Integrado");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1280, 800); // Tamanho HD padrão
-        frame.setLocationRelativeTo(null); // Centralizar no ecrã
-
-        // Inicializa a View Principal passando os controladores necessários
-        MainView mainView = new MainView(vendaController, producaoController, gestaoController);
-        
-        frame.setContentPane(mainView);
-        frame.setVisible(true);
+    public static void main(String[] args) {
+        launch(args);
     }
 }
