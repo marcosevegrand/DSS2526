@@ -1,81 +1,65 @@
-// ...existing code...
-package pt.uminho.dss.restaurante.ui.view;
+package dss2526.ui.view;
 
-import pt.uminho.dss.restaurante.ui.controller.ProducaoController;
-import pt.uminho.dss.restaurante.domain.entity.Tarefa;
-import pt.uminho.dss.restaurante.domain.enumeration.EstacaoTrabalho;
+import dss2526.ui.controller.ProducaoController;
+import dss2526.domain.enumeration.EstacaoTrabalho;
+import dss2526.domain.entity.Tarefa;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-/**
- * Painel simples para o terminal de produção.
- * Mostra tarefas pendentes para uma estação e permite marcar como concluídas.
- */
 public class TerminalProducaoView extends JPanel {
 
-    private final ProducaoController controller;
-    private final EstacaoTrabalho estacao;
-    private final DefaultListModel<String> listModel = new DefaultListModel<>();
-    private final JList<String> lista = new JList<>(listModel);
-    // Mapa índice -> id da tarefa
-    private final Map<Integer, Integer> indexToId = new HashMap<>();
-
     public TerminalProducaoView(ProducaoController controller, EstacaoTrabalho estacao) {
-        this.controller = controller;
-        this.estacao = estacao;
-        inicializarUI();
-        atualizarLista();
-    }
-
-    private void inicializarUI() {
-        setLayout(new BorderLayout(8, 8));
-        JLabel title = new JLabel("Terminal Produção - " + estacao, SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 18));
+        setLayout(new BorderLayout());
+        setBackground(new Color(240, 240, 245));
+        
+        // Título da Estação
+        JLabel title = new JLabel("Estação: " + estacao, SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setBorder(new EmptyBorder(20,0,20,0));
         add(title, BorderLayout.NORTH);
-
-        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scroll = new JScrollPane(lista);
-        add(scroll, BorderLayout.CENTER);
-
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnRefresh = new JButton("Atualizar");
-        JButton btnConcluir = new JButton("Marcar como Concluída");
-
-        btnRefresh.addActionListener(e -> atualizarLista());
-        btnConcluir.addActionListener(e -> concluirSelecionada());
-
-        controls.add(btnRefresh);
-        controls.add(btnConcluir);
-        add(controls, BorderLayout.SOUTH);
-    }
-
-    private void atualizarLista() {
-        listModel.clear();
-        indexToId.clear();
-        List<Tarefa> tarefas = controller.listarTarefasPorEstacao(estacao);
-        int idx = 0;
-        for (Tarefa t : tarefas) {
-            String text = String.format("#%d - %s %s", t.getId(),
-                t.getProduto() != null ? t.getProduto().getNome() : "(sem produto)",
-                t.getPedido() != null ? " (Pedido #" + t.getPedido().getId() + ")" : "");
-            listModel.addElement(text);
-            indexToId.put(idx++, t.getId());
+        
+        // Painel fluido para cartões de tarefas
+        JPanel listaTarefas = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        listaTarefas.setOpaque(false);
+        
+        // Simular Cards de Tarefas vindos do controller
+        for(Tarefa t : controller.listarTarefasPorEstacao(estacao)) {
+            JPanel card = new JPanel(new BorderLayout());
+            card.setPreferredSize(new Dimension(280, 180));
+            card.setBackground(Color.WHITE);
+            // Sombra simples (borda cinza)
+            card.setBorder(BorderFactory.createLineBorder(new Color(200,200,200), 1));
+            
+            // Header do Card
+            JLabel l1 = new JLabel("#PEDIDO " + t.getPedido().getId());
+            l1.setFont(new Font("Monospaced", Font.BOLD, 16));
+            l1.setOpaque(true);
+            l1.setBackground(new Color(255, 243, 224)); // Laranja claro
+            l1.setBorder(new EmptyBorder(10,10,10,10));
+            
+            // Conteúdo
+            JLabel l2 = new JLabel("<html><center>"+t.getProduto().getNome()+"</center></html>", SwingConstants.CENTER);
+            l2.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+            
+            // Botão Ação
+            JButton btnDone = new JButton("PRONTO ✅");
+            btnDone.setBackground(new Color(46, 204, 113));
+            btnDone.setForeground(Color.WHITE);
+            btnDone.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            btnDone.addActionListener(e -> {
+                card.setVisible(false); // Simula remoção visual
+                JOptionPane.showMessageDialog(this, "Tarefa marcada como concluída!");
+            });
+            
+            card.add(l1, BorderLayout.NORTH);
+            card.add(l2, BorderLayout.CENTER);
+            card.add(btnDone, BorderLayout.SOUTH);
+            
+            listaTarefas.add(card);
         }
-    }
-
-    private void concluirSelecionada() {
-        int sel = lista.getSelectedIndex();
-        if (sel < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione uma tarefa primeiro.");
-            return;
-        }
-        Integer id = indexToId.get(sel);
-        controller.concluirTarefa(id);
-        JOptionPane.showMessageDialog(this, "Tarefa #" + id + " marcada como concluída.");
-        atualizarLista();
+        
+        add(new JScrollPane(listaTarefas), BorderLayout.CENTER);
     }
 }

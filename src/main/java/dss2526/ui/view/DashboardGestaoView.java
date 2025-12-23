@@ -1,107 +1,71 @@
-package pt.uminho.dss.restaurante.ui.view;
+package dss2526.ui.view;
 
-import pt.uminho.dss.restaurante.ui.controller.EstatisticaController;
-
+import dss2526.ui.controller.GestaoController;
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalDate;
-import java.util.Map;
+import javax.swing.border.EmptyBorder;
 
-/**
- * Painel simples para visualizar estatísticas.
- * Datas no formato ISO (YYYY-MM-DD).
- */
 public class DashboardGestaoView extends JPanel {
-
-    private final EstatisticaController controller;
-    private final JTextField txtInicio = new JTextField(10);
-    private final JTextField txtFim = new JTextField(10);
-    private final JTextArea output = new JTextArea(18, 60);
-    private final JSpinner spinnerTop = new JSpinner(new SpinnerNumberModel(5, 1, 50, 1));
-
-    public DashboardGestaoView(EstatisticaController controller) {
-        this.controller = controller;
-        inicializarUI();
+    
+    public DashboardGestaoView(GestaoController controller) {
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
+        
+        // Título
+        JLabel title = new JLabel("Dashboard de Gestão", SwingConstants.LEFT);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setBorder(new EmptyBorder(20, 20, 20, 20));
+        add(title, BorderLayout.NORTH);
+        
+        // Tabs
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        
+        tabs.addTab("Visão Geral", criarPainelIndicadores(controller));
+        tabs.addTab("Produtos Top", criarPainelDummy("Lista de produtos mais vendidos..."));
+        tabs.addTab("Performance", criarPainelDummy("Tempos médios de espera..."));
+        
+        add(tabs, BorderLayout.CENTER);
     }
-
-    private void inicializarUI() {
-        setLayout(new BorderLayout(8,8));
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        top.add(new JLabel("Data Início (YYYY-MM-DD):"));
-        txtInicio.setText(LocalDate.now().minusDays(7).toString());
-        top.add(txtInicio);
-        top.add(new JLabel("Data Fim:"));
-        txtFim.setText(LocalDate.now().toString());
-        top.add(txtFim);
-        top.add(new JLabel("Top N:"));
-        top.add(spinnerTop);
-
-        JButton btnFaturacao = new JButton("Calcular Faturação");
-        JButton btnTicket = new JButton("Ticket Médio");
-        JButton btnTaxa = new JButton("Taxa Cancelamento");
-        JButton btnTop = new JButton("Top Produtos");
-        JButton btnPorDia = new JButton("Faturação por Dia");
-
-        btnFaturacao.addActionListener(e -> calcularFaturacao());
-        btnTicket.addActionListener(e -> calcularTicket());
-        btnTaxa.addActionListener(e -> calcularTaxa());
-        btnTop.addActionListener(e -> calcularTop());
-        btnPorDia.addActionListener(e -> calcularPorDia());
-
-        top.add(btnFaturacao);
-        top.add(btnTicket);
-        top.add(btnTaxa);
-        top.add(btnTop);
-        top.add(btnPorDia);
-
-        add(top, BorderLayout.NORTH);
-
-        output.setEditable(false);
-        output.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        add(new JScrollPane(output), BorderLayout.CENTER);
+    
+    // Cria cartões simples com números (KPIs)
+    private JPanel criarPainelIndicadores(GestaoController ctrl) {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 30));
+        p.setBackground(Color.WHITE);
+        
+        p.add(criarKPI("Faturação Hoje", "€" + ctrl.faturacaoTotal(null, null), new Color(52, 152, 219)));
+        p.add(criarKPI("Ticket Médio", "€" + ctrl.ticketMedio(null, null), new Color(155, 89, 182)));
+        p.add(criarKPI("Cancelamentos", ctrl.taxaCancelamento(null, null) + "%", new Color(231, 76, 60)));
+        
+        return p;
     }
-
-    private LocalDate[] lerDatas() {
-        try {
-            LocalDate inicio = LocalDate.parse(txtInicio.getText().trim());
-            LocalDate fim = LocalDate.parse(txtFim.getText().trim());
-            return new LocalDate[]{inicio, fim};
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Formato de data inválido. Use YYYY-MM-DD.");
-            return null;
-        }
+    
+    private JPanel criarKPI(String titulo, String valor, Color cor) {
+        JPanel kpi = new JPanel(new GridLayout(2, 1));
+        kpi.setPreferredSize(new Dimension(200, 120));
+        kpi.setBackground(cor);
+        kpi.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        
+        JLabel lblTit = new JLabel(titulo, SwingConstants.CENTER);
+        lblTit.setForeground(new Color(255,255,255,200));
+        lblTit.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        
+        JLabel lblVal = new JLabel(valor, SwingConstants.CENTER);
+        lblVal.setForeground(Color.WHITE);
+        lblVal.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        
+        kpi.add(lblTit);
+        kpi.add(lblVal);
+        return kpi;
     }
-
-    private void calcularFaturacao() {
-        LocalDate[] d = lerDatas(); if (d==null) return;
-        float f = controller.faturacaoTotal(d[0], d[1]);
-        output.append(String.format("Faturação %s -> %s : €%.2f\n", d[0], d[1], f));
-    }
-
-    private void calcularTicket() {
-        LocalDate[] d = lerDatas(); if (d==null) return;
-        float f = controller.ticketMedio(d[0], d[1]);
-        output.append(String.format("Ticket médio %s -> %s : €%.2f\n", d[0], d[1], f));
-    }
-
-    private void calcularTaxa() {
-        LocalDate[] d = lerDatas(); if (d==null) return;
-        float t = controller.taxaCancelamento(d[0], d[1]);
-        output.append(String.format("Taxa de cancelamento %s -> %s : %.2f%%\n", d[0], d[1], t));
-    }
-
-    private void calcularTop() {
-        LocalDate[] d = lerDatas(); if (d==null) return;
-        int top = (Integer) spinnerTop.getValue();
-        Map<Integer,Integer> mapa = controller.topProdutos(d[0], d[1], top);
-        output.append("Top " + top + " produtos (itemId -> quantidade):\n");
-        mapa.forEach((id, qtd) -> output.append(String.format("  %d -> %d\n", id, qtd)));
-    }
-
-    private void calcularPorDia() {
-        LocalDate[] d = lerDatas(); if (d==null) return;
-        Map<LocalDate, Float> mapa = controller.faturacaoPorDia(d[0], d[1]);
-        output.append("Faturação por dia:\n");
-        mapa.forEach((dia, val) -> output.append(String.format("  %s : €%.2f\n", dia, val)));
+    
+    private JPanel criarPainelDummy(String msg) {
+        JPanel p = new JPanel(new GridBagLayout());
+        p.setBackground(Color.WHITE);
+        JLabel l = new JLabel(msg);
+        l.setFont(new Font("Segoe UI", Font.ITALIC, 20));
+        l.setForeground(Color.GRAY);
+        p.add(l);
+        return p;
     }
 }
