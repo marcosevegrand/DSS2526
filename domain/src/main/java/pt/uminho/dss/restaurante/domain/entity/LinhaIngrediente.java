@@ -12,10 +12,13 @@ public class LinhaIngrediente implements Serializable {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
     public Produto getProduto() { return produto; }
     public void setProduto(Produto produto) { this.produto = produto; }
+
     public Ingrediente getIngrediente() { return ingrediente; }
     public void setIngrediente(Ingrediente ingrediente) { this.ingrediente = ingrediente; }
+    
     public Double getQuantidade() { return quantidade; }
     public void setQuantidade(Double quantidade) { this.quantidade = quantidade; }
 }

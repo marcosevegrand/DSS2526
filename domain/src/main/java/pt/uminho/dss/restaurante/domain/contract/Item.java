@@ -7,8 +7,8 @@ import java.math.BigDecimal;
  * Mantida sem anotações para garantir a pureza do domínio.
  */
 public interface Item {
-    Long getId();
-    String getNome();
-    BigDecimal getPreco();
-    String getDescricao();
+
+    public BigDecimal getPreco();
+    
+    public boolean isDisponivel();
 }

@@ -10,34 +10,41 @@ import java.util.List;
 
 public class Pedido implements Serializable {
     private Long id;
-    private Boolean takeaway;
+    private boolean paraLevar;
     private EstadoPedido estado;
     private LocalDateTime dataHora;
-    private BigDecimal total;
     private List<LinhaPedido> linhasPedido = new ArrayList<>();
 
     public Pedido() {
         this.dataHora = LocalDateTime.now();
         this.estado = EstadoPedido.INICIADO;
-        this.total = BigDecimal.ZERO;
     }
+
+
+    public BigDecimal calcularPrecoTotal() {
+        BigDecimal total = BigDecimal.ZERO;
+        for (LinhaPedido linha : linhasPedido) {
+            total = total.add(linha.getPreco());
+        }
+        return total;
+    }
+
+    // Getters e Setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public Boolean getIsTakeaway() { return takeaway; }
-    public void setIsTakeaway(Boolean takeaway) { this.takeaway = takeaway; }
+
+    public boolean isParaLevar() { return paraLevar; }
+    public void setParaLevar(boolean paraLevar) { this.paraLevar = paraLevar; }
+
     public EstadoPedido getEstado() { return estado; }
     public void setEstado(EstadoPedido estado) { this.estado = estado; }
+
     public LocalDateTime getDataHora() { return dataHora; }
     public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
-    public BigDecimal getTotal() { return total; }
-    public void setTotal(BigDecimal total) { this.total = total; }
+
     public List<LinhaPedido> getLinhasPedido() { return linhasPedido; }
     public void setLinhasPedido(List<LinhaPedido> linhasPedido) { this.linhasPedido = linhasPedido; }
 
-    public void calcularTotal() {
-        this.total = linhasPedido.stream()
-                .map(l -> l.getPrecoUnitario().multiply(new BigDecimal(l.getQuantidade())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
+
 }

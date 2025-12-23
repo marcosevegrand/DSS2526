@@ -4,18 +4,26 @@ import java.io.Serializable;
 
 public class LinhaMenu implements Serializable {
     private Long id;
-    private Menu menu;
     private Produto produto;
     private Integer quantidade;
 
+    // Construtores
+
     public LinhaMenu() {}
+
+    public LinhaMenu(Produto produto, Integer quantidade) {
+        this.produto = produto;
+        this.quantidade = quantidade;
+    }
+
+    // Getters e Setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public Menu getMenu() { return menu; }
-    public void setMenu(Menu menu) { this.menu = menu; }
+
     public Produto getProduto() { return produto; }
     public void setProduto(Produto produto) { this.produto = produto; }
+
     public Integer getQuantidade() { return quantidade; }
     public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
 }

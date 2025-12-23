@@ -13,20 +13,20 @@ import pt.uminho.dss.restaurante.domain.entity.Menu;
 public interface IVenda {
 
     /**
-     * Cria e persiste um novo pedido. Retorna o pedido criado (pode ter id gerado).
+     * Cria e persiste um novo pedido. Retorna o pedido criado.
      */
-    Pedido criarPedido(ModoConsumo modo, int idTerminal, int idFuncionario);
+    Pedido criarPedido(Boolean takeaway);
 
     /**
      * Adiciona uma quantidade de um item (produto/menu) ao pedido.
      * Implementação concreta decide como mapear idItem para Produto/Menu e como persistir.
      */
-    void adicionarItem(int idPedido, int idItem, int quantidade);
+    void adicionarItem(int idPedido, int idItem);
 
     /**
      * Remove uma quantidade de um item do pedido.
      */
-    void removerItem(int idPedido, int idItem, int quantidade);
+    void removerItem(int idPedido, int idItem);
 
     /**
      * Marca o pedido como pago (ou inicia fluxo de pagamento).
@@ -44,7 +44,7 @@ public interface IVenda {
     Pedido obterPedido(int idPedido);
 
     /**
-     * Lista produtos disponíveis (catálogo).
+     * Lista produtos disponíveis.
      */
     List<Produto> listarProdutos();
 

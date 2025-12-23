@@ -12,7 +12,7 @@ public class Tarefa implements Serializable {
     private Long id;
     private Pedido pedido;
     private Produto produto;
-    private EstacaoTrabalho estacao;
+    private PassoProducao passo;
     private Boolean concluida;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
@@ -28,8 +28,9 @@ public class Tarefa implements Serializable {
     public void setPedido(Pedido pedido) { this.pedido = pedido; }
     public Produto getProduto() { return produto; }
     public void setProduto(Produto produto) { this.produto = produto; }
-    public EstacaoTrabalho getEstacao() { return estacao; }
-    public void setEstacao(EstacaoTrabalho estacao) { this.estacao = estacao; }
+    public void setPasso(PassoProducao passo) { this.passo = passo; }
+    public PassoProducao getPasso() { return passo; }
+    public EstacaoTrabalho getEstacao() { return passo.getEstacao(); }
     public Boolean getConcluida() { return concluida; }
     public void setConcluida(Boolean concluida) { 
         this.concluida = concluida;
