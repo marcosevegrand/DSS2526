@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     implementation project(':domain')
-    implementation 'org.hibernate:hibernate-core:6.x'
+
 
     runtimeOnly 'com.mysql:mysql-connector-j:8.3.0'
 }

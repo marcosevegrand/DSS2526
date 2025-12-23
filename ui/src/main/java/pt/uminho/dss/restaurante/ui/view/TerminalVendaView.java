@@ -16,126 +16,126 @@ public class TerminalVendaView extends JPanel {
     private final VendaController vendaController;
     private Pedido pedidoAtual;
     private int idTerminal = 1, idFuncionario = 1;
-    
+
     // Contentores de Navegação (ATRIBUTOS DE CLASSE)
-    private JPanel cardsContainer; 
+    private JPanel cardsContainer;
     private CardLayout cardLayout;
-    
+
     // Painéis das Etapas
     private JPanel painelInicio, painelModo, painelCategorias, painelCarrinho;
-    
+
     // Componentes UI
     private JList<String> listaItens;
     private JTable tabelaCarrinho;
     private JLabel labelTotal, labelPedidoId;
     private String categoriaAtual = "TODOS";
-    
+
     public TerminalVendaView(VendaController vendaController) {
         this.vendaController = vendaController;
         inicializarUI();
         // Agora já não dá erro porque o cardsContainer já foi inicializado
         mostrarEtapaInicio();
     }
-    
+
     private void inicializarUI() {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         setBackground(Color.WHITE);
-        
+
         // HEADER FIXO
         JPanel header = criarHeader();
         add(header, BorderLayout.NORTH);
-        
+
         // CARDS (Contentor das etapas)
         cardsContainer = new JPanel(new CardLayout()); // Inicializa o atributo da classe
         cardLayout = (CardLayout) cardsContainer.getLayout();
-        
+
         painelInicio = criarPainelInicio();
         painelModo = criarPainelModo();
         painelCategorias = criarPainelCategorias();
         painelCarrinho = criarPainelCarrinho();
-        
+
         cardsContainer.add(painelInicio, "INICIO");
         cardsContainer.add(painelModo, "MODO");
         cardsContainer.add(painelCategorias, "CATEGORIAS");
         cardsContainer.add(painelCarrinho, "CARRINHO");
-        
+
         add(cardsContainer, BorderLayout.CENTER);
     }
-    
+
     private JPanel criarHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(new Color(46, 125, 50));
         header.setPreferredSize(new Dimension(0, 80));
-        
+
         JLabel title = new JLabel(" FASTFOOD RESTAURANTE", SwingConstants.LEFT);
         title.setFont(new Font("Arial", Font.BOLD, 24));
         title.setForeground(Color.WHITE);
         header.add(title, BorderLayout.WEST);
-        
+
         labelPedidoId = new JLabel("Pedido: --- ", SwingConstants.RIGHT);
         labelPedidoId.setFont(new Font("Arial", Font.PLAIN, 16));
         labelPedidoId.setForeground(Color.WHITE);
         header.add(labelPedidoId, BorderLayout.EAST);
-        
+
         return header;
     }
-    
+
     private JPanel criarPainelInicio() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
-        
+
         JButton btnIniciar = new JButton("🚀 INICIAR NOVO PEDIDO");
         btnIniciar.setFont(new Font("Arial", Font.BOLD, 22));
         btnIniciar.setBackground(new Color(76, 175, 80));
         btnIniciar.setForeground(Color.WHITE);
         btnIniciar.setPreferredSize(new Dimension(350, 100));
-        
+
         // CORREÇÃO: Usar cardsContainer em vez de getParent()
         btnIniciar.addActionListener(e -> cardLayout.show(cardsContainer, "MODO"));
-        
+
         panel.add(btnIniciar);
         return panel;
     }
-    
+
     private JPanel criarPainelModo() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
-        
+
         JLabel titulo = new JLabel("COMO PRETENDE CONSUMIR?", SwingConstants.CENTER);
         titulo.setFont(new Font("Arial", Font.BOLD, 24));
-        titulo.setBorder(BorderFactory.createEmptyBorder(30,0,30,0));
-        
+        titulo.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
+
         JPanel botoes = new JPanel(new GridLayout(1, 2, 30, 0));
         botoes.setBorder(BorderFactory.createEmptyBorder(0, 50, 50, 50));
         botoes.setBackground(Color.WHITE);
-        
+
         JButton btnLocal = new JButton("<html><center>🍽️<br>PARA CONSUMO LOCAL</center></html>");
         JButton btnTakeaway = new JButton("<html><center>📦<br>TAKE AWAY</center></html>");
-        
+
         btnLocal.setFont(new Font("Arial", Font.BOLD, 20));
         btnLocal.setBackground(new Color(232, 245, 233));
         btnLocal.addActionListener(e -> iniciarPedido(ModoConsumo.LOCAL));
-        
+
         btnTakeaway.setFont(new Font("Arial", Font.BOLD, 20));
         btnTakeaway.setBackground(new Color(255, 243, 224));
         btnTakeaway.addActionListener(e -> iniciarPedido(ModoConsumo.TAKE_AWAY));
-        
+
         botoes.add(btnLocal);
         botoes.add(btnTakeaway);
-        
+
         panel.add(titulo, BorderLayout.NORTH);
         panel.add(botoes, BorderLayout.CENTER);
         return panel;
     }
-    
+
     private JPanel criarPainelCategorias() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.WHITE);
-        
+
         JPanel categoriasPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        String[] categorias = {"TODOS", "MENUS", "PRODUTOS", "BEBIDAS", "SOBREMESAS"};
-        
+        String[] categorias = { "TODOS", "MENUS", "PRODUTOS", "BEBIDAS", "SOBREMESAS" };
+
         for (String cat : categorias) {
             JButton btn = new JButton(cat);
             btn.setPreferredSize(new Dimension(130, 45));
@@ -146,11 +146,11 @@ public class TerminalVendaView extends JPanel {
             });
             categoriasPanel.add(btn);
         }
-        
+
         listaItens = new JList<>();
         listaItens.setFont(new Font("Arial", Font.PLAIN, 18));
         listaItens.setFixedCellHeight(45);
-        
+
         JPanel footer = new JPanel(new BorderLayout());
         JButton btnVerCarrinho = new JButton("🛒 VER CARRINHO / FINALIZAR");
         btnVerCarrinho.setFont(new Font("Arial", Font.BOLD, 16));
@@ -162,56 +162,56 @@ public class TerminalVendaView extends JPanel {
         btnAdicionar.setBackground(new Color(76, 175, 80));
         btnAdicionar.setForeground(Color.WHITE);
         btnAdicionar.addActionListener(e -> adicionarItemSelecionado());
-        
+
         footer.add(btnAdicionar, BorderLayout.WEST);
         footer.add(btnVerCarrinho, BorderLayout.EAST);
-        
+
         panel.add(categoriasPanel, BorderLayout.NORTH);
         panel.add(new JScrollPane(listaItens), BorderLayout.CENTER);
         panel.add(footer, BorderLayout.SOUTH);
-        
+
         return panel;
     }
-    
+
     private JPanel criarPainelCarrinho() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.WHITE);
-        
+
         tabelaCarrinho = new JTable();
         tabelaCarrinho.setRowHeight(30);
-        
+
         JPanel topo = new JPanel(new BorderLayout());
         JButton btnVoltar = new JButton("← CONTINUAR A COMPRAR");
         btnVoltar.addActionListener(e -> cardLayout.show(cardsContainer, "CATEGORIAS"));
         topo.add(btnVoltar, BorderLayout.WEST);
-        
+
         JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnRemover = new JButton("🗑️ REMOVER");
         btnRemover.addActionListener(e -> removerLinhaSelecionada());
         acoes.add(btnRemover);
-        
+
         JPanel footer = new JPanel(new BorderLayout());
         labelTotal = new JLabel("Total: €0.00 ", SwingConstants.RIGHT);
         labelTotal.setFont(new Font("Arial", Font.BOLD, 22));
-        
+
         JButton btnPagar = new JButton("💳 FINALIZAR E PAGAR");
         btnPagar.setPreferredSize(new Dimension(250, 60));
         btnPagar.setBackground(new Color(46, 125, 50));
         btnPagar.setForeground(Color.WHITE);
         btnPagar.setFont(new Font("Arial", Font.BOLD, 18));
         btnPagar.addActionListener(e -> finalizarPedido());
-        
+
         footer.add(labelTotal, BorderLayout.NORTH);
         footer.add(btnPagar, BorderLayout.SOUTH);
-        
+
         panel.add(topo, BorderLayout.NORTH);
         panel.add(new JScrollPane(tabelaCarrinho), BorderLayout.CENTER);
         panel.add(acoes, BorderLayout.EAST);
         panel.add(footer, BorderLayout.SOUTH);
-        
+
         return panel;
     }
-    
+
     // === LÓGICA DE NAVEGAÇÃO ===
 
     private void mostrarEtapaInicio() {
@@ -228,11 +228,11 @@ public class TerminalVendaView extends JPanel {
         cardLayout.show(cardsContainer, "CATEGORIAS");
         carregarItensCategoria();
     }
-    
+
     private void carregarItensCategoria() {
-        List<?> itens = categoriaAtual.equals("MENUS") ? 
-            vendaController.listarMenus() : vendaController.listarProdutos();
-        
+        List<?> itens = categoriaAtual.equals("MENUS") ? vendaController.listarMenus()
+                : vendaController.listarProdutos();
+
         DefaultListModel<String> model = new DefaultListModel<>();
         for (Object item : itens) {
             if (item instanceof Produto p) {
@@ -244,7 +244,7 @@ public class TerminalVendaView extends JPanel {
         listaItens.setModel(model);
         actualizarTabela();
     }
-    
+
     private void adicionarItemSelecionado() {
         int index = listaItens.getSelectedIndex();
         if (index < 0 || pedidoAtual == null) {
@@ -253,15 +253,15 @@ public class TerminalVendaView extends JPanel {
         }
 
         // 1. Obter o ID do Item
-        int idItem = categoriaAtual.equals("MENUS") ?
-                vendaController.getMenuIdByIndex(index) :
-                vendaController.getProdutoIdByIndex(index);
+        int idItem = categoriaAtual.equals("MENUS") ? vendaController.getMenuIdByIndex(index)
+                : vendaController.getProdutoIdByIndex(index);
 
         // 2. Escolher Quantidade (Usando um Spinner num JOptionPane)
         JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, 20, 1));
         int option = JOptionPane.showConfirmDialog(this, spinner, "Quantidade:", JOptionPane.OK_CANCEL_OPTION);
 
-        if (option != JOptionPane.OK_OPTION) return;
+        if (option != JOptionPane.OK_OPTION)
+            return;
         int quantidade = (int) spinner.getValue();
 
         // 3. Personalização (Simulação de ingredientes)
@@ -274,17 +274,17 @@ public class TerminalVendaView extends JPanel {
             actualizarTabela();
             JOptionPane.showMessageDialog(this, "Item adicionado com sucesso!");
         }
-    }    
+    }
 
     private void removerLinhaSelecionada() {
         int linha = tabelaCarrinho.getSelectedRow();
         if (linha >= 0 && pedidoAtual != null) {
-            var item = pedidoAtual.getLinhas().get(linha);
-            vendaController.removerItem(pedidoAtual.getId(), item.getItemId(), 1);
+            var item = pedidoAtual.getLinhasPedido().get(linha);
+            vendaController.removerItem(pedidoAtual.getId(), item.getItem().getId(), 1);
             actualizarTabela();
         }
     }
-    
+
     /**
      * Cria um diálogo simples para remover ou adicionar extras
      */
@@ -307,61 +307,71 @@ public class TerminalVendaView extends JPanel {
 
         if (res == JOptionPane.OK_OPTION) {
             StringBuilder sb = new StringBuilder();
-            if (semTomate.isSelected()) sb.append("[SEM TOMATE] ");
-            if (semCebola.isSelected()) sb.append("[SEM CEBOLA] ");
-            if (extraQueijo.isSelected()) sb.append("[+EXTRA QUEIJO] ");
-            if (extraCarne.isSelected()) sb.append("[+EXTRA CARNE] ");
+            if (semTomate.isSelected())
+                sb.append("[SEM TOMATE] ");
+            if (semCebola.isSelected())
+                sb.append("[SEM CEBOLA] ");
+            if (extraQueijo.isSelected())
+                sb.append("[+EXTRA QUEIJO] ");
+            if (extraCarne.isSelected())
+                sb.append("[+EXTRA CARNE] ");
             return sb.toString();
         }
         return "";
     }
 
     private void finalizarPedido() {
-        if (pedidoAtual != null && !pedidoAtual.getLinhas().isEmpty()) {
+        if (pedidoAtual != null && !pedidoAtual.getLinhasPedido().isEmpty()) {
 
             // 4. Adicionar Nota Geral ao Pedido
-            String notaGeral = JOptionPane.showInputDialog(this, 
-                "Deseja adicionar uma nota ao pedido? (Ex: Alergias, porta de trás...)", 
-                "Nota do Pedido", 
-                JOptionPane.QUESTION_MESSAGE);
-            
-            // Atualiza a nota no controller antes de pagar
-            if (notaGeral != null && !notaGeral.isEmpty()) {
+            String notaGeral = JOptionPane.showInputDialog(this,
+                    "Alguma observação para o pedido?",
+                    "Observação",
+                    JOptionPane.QUESTION_MESSAGE);
+
+            if (notaGeral != null && !notaGeral.trim().isEmpty()) {
                 vendaController.adicionarNotaAoPedido(pedidoAtual.getId(), notaGeral);
             }
 
-            vendaController.pagarPedido(pedidoAtual.getId());
+            // Pagamento
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Confirmar pagamento? Total: €" + String.format("%.2f", pedidoAtual.calcularPrecoTotal()),
+                    "Pagamento",
+                    JOptionPane.YES_NO_OPTION);
 
-            JOptionPane.showMessageDialog(this, 
-                "✅ Pedido #" + pedidoAtual.getId() + " FINALIZADO!\n" +
-                "Total: €" + String.format("%.2f", pedidoAtual.getPrecoTotal()));
-            
-            mostrarEtapaInicio();
+            if (confirm == JOptionPane.YES_OPTION) {
+                vendaController.pagarPedido(pedidoAtual.getId());
+                JOptionPane.showMessageDialog(this, "Pedido pago e enviado à produção!");
+                mostrarEtapaInicio(); // Assuming limparPedido() is replaced by mostrarEtapaInicio()
+            }
         } else {
             JOptionPane.showMessageDialog(this, "O carrinho está vazio!");
         }
-    }    
+    }
+
     private void actualizarTabela() {
         if (pedidoAtual == null) {
-            labelTotal.setText("Total: €0.00");
+            labelTotal.setText("Total: €0.00 ");
+            // Assuming tableModel refers to the model of tabelaCarrinho
+            ((DefaultTableModel) tabelaCarrinho.getModel()).setRowCount(0);
             return;
         }
-        
+
+        // Re-fetch pedidoAtual to ensure it's up-to-date after modifications
         pedidoAtual = vendaController.obterPedido(pedidoAtual.getId());
-        
-        String[] colunas = {"Qtd", "Item", "Preço Un.", "Subtotal"};
+
+        String[] colunas = { "Qtd", "Item", "Preço Un.", "Subtotal" };
         DefaultTableModel model = new DefaultTableModel(colunas, 0);
-        
-        for (var linha : pedidoAtual.getLinhas()) {
-            model.addRow(new Object[]{
-                linha.getQuantidade(),
-                linha.getDescricao(),
-                String.format("€%.2f", linha.getPrecoUnitario()),
-                String.format("€%.2f", linha.getSubtotal())
+
+        for (var linha : pedidoAtual.getLinhasPedido()) {
+            model.addRow(new Object[] {
+                    linha.getQuantidade(),
+                    linha.getItem().getNome(),
+                    String.format("€%.2f", linha.getPrecoUnitario()),
+                    String.format("€%.2f", linha.getPreco())
             });
         }
-        
         tabelaCarrinho.setModel(model);
-        labelTotal.setText("Total: €" + String.format("%.2f", pedidoAtual.getPrecoTotal()) + " ");
+        labelTotal.setText("Total: €" + String.format("%.2f", pedidoAtual.calcularPrecoTotal()) + " ");
     }
 }

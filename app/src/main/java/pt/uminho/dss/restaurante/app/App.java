@@ -1,20 +1,21 @@
 package pt.uminho.dss.restaurante.app;
 
-import pt.uminho.dss.restaurante.persistence.contract.ProdutoDAO;
-import pt.uminho.dss.restaurante.persistence.contract.MenuDAO;
-import pt.uminho.dss.restaurante.persistence.contract.PedidoDAO;
-import pt.uminho.dss.restaurante.persistence.contract.IngredienteDAO;
-
-import pt.uminho.dss.restaurante.venda.IVenda;
-import pt.uminho.dss.restaurante.venda.VendaFacade;
-
-import pt.uminho.dss.restaurante.ui.controller.VendaController;
-import pt.uminho.dss.restaurante.ui.view.TerminalVendaView;
-
 import pt.uminho.dss.restaurante.persistence.impl.ProdutoDAOImpl;
 import pt.uminho.dss.restaurante.persistence.impl.MenuDAOImpl;
 import pt.uminho.dss.restaurante.persistence.impl.PedidoDAOImpl;
 import pt.uminho.dss.restaurante.persistence.impl.IngredienteDAOImpl;
+import pt.uminho.dss.restaurante.persistence.impl.TarefaDAOImpl;
+
+import pt.uminho.dss.restaurante.persistence.contract.ProdutoDAO;
+import pt.uminho.dss.restaurante.persistence.contract.MenuDAO;
+import pt.uminho.dss.restaurante.persistence.contract.PedidoDAO;
+import pt.uminho.dss.restaurante.persistence.contract.IngredienteDAO;
+import pt.uminho.dss.restaurante.persistence.contract.TarefaDAO;
+
+import pt.uminho.dss.restaurante.venda.IVenda;
+import pt.uminho.dss.restaurante.venda.VendaFacade;
+import pt.uminho.dss.restaurante.ui.controller.VendaController;
+import pt.uminho.dss.restaurante.ui.view.TerminalVendaView;
 
 import pt.uminho.dss.restaurante.producao.ProducaoFacade;
 import pt.uminho.dss.restaurante.ui.controller.ProducaoController;
@@ -38,6 +39,7 @@ public class App {
     private final MenuDAO menuDAO;
     private final PedidoDAO pedidoDAO;
     private final IngredienteDAO ingredienteDAO;
+    private final TarefaDAO tarefaDAO;
 
     private IVenda vendaFacade;
     private VendaController vendaController;
@@ -56,12 +58,13 @@ public class App {
         this.menuDAO = new MenuDAOImpl();
         this.pedidoDAO = new PedidoDAOImpl();
         this.ingredienteDAO = new IngredienteDAOImpl();
+        this.tarefaDAO = new TarefaDAOImpl();
 
         // Facade / controllers
         this.vendaFacade = new VendaFacade(produtoDAO, menuDAO, pedidoDAO);
         this.vendaController = new VendaController(vendaFacade);
 
-        this.producaoFacade = new ProducaoFacade();
+        this.producaoFacade = new ProducaoFacade(tarefaDAO);
         this.producaoController = new ProducaoController(producaoFacade);
 
         this.estatisticaFacade = new EstatisticaFacade(pedidoDAO);
@@ -132,12 +135,12 @@ public class App {
         estFrame.setSize(600, 400);
         estFrame.setLocationRelativeTo(null);
 
-        JPanel p = new JPanel(new BorderLayout(8,8));
+        JPanel p = new JPanel(new BorderLayout(8, 8));
         JLabel title = new JLabel("Escolha a Estação de Trabalho", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 16));
         p.add(title, BorderLayout.NORTH);
 
-        JPanel listaPanel = new JPanel(new GridLayout(0,1,6,6));
+        JPanel listaPanel = new JPanel(new GridLayout(0, 1, 6, 6));
         for (EstacaoTrabalho et : EstacaoTrabalho.values()) {
             JButton b = new JButton(et.toString());
             b.addActionListener(ev -> abrirTerminalProducao(estFrame, et));

@@ -14,13 +14,15 @@ public interface IVenda {
     /**
      * Cria e persiste um novo pedido. Retorna o pedido criado.
      */
+    /**
+     * Cria e persiste um novo pedido. Retorna o pedido criado.
+     */
     Pedido criarPedido(boolean paraLevar);
 
     /**
      * Adiciona uma quantidade de um item (produto/menu) ao pedido.
-     * Implementação concreta decide como mapear idItem para Produto/Menu e como persistir.
      */
-    void adicionarItem(int idPedido, int idItem, int quantidade);
+    void adicionarItem(int idPedido, int idItem, int quantidade, String observacao);
 
     /**
      * Remove uma quantidade de um item do pedido.
@@ -30,12 +32,12 @@ public interface IVenda {
     /**
      * Adiciona uma nota/observação ao pedido.
      */
-    void adicionarNota(int idPedido, String nota);
+    void adicionarNotaAoPedido(int idPedido, String nota);
 
     /**
      * Marca o pedido como pago (ou inicia fluxo de pagamento).
      */
-    void confirmarPedido(int idPedido);
+    void pagarPedido(int idPedido);
 
     /**
      * Cancela o pedido.
@@ -47,8 +49,12 @@ public interface IVenda {
      */
     Pedido obterPedido(int idPedido);
 
-    /**
-     * Lista items disponíveis.
-     */
-    List<Item> obterItemsDisponiveis();
+    List<pt.uminho.dss.restaurante.domain.entity.Produto> listarProdutos();
+
+    List<pt.uminho.dss.restaurante.domain.entity.Menu> listarMenus();
+
+    void adicionarItem(int idPedido, int idItem, int quantidade);
+
+    Pedido criarPedido(pt.uminho.dss.restaurante.domain.enumeration.ModoConsumo modo, int idTerminal,
+            int idFuncionario);
 }

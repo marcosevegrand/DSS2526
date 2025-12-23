@@ -23,21 +23,24 @@ public class EstatisticaFacade implements IEstatistica {
     }
 
     private List<Pedido> obterPedidosPagosNoPeriodo(LocalDate inicio, LocalDate fim) {
-        if (inicio == null || fim == null) return Collections.emptyList();
-        return pedidoDAO.findAll().stream()
-            .filter(p -> p.getDataHoraPagamento() != null)
-            .filter(p -> {
-                LocalDate d = p.getDataHoraPagamento().toLocalDate();
-                return (!d.isBefore(inicio)) && (!d.isAfter(fim));
-            })
-            .collect(Collectors.toList());
+        if (inicio == null || fim == null)
+            return Collections.emptyList();
+        return pedidoDAO.values().stream()
+                .filter(p -> p.getDataHora() != null && p.getEstado() == EstadoPedido.PAGO) // Use getDataHora and check
+                                                                                            // status
+                .filter(p -> {
+                    LocalDate d = p.getDataHora().toLocalDate();
+                    return (!d.isBefore(inicio)) && (!d.isAfter(fim));
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public float calcularFaturacaoTotal(LocalDate dataInicio, LocalDate dataFim) {
         return (float) obterPedidosPagosNoPeriodo(dataInicio, dataFim).stream()
-            .mapToDouble(Pedido::getPrecoTotal)
-            .sum();
+                .map(Pedido::calcularPrecoTotal) // Method ref change
+                .mapToDouble(java.math.BigDecimal::doubleValue)
+                .sum();
     }
 
     @Override
@@ -48,38 +51,39 @@ public class EstatisticaFacade implements IEstatistica {
     @Override
     public float calcularTicketMedio(LocalDate dataInicio, LocalDate dataFim) {
         List<Pedido> pedidos = obterPedidosPagosNoPeriodo(dataInicio, dataFim);
-        if (pedidos.isEmpty()) return 0f;
-        float total = (float) pedidos.stream().mapToDouble(Pedido::getPrecoTotal).sum();
+        if (pedidos.isEmpty())
+            return 0f;
+        float total = (float) pedidos.stream().map(Pedido::calcularPrecoTotal)
+                .mapToDouble(java.math.BigDecimal::doubleValue).sum();
         return total / pedidos.size();
     }
 
     @Override
     public Map<Integer, Integer> obterProdutosMaisVendidos(LocalDate dataInicio, LocalDate dataFim, int top) {
-        Map<Integer, Integer> contagem = new HashMap<>();
+        Map<Integer, Integer> contagem = new HashMap<>(); // Same logic ...
         List<Pedido> pedidos = obterPedidosPagosNoPeriodo(dataInicio, dataFim);
         for (Pedido p : pedidos) {
-            for (LinhaPedido lp : p.getLinhas()) {
-                Integer id = lp.getItemId();
-                if (id == null) continue;
+            for (LinhaPedido lp : p.getLinhasPedido()) { // getLinhas vs getLinhasPedido
+                Integer id = lp.getItem().getId(); //
+                if (id == null)
+                    continue;
                 contagem.merge(id, lp.getQuantidade(), Integer::sum);
             }
         }
         return contagem.entrySet().stream()
-            .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
-            .limit(top)
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                (a,b) -> a,
-                LinkedHashMap::new
-            ));
+                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
+                .limit(top)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        LinkedHashMap::new));
     }
 
     @Override
     public int calcularTempoMedioEspera(LocalDate dataInicio, LocalDate dataFim) {
-        List<Pedido> pedidos = obterPedidosPagosNoPeriodo(dataInicio, dataFim);
-        if (pedidos.isEmpty()) return 0;
-        return (int) pedidos.stream().mapToInt(Pedido::getTempoEsperaEstimado).average().orElse(0);
+        // Pedido doesn't have estimated wait time. Returning 0.
+        return 0;
     }
 
     @Override
@@ -87,7 +91,7 @@ public class EstatisticaFacade implements IEstatistica {
         List<Pedido> pedidos = obterPedidosPagosNoPeriodo(dataInicio, dataFim);
         Map<String, Integer> mapa = new HashMap<>();
         for (Pedido p : pedidos) {
-            String modo = p.getModoConsumo().toString();
+            String modo = p.isParaLevar() ? "TAKE_AWAY" : "EAT_IN";
             mapa.merge(modo, 1, Integer::sum);
         }
         return mapa;
@@ -95,14 +99,15 @@ public class EstatisticaFacade implements IEstatistica {
 
     @Override
     public float calcularTaxaCancelamento(LocalDate dataInicio, LocalDate dataFim) {
-        List<Pedido> todosNoPeriodo = pedidoDAO.findAll().stream()
-            .filter(p -> p.getDataHoraCriacao() != null)
-            .filter(p -> {
-                LocalDate d = p.getDataHoraCriacao().toLocalDate();
-                return (!d.isBefore(dataInicio)) && (!d.isAfter(dataFim));
-            }).collect(Collectors.toList());
-        if (todosNoPeriodo.isEmpty()) return 0f;
-        Integer cancelados = todosNoPeriodo.stream().filter(p -> p.getEstado() == EstadoPedido.CANCELADO).count();
+        List<Pedido> todosNoPeriodo = pedidoDAO.values().stream()
+                .filter(p -> p.getDataHora() != null)
+                .filter(p -> {
+                    LocalDate d = p.getDataHora().toLocalDate();
+                    return (!d.isBefore(dataInicio)) && (!d.isAfter(dataFim));
+                }).collect(Collectors.toList());
+        if (todosNoPeriodo.isEmpty())
+            return 0f;
+        long cancelados = todosNoPeriodo.stream().filter(p -> p.getEstado() == EstadoPedido.CANCELADO).count();
         return (float) cancelados / todosNoPeriodo.size() * 100f;
     }
 
@@ -111,11 +116,12 @@ public class EstatisticaFacade implements IEstatistica {
         Map<LocalDate, Float> mapa = new LinkedHashMap<>();
         for (LocalDate cur = dataInicio; !cur.isAfter(dataFim); cur = cur.plusDays(1)) {
             final LocalDate data = cur;
-            float f = (float) pedidoDAO.findAll().stream()
-                .filter(p -> p.getDataHoraPagamento() != null)
-                .filter(p -> p.getDataHoraPagamento().toLocalDate().equals(data))
-                .mapToDouble(Pedido::getPrecoTotal)
-                .sum();
+            float f = (float) pedidoDAO.values().stream()
+                    .filter(p -> p.getDataHora() != null && p.getEstado() == EstadoPedido.PAGO)
+                    .filter(p -> p.getDataHora().toLocalDate().equals(data))
+                    .map(Pedido::calcularPrecoTotal)
+                    .mapToDouble(java.math.BigDecimal::doubleValue)
+                    .sum();
             mapa.put(data, f);
         }
         return mapa;

@@ -9,6 +9,10 @@ import java.math.BigDecimal;
 public interface Item {
 
     public BigDecimal getPreco();
-    
+
     public boolean isDisponivel();
+
+    public Integer getId();
+
+    public String getNome();
 }

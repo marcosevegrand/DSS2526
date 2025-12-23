@@ -11,17 +11,7 @@ import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
 /**
  * DAO para Pedido — contrato mínimo usado pela fachada/ UI.
  */
-public interface PedidoDAO {
-
-    Optional<Pedido> findById(int id);
-
-    List<Pedido> findAll();
-
-    Pedido save(Pedido pedido);
-
-    Pedido update(Pedido pedido);
-
-    void delete(int id);
+public interface PedidoDAO extends GenericDAO<Pedido, Integer> {
 
     List<Pedido> findByEstado(EstadoPedido estado);
 
