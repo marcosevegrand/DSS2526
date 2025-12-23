@@ -1,3 +1,4 @@
+// ...existing code...
 package pt.uminho.dss.restaurante.domain.entity;
 
 import pt.uminho.dss.restaurante.domain.contract.Item;
