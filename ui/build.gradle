@@ -1,6 +1,0 @@
-dependencies {
-    implementation project(':domain')
-    implementation project(':venda')
-    implementation project(':producao')
-    implementation project(':estatistica')
-}
