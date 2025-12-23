@@ -1,11 +1,12 @@
-package pt.uminho.dss.restaurante.core.domain.entity;
+package pt.uminho.dss.restaurante.domain.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import pt.uminho.dss.restaurante.core.domain.enumeration.EstadoPedido;
-import pt.uminho.dss.restaurante.core.domain.enumeration.ModoConsumo;
+
+import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
+import pt.uminho.dss.restaurante.domain.enumeration.ModoConsumo;
 
 public class Pedido {
 

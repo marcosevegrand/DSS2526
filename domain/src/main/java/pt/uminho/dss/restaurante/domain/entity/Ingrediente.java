@@ -1,7 +1,8 @@
-package pt.uminho.dss.restaurante.core.domain.entity;
+package pt.uminho.dss.restaurante.domain.entity;
 
 import java.util.Set;
-import pt.uminho.dss.restaurante.core.domain.enumeration.Alergenico;
+
+import pt.uminho.dss.restaurante.domain.enumeration.Alergenico;
 
 public class Ingrediente {
 

@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(':core')
+    implementation project(':domain')
     implementation project(':venda')
     implementation project(':producao')
     implementation project(':estatistica')

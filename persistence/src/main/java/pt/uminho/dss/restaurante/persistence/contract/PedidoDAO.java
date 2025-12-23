@@ -3,8 +3,9 @@ package pt.uminho.dss.restaurante.persistence.contract;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import pt.uminho.dss.restaurante.core.domain.entity.Pedido;
-import pt.uminho.dss.restaurante.core.domain.enumeration.EstadoPedido;
+
+import pt.uminho.dss.restaurante.domain.entity.Pedido;
+import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
 
 public interface PedidoDAO extends GenericDAO<Pedido, Integer> {
     /**

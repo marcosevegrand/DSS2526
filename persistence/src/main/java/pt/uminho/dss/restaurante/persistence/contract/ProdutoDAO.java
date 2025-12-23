@@ -2,7 +2,8 @@ package pt.uminho.dss.restaurante.persistence.contract;
 
 import java.util.List;
 import java.util.Optional;
-import pt.uminho.dss.restaurante.core.domain.entity.Produto;
+
+import pt.uminho.dss.restaurante.domain.entity.Produto;
 
 public interface ProdutoDAO extends GenericDAO<Produto, Integer> {
     /**

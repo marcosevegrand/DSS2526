@@ -1,4 +1,4 @@
-package pt.uminho.dss.restaurante.core.domain.enumeration;
+package pt.uminho.dss.restaurante.domain.enumeration;
 
 public enum Alergenico {
     PEIXE,

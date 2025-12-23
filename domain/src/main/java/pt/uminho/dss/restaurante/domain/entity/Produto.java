@@ -1,8 +1,9 @@
-package pt.uminho.dss.restaurante.core.domain.entity;
+package pt.uminho.dss.restaurante.domain.entity;
 
 import java.util.Map;
 import java.util.Set;
-import pt.uminho.dss.restaurante.core.domain.contract.Item;
+
+import pt.uminho.dss.restaurante.domain.contract.Item;
 
 public class Produto implements Item {
 

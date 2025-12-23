@@ -1,4 +1,4 @@
-package pt.uminho.dss.restaurante.core.domain.entity;
+package pt.uminho.dss.restaurante.domain.entity;
 
 import java.util.HashMap;
 import java.util.List;
