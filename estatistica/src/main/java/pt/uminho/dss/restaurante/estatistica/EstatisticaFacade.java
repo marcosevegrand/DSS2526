@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import pt.uminho.dss.restaurante.core.domain.entity.LinhaPedido;
+// import pt.uminho.dss.restaurante.core.domain.entity.LinhaPedido;
 import pt.uminho.dss.restaurante.core.domain.entity.Pedido;
 import pt.uminho.dss.restaurante.core.domain.enumeration.EstadoPedido;
 import pt.uminho.dss.restaurante.persistence.contract.PedidoDAO;
@@ -51,16 +51,16 @@ public class EstatisticaFacade implements IEstatistica {
         LocalDate dataFim,
         int top
     ) {
-        List<Pedido> pedidos = obterPedidosPagosNoPeriodo(dataInicio, dataFim);
+        // List<Pedido> pedidos = obterPedidosPagosNoPeriodo(dataInicio, dataFim);
         Map<Integer, Integer> contagemPorItem = new HashMap<>();
 
-        for (Pedido p : pedidos) {
-            for (LinhaPedido linha : p.getLinhas()) {
-                int idItem = linha.getItem().getId();
-                int quantidade = linha.getQuantidade();
-                contagemPorItem.merge(idItem, quantidade, Integer::sum);
-            }
-        }
+        // for (Pedido p : pedidos) {
+        //     for (LinhaPedido linha : p.getLinhas()) {
+        //         int idItem = linha.getItem().getId();
+        //         int quantidade = linha.getQuantidade();
+        //         contagemPorItem.merge(idItem, quantidade, Integer::sum);
+        //     }
+        // }
 
         return contagemPorItem.entrySet().stream()
             .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
