@@ -1,38 +1,8 @@
-package pt.uminho.dss.fastfood.venda;
-
-import pt.uminho.dss.restaurante.core.domain.entity.Pedido;
-import pt.uminho.dss.restaurante.core.domain.enumeration.ModoConsumo;
+package pt.uminho.dss.restaurante.venda;
 
 // Se tiveres DTOs, importa-os também daqui ou de um subpackage dto do módulo venda.
 
 public interface IVenda {
     // Ciclo de vida do pedido
-    Pedido iniciarPedido(
-        ModoConsumo modoConsumo,
-        int idTerminal,
-        int idFuncionario
-    );
 
-    Pedido adicionarItem(
-        int idPedido,
-        int idProdutoOuMenu,
-        String personalizacao, // ou um DTO próprio
-        int quantidade
-    );
-
-    Pedido removerItem(int idPedido, int idLinhaPedido);
-
-    Pedido editarItem(
-        int idPedido,
-        int idLinhaPedido,
-        String novaPersonalizacao,
-        int novaQuantidade
-    );
-
-    Pedido cancelarPedido(int idPedido);
-
-    Pedido confirmarPedido(int idPedido);
-
-    // Consulta
-    Pedido obterPedido(int idPedido);
 }

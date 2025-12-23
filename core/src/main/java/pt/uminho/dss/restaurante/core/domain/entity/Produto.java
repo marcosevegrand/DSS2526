@@ -1,17 +1,17 @@
 package pt.uminho.dss.restaurante.core.domain.entity;
 
+import java.util.Map;
+import java.util.Set;
 import pt.uminho.dss.restaurante.core.domain.contract.Item;
 
 public class Produto implements Item {
 
     private int id;
     private String nome;
-    private String descricao;
-    private float precoBase;
-    private int tempoPreparacaoBase; // em minutos
-
-    // Opcional: tipo/categoria (hamburguer, bebida, sobremesa, etc.)
-    private String categoria;
+    private float preco;
+    private int tempoPreparacao;
+    private Set<Ingrediente> ingredientes;
+    private Map<Integer, Integer> ingredientesQuantidade;
 
     // -------------------------------------------------
     // Construtores
@@ -20,46 +20,25 @@ public class Produto implements Item {
     public Produto(
         int id,
         String nome,
-        String descricao,
-        float precoBase,
-        int tempoPreparacaoBase,
-        String categoria
+        float preco,
+        Set<Ingrediente> ingredientes,
+        Map<Integer, Integer> ingredientesQuantidade
     ) {
         this.id = id;
         this.nome = nome;
-        this.descricao = descricao;
-        this.precoBase = precoBase;
-        this.tempoPreparacaoBase = tempoPreparacaoBase;
-        this.categoria = categoria;
-    }
-
-    public Produto(
-        String nome,
-        String descricao,
-        String tipo,
-        float precoBase,
-        int tempoPreparacaoBase,
-        String categoria
-    ) {
-        this(0, nome, descricao, precoBase, tempoPreparacaoBase, categoria);
+        this.preco = preco;
+        for (Ingrediente i : ingredientes) {
+            this.ingredientes.add(i);
+            this.ingredientesQuantidade.put(
+                i.getId(),
+                ingredientesQuantidade.get(i.getId())
+            );
+            this.tempoPreparacao += i.getTempoPreparacao();
+        }
     }
 
     // Construtor vazio para ORM / frameworks
     protected Produto() {}
-
-    // -------------------------------------------------
-    // Lógica simples
-    // -------------------------------------------------
-
-    public float calcularPreco(int quantidade) {
-        return precoBase * quantidade;
-    }
-
-    public int calcularTempoPreparacao(int quantidade) {
-        // Em fast food costuma ser o mesmo tempo para 1 ou vários,
-        // mas podes ajustar para multiplicar se fizer sentido.
-        return tempoPreparacaoBase;
-    }
 
     // -------------------------------------------------
     // Getters e setters
@@ -70,7 +49,6 @@ public class Produto implements Item {
     }
 
     public void setId(int id) {
-        // opcional, se o ID vier da BD
         this.id = id;
     }
 
@@ -82,43 +60,19 @@ public class Produto implements Item {
         this.nome = nome;
     }
 
-    public String getDescricao() {
-        return descricao;
+    public float getPreco() {
+        return preco;
     }
 
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
+    public void setPreco(float preco) {
+        this.preco = preco;
     }
 
-    public float getPrecoBase() {
-        return precoBase;
+    public int getTempoPreparacao() {
+        return tempoPreparacao;
     }
 
-    public void setPrecoBase(float precoBase) {
-        this.precoBase = precoBase;
-    }
-
-    public int getTempoPreparacaoBase() {
-        return tempoPreparacaoBase;
-    }
-
-    public void setTempoPreparacaoBase(int tempoPreparacaoBase) {
-        this.tempoPreparacaoBase = tempoPreparacaoBase;
-    }
-
-    public String getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-
-    public float calcularPreco(int quantidade, String personalizacao) {
-        return precoBase * quantidade;
-    }
-
-    public int calcularTempoPreparacao(int quantidade, String personalizacao) {
-        return tempoPreparacaoBase;
+    public void setTempoPreparacao(int tempoPreparacaoBase) {
+        this.tempoPreparacao = tempoPreparacaoBase;
     }
 }
