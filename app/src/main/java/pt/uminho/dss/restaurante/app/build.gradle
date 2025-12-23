@@ -12,5 +12,5 @@ dependencies {
 }
 
 application {
-    mainClass = 'pt.uminho.dss.fastfood.app.App'
+    mainClass = 'pt.uminho.dss.restaurante.app.App'
 }
