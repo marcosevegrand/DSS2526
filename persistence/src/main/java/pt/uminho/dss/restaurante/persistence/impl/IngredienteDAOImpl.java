@@ -12,27 +12,27 @@ import java.util.Optional;
  */
 public class IngredienteDAOImpl implements IngredienteDAO {
 
-    private static final Map<Integer, Ingrediente> INGREDIENTES = new ConcurrentHashMap<>();
-    private static int nextId = 1;
+    private static final Map<Long, Ingrediente> INGREDIENTES = new ConcurrentHashMap<>();
+    private static long nextId = 1L;
 
     static {
         // exemplos iniciais
         Ingrediente i1 = new Ingrediente();
-        i1.setId(1);
+        i1.setId(1L);
         i1.setNome("Carne");
         INGREDIENTES.put(i1.getId(), i1);
 
         Ingrediente i2 = new Ingrediente();
-        i2.setId(2);
+        i2.setId(2L);
         i2.setNome("Queijo");
         INGREDIENTES.put(i2.getId(), i2);
 
         Ingrediente i3 = new Ingrediente();
-        i3.setId(3);
+        i3.setId(3L);
         i3.setNome("Batata");
         INGREDIENTES.put(i3.getId(), i3);
 
-        nextId = 4;
+        nextId = 4L;
     }
 
     @Override

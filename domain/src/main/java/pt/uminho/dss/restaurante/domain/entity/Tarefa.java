@@ -17,25 +17,38 @@ public class Tarefa implements Serializable {
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
 
+    // Construtor
+
     public Tarefa() {
         this.concluida = false;
         this.dataCriacao = LocalDateTime.now();
     }
 
+    // Lógica Simples
+
+    public EstacaoTrabalho getEstacao() { return passo.getEstacao(); }
+
+    // Getters e Setters
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    
     public Pedido getPedido() { return pedido; }
     public void setPedido(Pedido pedido) { this.pedido = pedido; }
+    
     public Produto getProduto() { return produto; }
     public void setProduto(Produto produto) { this.produto = produto; }
+    
     public void setPasso(PassoProducao passo) { this.passo = passo; }
     public PassoProducao getPasso() { return passo; }
-    public EstacaoTrabalho getEstacao() { return passo.getEstacao(); }
+
     public Boolean getConcluida() { return concluida; }
+
     public void setConcluida(Boolean concluida) { 
         this.concluida = concluida;
         if (concluida) this.dataConclusao = LocalDateTime.now();
     }
+
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public LocalDateTime getDataConclusao() { return dataConclusao; }
 }
