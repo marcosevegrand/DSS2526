@@ -1,11 +1,11 @@
-package pt.uminho.dss.restaurante.domain.entity;
+package dss2526.domain.entity;
+
+import dss2526.domain.contract.Item;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import pt.uminho.dss.restaurante.domain.contract.Item;
 
 public class Catalogo implements Serializable {
     private Integer id;

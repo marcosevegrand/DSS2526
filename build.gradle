@@ -1,18 +1,17 @@
-allprojects {
-    repositories {
-        mavenCentral()
-    }
+plugins {
+    id 'java'
+    id 'application'
 }
 
-subprojects {
-    apply plugin: 'java'
+repositories {
+    mavenCentral()
+}
 
-    java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
+dependencies {
+    implementation 'org.hibernate.orm:hibernate-core:6.4.0.Final'
+    // implementation 'com.mysql:mysql-connector-j:8.3.0'
+}
 
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-    }
+application {
+    mainClass = 'pt.uminho.dss.restaurante.app.App'
 }

@@ -1,4 +1,4 @@
-package pt.uminho.dss.restaurante.domain.contract;
+package dss2526.domain.contract;
 
 import java.math.BigDecimal;
 

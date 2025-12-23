@@ -1,4 +1,4 @@
-package pt.uminho.dss.restaurante.domain.enumeration;
+package dss2526.domain.enumeration;
 
 public enum EstacaoTrabalho {
     BEBIDAS,         // prepara bebidas

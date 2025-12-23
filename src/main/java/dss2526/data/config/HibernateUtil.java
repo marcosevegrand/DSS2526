@@ -1,1 +1,5 @@
-package pt.uminho.dss.restaurante.persistence.config;
+package dss2526.data.config;
+
+class HibernateUtil {
+    // Classe utilitária para configuração do Hibernate
+}

@@ -1,15 +1,14 @@
-package pt.uminho.dss.restaurante.venda;
+package dss2526.venda;
 
+import dss2526.domain.entity.Pedido;
+import dss2526.domain.contract.Item;
 import java.util.List;
-
-import pt.uminho.dss.restaurante.domain.entity.Pedido;
-import pt.uminho.dss.restaurante.domain.contract.Item;
 
 /**
  * API mínima utilizada pela UI do terminal de vendas.
  * Implementações podem delegar para DAOs / serviços de domínio.
  */
-public interface IVenda {
+public interface IVendaFacade {
 
     /**
      * Cria e persiste um novo pedido. Retorna o pedido criado.

@@ -1,13 +1,13 @@
-package pt.uminho.dss.restaurante.venda;
+package dss2526.venda;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import pt.uminho.dss.restaurante.domain.entity.*;
-import pt.uminho.dss.restaurante.domain.enumeration.*;
-import pt.uminho.dss.restaurante.persistence.contract.*;
+import dss2526.domain.entity.*;
+import dss2526.domain.enumeration.*;
+import dss2526.data.contract.*;
 
 /**
  * Fachada de venda — versão que usa Optional no findById e métodos de Pedido addLinha/removeLinhaPorItem.

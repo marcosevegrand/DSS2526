@@ -1,4 +1,4 @@
-package pt.uminho.dss.restaurante.persistence.contract;
+package dss2526.data.contract;
 
 import java.util.List;
 

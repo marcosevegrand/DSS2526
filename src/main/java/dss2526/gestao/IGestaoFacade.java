@@ -1,9 +1,9 @@
-package pt.uminho.dss.restaurante.estatistica;
+package dss2526.gestao;
 
 import java.time.LocalDate;
 import java.util.Map;
 
-public interface IEstatistica {
+public interface IGestaoFacade {
     
     /**
      * Calcula a faturação total num período de tempo.

@@ -12,4 +12,3 @@ plugins {
 }
 
 rootProject.name = 'DSS2526'
-include 'domain', 'persistence','venda', 'producao', 'estatistica', 'ui', 'app'

@@ -1,10 +1,9 @@
-// ...existing code...
-package pt.uminho.dss.restaurante.persistence.contract;
+package dss2526.data.contract;
 
 import java.util.List;
 import java.util.Optional;
 
-import pt.uminho.dss.restaurante.domain.entity.Menu;
+import dss2526.domain.entity.Menu;
 
 /**
  * DAO para Menu — contrato mínimo usado pela fachada/ UI.

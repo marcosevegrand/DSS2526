@@ -1,6 +1,6 @@
-package pt.uminho.dss.restaurante.domain.entity;
+package dss2526.domain.entity;
 
-import pt.uminho.dss.restaurante.domain.enumeration.EstacaoTrabalho;
+import dss2526.domain.enumeration.EstacaoTrabalho;
 
 import java.io.Serializable;
 

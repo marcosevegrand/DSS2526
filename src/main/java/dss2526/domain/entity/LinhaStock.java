@@ -1,4 +1,4 @@
-package pt.uminho.dss.restaurante.domain.entity;
+package dss2526.domain.entity;
 
 public class LinhaStock {
     private Integer id;

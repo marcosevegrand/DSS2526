@@ -1,6 +1,6 @@
-package pt.uminho.dss.restaurante.domain.entity;
+package dss2526.domain.entity;
 
-import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
+import dss2526.domain.enumeration.EstadoPedido;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

@@ -1,9 +1,9 @@
-package pt.uminho.dss.restaurante.persistence.contract;
+package dss2526.data.contract;
 
 import java.util.List;
 import java.util.Optional;
 
-import pt.uminho.dss.restaurante.domain.entity.Ingrediente;
+import dss2526.domain.entity.Ingrediente;
 
 /**
  * DAO para Ingrediente — contrato mínimo usado pela aplicação.

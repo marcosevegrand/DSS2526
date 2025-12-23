@@ -1,9 +1,8 @@
-// ...existing code...
-package pt.uminho.dss.restaurante.domain.entity;
+package dss2526.domain.entity;
 
 import java.io.Serializable;
 
-import pt.uminho.dss.restaurante.domain.enumeration.Alergenico;
+import dss2526.domain.enumeration.Alergenico;
 
 /**
  * Entidade pura representando um ingrediente.

@@ -1,4 +1,4 @@
-package pt.uminho.dss.restaurante.persistence.config;
+package dss2526.data.config;
 
 import java.io.IOException;
 import java.io.InputStream;
