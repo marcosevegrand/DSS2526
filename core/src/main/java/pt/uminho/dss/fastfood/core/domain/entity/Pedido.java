@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import pt.uminho.dss.fastfood.core.domain.entity.LinhaPedido;
 import pt.uminho.dss.fastfood.core.domain.enumeration.EstadoPedido;
 import pt.uminho.dss.fastfood.core.domain.enumeration.ModoConsumo;
 import pt.uminho.dss.fastfood.core.domain.contract.Item;

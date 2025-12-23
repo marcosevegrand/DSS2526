@@ -1,7 +1,6 @@
 package pt.uminho.dss.fastfood.ui.views;
 
 import pt.uminho.dss.fastfood.core.domain.entity.Pedido;
-import pt.uminho.dss.fastfood.core.domain.entity.Talao;
 import pt.uminho.dss.fastfood.core.domain.enumeration.ModoConsumo;
 import pt.uminho.dss.fastfood.venda.IVenda;
 
@@ -86,8 +85,6 @@ public class TerminalVendaView {
         if (pedidoAtual == null) {
             return;
         }
-        float total = pedidoAtual.getPrecoTotal();
-        int tempo = pedidoAtual.getTempoEsperaEstimado();
         // Atualiza labels/elementos gráficos com total e tempo:
         // lblTotal.setText(String.format("%.2f €", total));
         // lblTempo.setText(tempo + " min");
@@ -146,7 +143,6 @@ public class TerminalVendaView {
 
     public void mostrarEcraFinal() {
         garantirPedidoAtual();
-        Talao talao = venda.emitirTalao(pedidoAtual.getId());
 
         // Mostra número do pedido, valor pago, tempo de espera, etc.
         // lblNumero.setText("Pedido nº " + talao.getNumero());

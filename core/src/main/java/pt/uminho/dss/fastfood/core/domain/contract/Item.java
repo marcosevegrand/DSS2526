@@ -1,6 +1,5 @@
 package pt.uminho.dss.fastfood.core.domain.contract;
 
-import pt.uminho.dss.fastfood.core.domain.enumeration.TipoItem;
 
 public interface Item {
 
