@@ -38,6 +38,12 @@ public interface IVenda {
      */
     void cancelarPedido(int idPedido);
 
+    // Altera a assinatura do adicionarItem
+    void adicionarItem(int idPedido, int idItem, int quantidade, String observacao);
+
+    // Adiciona o novo método para a nota geral do pedido
+    void adicionarNotaAoPedido(int idPedido, String nota);
+
     /**
      * Obtém o pedido (pode retornar null se não existir).
      */

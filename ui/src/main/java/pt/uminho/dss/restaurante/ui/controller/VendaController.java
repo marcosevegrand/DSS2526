@@ -75,5 +75,12 @@ public class VendaController {
         }
         return -1;
     }
+
+    public void adicionarItem(int idPedido, int idItem, int quantidade, String observacao) {
+        venda.adicionarItem(idPedido, idItem, quantidade, observacao);
+    }
+    
+    public void adicionarNotaAoPedido(int idPedido, String nota) {
+        venda.adicionarNotaAoPedido(idPedido, nota);
+    }
 }
-// ...existing code...

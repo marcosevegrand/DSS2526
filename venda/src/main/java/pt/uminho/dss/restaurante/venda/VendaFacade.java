@@ -41,22 +41,25 @@ public class VendaFacade {
     }
 
     @Override
-    public void adicionarItem(int idPedido, int idItem, int quantidade) {
+    public void adicionarItem(int idPedido, int idItem, int quantidade, String observacao) {
         Pedido pedido = findPedidoOrThrow(idPedido);
 
+        // Tenta encontrar como Produto
         Optional<Produto> optProduto = produtoDAO.findById(idItem);
         if (optProduto.isPresent()) {
             Produto produto = optProduto.get();
-            LinhaPedido linha = new LinhaPedido(produto, quantidade);
+            // IMPORTANTE: O construtor de LinhaPedido deve aceitar esta String
+            LinhaPedido linha = new LinhaPedido(produto, quantidade, observacao);
             pedido.addLinha(linha);
             pedidoDAO.update(pedido);
             return;
         }
 
+        // Tenta encontrar como Menu
         Optional<Menu> optMenu = menuDAO.findById(idItem);
         if (optMenu.isPresent()) {
             Menu menu = optMenu.get();
-            LinhaPedido linha = new LinhaPedido(menu, quantidade);
+            LinhaPedido linha = new LinhaPedido(menu, quantidade, observacao);
             pedido.addLinha(linha);
             pedidoDAO.update(pedido);
             return;
@@ -104,4 +107,5 @@ public class VendaFacade {
     public List<Menu> listarMenus() {
         return menuDAO.findAll();
     }
+
 }
