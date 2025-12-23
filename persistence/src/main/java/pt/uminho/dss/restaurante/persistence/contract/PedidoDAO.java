@@ -1,3 +1,4 @@
+// ...existing code...
 package pt.uminho.dss.restaurante.persistence.contract;
 
 import java.time.LocalDate;
@@ -7,22 +8,24 @@ import java.util.Optional;
 import pt.uminho.dss.restaurante.domain.entity.Pedido;
 import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
 
-public interface PedidoDAO extends GenericDAO<Pedido, Integer> {
-    /**
-     * Devolve todos os pedidos com um determinado estado
-     * (por exemplo, PAGO, EM_ESPERA_PRODUCAO, etc.).
-     */
+/**
+ * DAO para Pedido — contrato mínimo usado pela fachada/ UI.
+ */
+public interface PedidoDAO {
+
+    Optional<Pedido> findById(int id);
+
+    List<Pedido> findAll();
+
+    Pedido save(Pedido pedido);
+
+    Pedido update(Pedido pedido);
+
+    void delete(int id);
+
     List<Pedido> findByEstado(EstadoPedido estado);
 
-    /**
-     * Devolve todos os pedidos criados num certo dia.
-     * Útil para estatísticas e listagens.
-     */
     List<Pedido> findByData(LocalDate data);
 
-    /**
-     * Procura o último pedido criado num terminal específico,
-     * se precisares de saber qual foi o último número emitido.
-     */
     Optional<Pedido> findUltimoPorTerminal(int idTerminal);
 }

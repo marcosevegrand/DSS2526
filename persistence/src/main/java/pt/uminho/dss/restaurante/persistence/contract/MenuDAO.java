@@ -1,3 +1,4 @@
+// ...existing code...
 package pt.uminho.dss.restaurante.persistence.contract;
 
 import java.util.List;
@@ -5,14 +6,18 @@ import java.util.Optional;
 
 import pt.uminho.dss.restaurante.domain.entity.Menu;
 
-public interface MenuDAO extends GenericDAO<Menu, Integer> {
-    /**
-     * Procura menus por nome (ou parte do nome).
-     */
-    List<Menu> findByNome(String nomeParcial);
+/**
+ * DAO para Menu — contrato mínimo usado pela fachada/ UI.
+ */
+public interface MenuDAO {
 
-    /**
-     * Devolve o menu com nome exato, se existir.
-     */
-    Optional<Menu> findByNomeExato(String nome);
+    Optional<Menu> findById(int id);
+
+    List<Menu> findAll();
+
+    Menu save(Menu menu);
+
+    Menu update(Menu menu);
+
+    void delete(int id);
 }

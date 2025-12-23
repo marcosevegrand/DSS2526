@@ -1,55 +1,32 @@
+// ...existing code...
 package pt.uminho.dss.restaurante.domain.entity;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
-import pt.uminho.dss.restaurante.domain.contract.Item;
+/**
+ * Entidade Produto — tornar pública e disponibilizar construtor sem-args.
+ */
+public class Produto {
 
-public class Produto implements Item {
-
-    private int id;
+    private Integer id;
     private String nome;
-    private float preco;
-    private int tempoPreparacao;
-    private Set<Ingrediente> ingredientes;
-    private Map<Integer, Integer> ingredientesQuantidade;
+    private double preco;
 
-    // -------------------------------------------------
-    // Construtores
-    // -------------------------------------------------
+    // Construtor sem-args público exigido por código que faz "new Produto()"
+    public Produto() {
+    }
 
-    public Produto(
-        int id,
-        String nome,
-        float preco,
-        Set<Ingrediente> ingredientes,
-        Map<Integer, Integer> ingredientesQuantidade
-    ) {
+    public Produto(Integer id, String nome, double preco) {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
-        for (Ingrediente i : ingredientes) {
-            this.ingredientes.add(i);
-            this.ingredientesQuantidade.put(
-                i.getId(),
-                ingredientesQuantidade.get(i.getId())
-            );
-            this.tempoPreparacao += i.getTempoPreparacao();
-        }
     }
 
-    // Construtor vazio para ORM / frameworks
-    protected Produto() {}
-
-    // -------------------------------------------------
-    // Getters e setters
-    // -------------------------------------------------
-
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -58,22 +35,36 @@ public class Produto implements Item {
     }
 
     public void setNome(String nome) {
-        this.nome = nome;
+        this.nome = Objects.requireNonNull(nome);
     }
 
-    public float getPreco() {
+    public double getPreco() {
         return preco;
     }
 
-    public void setPreco(float preco) {
+    public void setPreco(double preco) {
         this.preco = preco;
     }
 
-    public int getTempoPreparacao() {
-        return tempoPreparacao;
+    @Override
+    public String toString() {
+        return "Produto{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", preco=" + preco +
+                '}';
     }
 
-    public void setTempoPreparacao(int tempoPreparacaoBase) {
-        this.tempoPreparacao = tempoPreparacaoBase;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Produto)) return false;
+        Produto produto = (Produto) o;
+        return Objects.equals(id, produto.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

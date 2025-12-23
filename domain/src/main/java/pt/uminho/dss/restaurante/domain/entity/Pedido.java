@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
 import pt.uminho.dss.restaurante.domain.enumeration.ModoConsumo;
 
@@ -40,15 +39,65 @@ public class Pedido {
         this.tempoEsperaEstimado = 0;
     }
 
-    // Construtor vazio para ORM, se precisares
+    // Construtor vazio para ORM
     protected Pedido() {}
 
     // --------------------------------------------------
-    // Getters (e setters mínimos, se precisares)
+    // MÉTODOS DE NEGÓCIO (FALTAVAM)
+    // --------------------------------------------------
+
+    /**
+     * Adiciona linha ao pedido e actualiza total.
+     */
+    public void addLinha(LinhaPedido linha) {
+        linhas.add(linha);
+        actualizarPrecoTotal();
+    }
+
+    /**
+     * Remove linhas por ID de item e quantidade.
+     * Usa métodos da LinhaPedido.
+     */
+    public void removeLinhaPorItem(int idItem, int quantidade) {
+        linhas.removeIf(linha -> {
+            if (linha.getItemId() == idItem && linha.podeRemover(quantidade)) {
+                linha.decrementarQuantidade(quantidade);
+                return linha.getQuantidade() == 0;
+            }
+            return false;
+        });
+        actualizarPrecoTotal();
+    }
+
+    /**
+     * Actualiza precoTotal somando subtotais das linhas.
+     */
+    private void actualizarPrecoTotal() {
+        this.precoTotal = (float) linhas.stream()
+            .mapToDouble(LinhaPedido::getSubtotal)
+            .sum();
+    }
+
+    /**
+     * Marca como pago (para VendaFacade).
+     */
+    public void pagar() {
+        if (this.estado == EstadoPedido.EM_CONSTRUCAO) {
+            this.estado = EstadoPedido.PAGO;
+            this.dataHoraPagamento = LocalDateTime.now();
+        }
+    }
+
+    // --------------------------------------------------
+    // Getters e Setters
     // --------------------------------------------------
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public ModoConsumo getModoConsumo() {
@@ -59,12 +108,20 @@ public class Pedido {
         return estado;
     }
 
+    public void setEstado(EstadoPedido estado) {
+        this.estado = estado;
+    }
+
     public LocalDateTime getDataHoraCriacao() {
         return dataHoraCriacao;
     }
 
     public LocalDateTime getDataHoraPagamento() {
         return dataHoraPagamento;
+    }
+
+    public void setDataHoraPagamento(LocalDateTime dataHoraPagamento) {
+        this.dataHoraPagamento = dataHoraPagamento;
     }
 
     public List<LinhaPedido> getLinhas() {
@@ -77,6 +134,10 @@ public class Pedido {
 
     public int getTempoEsperaEstimado() {
         return tempoEsperaEstimado;
+    }
+
+    public void setTempoEsperaEstimado(int tempoEsperaEstimado) {
+        this.tempoEsperaEstimado = tempoEsperaEstimado;
     }
 
     public int getIdTerminal() {

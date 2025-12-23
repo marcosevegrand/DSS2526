@@ -1,39 +1,30 @@
+// ...existing code...
 package pt.uminho.dss.restaurante.domain.entity;
 
-import java.util.Set;
+import java.util.Objects;
 
-import pt.uminho.dss.restaurante.domain.enumeration.Alergenico;
-
+/**
+ * Entidade Ingrediente — pública com construtor sem-args para uso pelos DAOs.
+ */
 public class Ingrediente {
 
-    private int id;
+    private Integer id;
     private String nome;
-    private String unidadeMedida;
-    private int tempoPreparacao;
-    private Set<Alergenico> alergenicos;
 
-    public Ingrediente(
-        int id,
-        String nome,
-        String unidadeMedida,
-        Set<Alergenico> alergenicos
-    ) {
-        this.id = id;
-        this.nome = nome;
-        this.unidadeMedida = unidadeMedida;
-        this.alergenicos = alergenicos;
+    // Construtor sem-args público
+    public Ingrediente() {
     }
 
-    // Construtor vazio para ORM / frameworks
-    protected Ingrediente() {}
+    public Ingrediente(Integer id, String nome) {
+        this.id = id;
+        this.nome = nome;
+    }
 
-    // GETTERS & SETTERS
-
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -42,38 +33,28 @@ public class Ingrediente {
     }
 
     public void setNome(String nome) {
-        this.nome = nome;
+        this.nome = Objects.requireNonNull(nome);
     }
 
-    public String getUnidadeMedida() {
-        return unidadeMedida;
+    @Override
+    public String toString() {
+        return "Ingrediente{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                '}';
     }
 
-    public void setUnidadeMedida(String unidadeMedida) {
-        this.unidadeMedida = unidadeMedida;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Ingrediente)) return false;
+        Ingrediente that = (Ingrediente) o;
+        return Objects.equals(id, that.id);
     }
 
-    public int getTempoPreparacao() {
-        return tempoPreparacao;
-    }
-
-    public void setTempoPreparacao(int tempoPreparacao) {
-        this.tempoPreparacao = tempoPreparacao;
-    }
-
-    public Set<Alergenico> getAlergenicos() {
-        return alergenicos;
-    }
-
-    public void setAlergenicos(Set<Alergenico> alergenicos) {
-        this.alergenicos = alergenicos;
-    }
-
-    public void addAlergenico(Alergenico alergenico) {
-        this.alergenicos.add(alergenico);
-    }
-
-    public void removeAlergenico(Alergenico alergenico) {
-        this.alergenicos.remove(alergenico);
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
+// ...existing code...
