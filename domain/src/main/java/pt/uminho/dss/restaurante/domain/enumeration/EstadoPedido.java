@@ -1,9 +1,10 @@
 package pt.uminho.dss.restaurante.domain.enumeration;
 
 public enum EstadoPedido {
-    EM_CONSTRUCAO,
-    AGUARDA_PAGAMENTO,
-    PAGO,
+    INICIADO,
+    CONFIRMADO,
     CANCELADO,
-    EM_ESPERA_PRODUCAO,
+    EM_PREPARACAO,
+    PRONTO,
+    ENTREGUE
 }

@@ -7,5 +7,4 @@ public enum EstacaoTrabalho {
     CAIXA,           // pagamentos
     GRELHADOR,       // grelha
     FRITADEIRA,      // frituras
-    GERENCIA         // relatórios
 }

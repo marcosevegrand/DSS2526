@@ -1,89 +1,43 @@
 package pt.uminho.dss.restaurante.domain.entity;
 
+import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import pt.uminho.dss.restaurante.domain.enumeration.EstadoPedido;
-import pt.uminho.dss.restaurante.domain.enumeration.ModoConsumo;
-
-public class Pedido {
-
-    private int id;
-    private ModoConsumo modoConsumo;
+public class Pedido implements Serializable {
+    private Long id;
+    private Boolean takeaway;
     private EstadoPedido estado;
+    private LocalDateTime dataHora;
+    private BigDecimal total;
+    private List<LinhaPedido> linhasPedido = new ArrayList<>();
 
-    private LocalDateTime dataHoraCriacao;
-    private LocalDateTime dataHoraPagamento;
-
-    private List<LinhaPedido> linhas;
-
-    private float precoTotal;
-    private int tempoEsperaEstimado; // em minutos
-
-    private int idTerminal;
-    private int idFuncionario; // que abriu/acompanha o pedido
-
-    // --------------------------------------------------
-    // Construtores
-    // --------------------------------------------------
-
-    public Pedido(ModoConsumo modoConsumo, int idTerminal, int idFuncionario) {
-        this.modoConsumo = modoConsumo;
-        this.estado = EstadoPedido.EM_CONSTRUCAO;
-        this.dataHoraCriacao = LocalDateTime.now();
-        this.linhas = new ArrayList<>();
-        this.idTerminal = idTerminal;
-        this.idFuncionario = idFuncionario;
-        this.precoTotal = 0f;
-        this.tempoEsperaEstimado = 0;
+    public Pedido() {
+        this.dataHora = LocalDateTime.now();
+        this.estado = EstadoPedido.INICIADO;
+        this.total = BigDecimal.ZERO;
     }
 
-    // Construtor vazio para ORM, se precisares
-    protected Pedido() {}
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Boolean getIsTakeaway() { return takeaway; }
+    public void setIsTakeaway(Boolean takeaway) { this.takeaway = takeaway; }
+    public EstadoPedido getEstado() { return estado; }
+    public void setEstado(EstadoPedido estado) { this.estado = estado; }
+    public LocalDateTime getDataHora() { return dataHora; }
+    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+    public BigDecimal getTotal() { return total; }
+    public void setTotal(BigDecimal total) { this.total = total; }
+    public List<LinhaPedido> getLinhasPedido() { return linhasPedido; }
+    public void setLinhasPedido(List<LinhaPedido> linhasPedido) { this.linhasPedido = linhasPedido; }
 
-    // --------------------------------------------------
-    // Getters (e setters mínimos, se precisares)
-    // --------------------------------------------------
-
-    public int getId() {
-        return id;
-    }
-
-    public ModoConsumo getModoConsumo() {
-        return modoConsumo;
-    }
-
-    public EstadoPedido getEstado() {
-        return estado;
-    }
-
-    public LocalDateTime getDataHoraCriacao() {
-        return dataHoraCriacao;
-    }
-
-    public LocalDateTime getDataHoraPagamento() {
-        return dataHoraPagamento;
-    }
-
-    public List<LinhaPedido> getLinhas() {
-        return Collections.unmodifiableList(linhas);
-    }
-
-    public float getPrecoTotal() {
-        return precoTotal;
-    }
-
-    public int getTempoEsperaEstimado() {
-        return tempoEsperaEstimado;
-    }
-
-    public int getIdTerminal() {
-        return idTerminal;
-    }
-
-    public int getIdFuncionario() {
-        return idFuncionario;
+    public void calcularTotal() {
+        this.total = linhasPedido.stream()
+                .map(l -> l.getPrecoUnitario().multiply(new BigDecimal(l.getQuantidade())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
