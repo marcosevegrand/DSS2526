@@ -1,0 +1,16 @@
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation project(':core')
+    implementation project(':persistence')
+    implementation project(':venda')
+    implementation project(':producao')
+    implementation project(':estatistica')
+    implementation project(':ui')
+}
+
+application {
+    mainClass = 'pt.uminho.dss.fastfood.app.App'
+}

@@ -1,14 +1,6 @@
-plugins {
-    id 'application'
-}
-
 dependencies {
     implementation project(':core')
     implementation project(':venda')
     implementation project(':producao')
     implementation project(':estatistica')
-}
-
-application {
-    mainClass = 'pt.uminho.dss.fastfood.ui.MainApp'
 }
