@@ -1,7 +1,7 @@
-package pt.uminho.dss.fastfood.persistence;
+package pt.uminho.dss.fastfood.persistence.contract;
 
-import pt.uminho.dss.fastfood.core.domain.Pedido;
-import pt.uminho.dss.fastfood.core.domain.enums.EstadoPedido;
+import pt.uminho.dss.fastfood.core.domain.entity.Pedido;
+import pt.uminho.dss.fastfood.core.domain.enumeration.EstadoPedido;
 
 import java.time.LocalDate;
 import java.util.List;

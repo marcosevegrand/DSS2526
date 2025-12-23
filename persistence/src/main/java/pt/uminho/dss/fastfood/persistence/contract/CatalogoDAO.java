@@ -1,6 +1,6 @@
-package pt.uminho.dss.fastfood.persistence;
+package pt.uminho.dss.fastfood.persistence.contract;
 
-import pt.uminho.dss.fastfood.core.domain.Catalogo;
+import pt.uminho.dss.fastfood.core.domain.entity.Catalogo;
 
 public interface CatalogoDAO extends GenericDAO<Catalogo, Integer> {
 

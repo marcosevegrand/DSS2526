@@ -31,6 +31,6 @@ public class DBConfig {
     private DBConfig() {}
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        return DriverManager.getConnection(URL, USERNAME, PASSWORD);
     }
 }

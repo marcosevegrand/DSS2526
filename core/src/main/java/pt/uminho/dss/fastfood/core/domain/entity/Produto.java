@@ -1,6 +1,8 @@
 package pt.uminho.dss.fastfood.core.domain.entity;
 
-public class Produto {
+import pt.uminho.dss.fastfood.core.domain.contract.Item;
+
+public class Produto implements Item {
 
     private int id;
     private String nome;
@@ -34,6 +36,7 @@ public class Produto {
     public Produto(
         String nome,
         String descricao,
+        String tipo,
         float precoBase,
         int tempoPreparacaoBase,
         String categoria
@@ -86,7 +89,7 @@ public class Produto {
     public void setDescricao(String descricao) {
         this.descricao = descricao;
     }
-
+    
     public float getPrecoBase() {
         return precoBase;
     }
@@ -110,4 +113,14 @@ public class Produto {
     public void setCategoria(String categoria) {
         this.categoria = categoria;
     }
+
+
+    public float calcularPreco(int quantidade, String personalizacao) {
+        return precoBase * quantidade;
+    }
+
+    public int calcularTempoPreparacao(int quantidade, String personalizacao) {
+        return tempoPreparacaoBase;
+    }
+
 }

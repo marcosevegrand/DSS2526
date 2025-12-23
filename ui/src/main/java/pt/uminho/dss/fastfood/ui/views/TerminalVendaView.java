@@ -22,7 +22,7 @@ public class TerminalVendaView {
     // =====================================================
 
     public void mostrarEcraInicial() {
-        // Aqui desenhas o ecrã inicial (UI concreta: JavaFX, Swing, web, etc.)
+        // Aqui desenhas o ecrã inicial (JavaFX, Swing, web, etc.).
         // Botões: "Comer no local" e "Levar".
         // Cada botão chama iniciarPedidoComerNoLocal() ou iniciarPedidoLevar().
     }
@@ -45,22 +45,20 @@ public class TerminalVendaView {
     // =====================================================
 
     public void mostrarEcraCatalogo() {
-        // Renderiza a lista de produtos/menus (vêm de outro serviço, ex.: CatalogoService).
-        // A UI chama adicionarItem(...) ou removerItem(...) de acordo com as ações do cliente.
+        // Renderiza a lista de produtos/menus (via serviço de catálogo).
+        // A UI chama adicionarItem(...) ou removerItem(...) conforme o cliente.
         actualizarResumoNaUI();
     }
 
-    public void adicionarItem(
-        int idProdutoOuMenu,
-        String personalizacao,
-        int quantidade
-    ) {
+    public void adicionarItem(int idProdutoOuMenu,
+                              String personalizacao,
+                              int quantidade) {
         garantirPedidoAtual();
         this.pedidoAtual = venda.adicionarItem(
-            pedidoAtual.getId(),
-            idProdutoOuMenu,
-            personalizacao,
-            quantidade
+                pedidoAtual.getId(),
+                idProdutoOuMenu,
+                personalizacao,
+                quantidade
         );
         actualizarResumoNaUI();
     }
@@ -71,17 +69,15 @@ public class TerminalVendaView {
         actualizarResumoNaUI();
     }
 
-    public void editarItem(
-        int idLinha,
-        int novaQuantidade,
-        String novaPersonalizacao
-    ) {
+    public void editarItem(int idLinha,
+                           int novaQuantidade,
+                           String novaPersonalizacao) {
         garantirPedidoAtual();
         this.pedidoAtual = venda.editarItem(
-            pedidoAtual.getId(),
-            idLinha,
-            novaPersonalizacao,
-            novaQuantidade
+                pedidoAtual.getId(),
+                idLinha,
+                novaPersonalizacao,
+                novaQuantidade
         );
         actualizarResumoNaUI();
     }
@@ -92,9 +88,9 @@ public class TerminalVendaView {
         }
         float total = pedidoAtual.getPrecoTotal();
         int tempo = pedidoAtual.getTempoEsperaEstimado();
-        // Atualiza labels/elementos gráficos com total e tempo.
-        // Ex.: lblTotal.setText(String.format("%.2f €", total));
-        //      lblTempo.setText(tempo + " min");
+        // Atualiza labels/elementos gráficos com total e tempo:
+        // lblTotal.setText(String.format("%.2f €", total));
+        // lblTempo.setText(tempo + " min");
     }
 
     // =====================================================
@@ -121,19 +117,27 @@ public class TerminalVendaView {
 
     public void mostrarEcraPagamento() {
         garantirPedidoAtual();
-        // Renderiza ecrã com opções de pagamento (cartão, MBWay, etc.).
-        // Ao submeter, chama finalizarPagamento(dadosPagamento).
+        // Aqui mostras duas opções, por exemplo:
+        // - "Pagar na caixa" -> chamar onPagarNaCaixa()
+        // - "Pagar aqui (multibanco)" -> chamar onPagarNoTerminal()
     }
 
-    public void finalizarPagamento(DadosPagamentoDTO dados) {
+    // Cliente escolhe pagar no terminal (multibanco assumido OK)
+    public void onPagarNoTerminal() {
         garantirPedidoAtual();
-        PagamentoDTO resultado = venda.pagar(pedidoAtual.getId(), dados);
+        this.pedidoAtual = venda.marcarComoPagoNoTerminal(pedidoAtual.getId());
+        mostrarEcraFinal();
+    }
 
-        if (resultado.sucesso()) {
-            mostrarEcraFinal();
-        } else {
-            // Mostra mensagem de erro e permite tentar de novo ou cancelar.
-        }
+    // Cliente escolhe pagar na caixa: terminal apenas emite talão
+    // e o estado pode permanecer AGUARDA_PAGAMENTO; a caixa depois
+    // chamará marcarComoPagoNaCaixa.
+    public void onPagarNaCaixa() {
+        garantirPedidoAtual();
+        // aqui podes decidir se marcas como pago já ou não;
+        // se quiseres deixar para a caixa, não chamamos nada na venda,
+        // apenas emitimos o talão para o cliente levar.
+        mostrarEcraFinal();
     }
 
     // =====================================================
@@ -145,7 +149,7 @@ public class TerminalVendaView {
         Talao talao = venda.emitirTalao(pedidoAtual.getId());
 
         // Mostra número do pedido, valor pago, tempo de espera, etc.
-        // Ex.: lblNumero.setText("Pedido nº " + talao.getNumero());
+        // lblNumero.setText("Pedido nº " + talao.getNumero());
 
         // Após algum tempo ou botão "Concluir":
         this.pedidoAtual = null;
@@ -159,7 +163,7 @@ public class TerminalVendaView {
     private void garantirPedidoAtual() {
         if (pedidoAtual == null) {
             throw new IllegalStateException(
-                "Não existe pedido em curso no terminal " + idTerminal
+                    "Não existe pedido em curso no terminal " + idTerminal
             );
         }
     }

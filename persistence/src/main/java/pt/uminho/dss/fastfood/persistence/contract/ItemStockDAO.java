@@ -1,7 +1,7 @@
 package pt.uminho.dss.fastfood.persistence.contract;
 
 import java.util.List;
-import pt.uminho.dss.fastfood.core.domain.ItemStock;
+import pt.uminho.dss.fastfood.core.domain.entity.ItemStock;
 
 public interface ItemStockDAO extends GenericDAO<ItemStock, Integer> {
     /**

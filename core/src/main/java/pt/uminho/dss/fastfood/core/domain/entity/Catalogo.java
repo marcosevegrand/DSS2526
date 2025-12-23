@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import pt.uminho.dss.fastfood.core.domain.enumeration.TipoItem;
+
 
 public class Catalogo {
 
@@ -71,7 +73,7 @@ public class Catalogo {
      * Se quiseres tratar Produto/Menu de forma genérica
      * usando um único id vindo da UI.
      */
-    public Object obterItemCatalogo(int idItem, TipoItemCatalogo tipo) {
+    public Object obterItemCatalogo(int idItem, TipoItem tipo) {
         switch (tipo) {
             case PRODUTO:
                 return obterProdutoPorId(idItem).orElse(null);

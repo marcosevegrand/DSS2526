@@ -1,6 +1,6 @@
-package pt.uminho.dss.fastfood.persistence;
+package pt.uminho.dss.fastfood.persistence.contract;
 
-import pt.uminho.dss.fastfood.core.domain.Talao;
+import pt.uminho.dss.fastfood.core.domain.entity.Talao;
 
 import java.util.List;
 
