@@ -8,135 +8,299 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TerminalVendaView extends JPanel {
+    
     private final VendaController vendaController;
     private Pedido pedidoAtual;
     
-    // Gestão de ecrãs (CardLayout)
-    private JPanel cardsContainer; 
-    private CardLayout cardLayout;
+    // Componentes UI
+    private DefaultTableModel cartModel;
+    private JTable cartTable;
+    private JLabel totalLabel;
+    private JPanel gridProdutos;
     
-    // Paleta de Cores
-    private final Color PRIMARY_COLOR = new Color(46, 204, 113); // Verde Esmeralda
-    private final Color ACCENT_COLOR = new Color(52, 152, 219);  // Azul
+    // Cores Locais
+    private final Color PRIMARY = new Color(52, 152, 219);
+    private final Color DANGER = new Color(231, 76, 60);
+    private final Color SUCCESS = new Color(46, 204, 113);
     
     public TerminalVendaView(VendaController vendaController) {
         this.vendaController = vendaController;
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(MainView.CONTENT_BG);
         
-        // --- Header Fixo ---
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(40, 40, 40));
-        header.setBorder(new EmptyBorder(15, 20, 15, 20));
-        
-        JLabel brand = new JLabel("🛒 POS Terminal");
-        brand.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        brand.setForeground(Color.WHITE);
-        header.add(brand, BorderLayout.WEST);
-        
-        add(header, BorderLayout.NORTH);
-
-        // --- Container de Cartões ---
-        cardsContainer = new JPanel(new CardLayout());
-        cardLayout = (CardLayout) cardsContainer.getLayout();
-        
-        // Adiciona as "páginas"
-        cardsContainer.add(painelInicio(), "INICIO");
-        cardsContainer.add(painelSelecao(), "SELECAO");
-        
-        add(cardsContainer, BorderLayout.CENTER);
-    }
-    
-    // Página inicial com botão gigante "Novo Pedido"
-    private JPanel painelInicio() {
-        JPanel p = new JPanel(new GridBagLayout());
-        p.setBackground(Color.WHITE);
-        
-        JButton btnStart = criarBotaoGrande("Novo Pedido", "🍽️", PRIMARY_COLOR);
-        btnStart.addActionListener(e -> {
-            pedidoAtual = vendaController.novoPedido();
-            cardLayout.show(cardsContainer, "SELECAO");
-        });
-        
-        p.add(btnStart);
-        return p;
-    }
-    
-    // Página principal de venda (Grelha de produtos + Carrinho)
-    private JPanel painelSelecao() {
-        JPanel p = new JPanel(new BorderLayout());
-        
-        // --- Coluna Esquerda: Categorias e Grelha ---
-        JPanel left = new JPanel(new BorderLayout());
-        left.setBorder(new EmptyBorder(10,10,10,10));
-        
-        // Categorias
-        JPanel cats = new JPanel(new GridLayout(1, 4, 10, 0));
-        cats.add(new JButton("Menus"));
-        cats.add(new JButton("Hambúrgueres"));
-        cats.add(new JButton("Bebidas"));
-        cats.add(new JButton("Sobremesas"));
-        left.add(cats, BorderLayout.NORTH);
-        
-        // Grelha de Produtos
-        JPanel gridProdutos = new JPanel(new GridLayout(3, 3, 10, 10)); // 3x3 grid
-        gridProdutos.setBorder(new EmptyBorder(10,0,0,0));
-        
-        List<Produto> prods = vendaController.listarProdutos();
-        for(Produto pr : prods) {
-            JButton btn = new JButton("<html><center>" + pr.getNome() + "<br><b>€" + pr.getPreco() + "</b></center></html>");
-            btn.setBackground(new Color(245, 245, 250));
-            btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            btn.addActionListener(e -> adicionarAoCarrinho(pr.getNome(), pr.getPreco().doubleValue()));
-            gridProdutos.add(btn);
+        // Inicializa pedido vazio ou busca do controller
+        try {
+            this.pedidoAtual = vendaController.novoPedido(); 
+        } catch (Exception e) {
+            this.pedidoAtual = new Pedido(); // Fallback
         }
+
+        inicializarUI();
+    }
+    
+    private void inicializarUI() {
+        // --- COLUNA ESQUERDA (Produtos) ---
+        JPanel panelProdutos = new JPanel(new BorderLayout());
+        panelProdutos.setBackground(MainView.CONTENT_BG);
+        panelProdutos.setBorder(new EmptyBorder(10, 10, 10, 10));
         
-        left.add(gridProdutos, BorderLayout.CENTER);
+        // Categorias (Topo)
+        JPanel categoriasPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        categoriasPanel.setBackground(MainView.CONTENT_BG);
+        String[] cats = {"Todos", "Menus", "Bebidas", "Sobremesas"};
+        for(String c : cats) {
+            JButton btn = new JButton(c);
+            btn.setBackground(Color.WHITE);
+            btn.setFocusPainted(false);
+            categoriasPanel.add(btn);
+            // Listener simples para simular filtro
+            btn.addActionListener(e -> carregarProdutos(c));
+        }
+        panelProdutos.add(categoriasPanel, BorderLayout.NORTH);
         
-        // --- Coluna Direita: Carrinho ---
-        JPanel right = new JPanel(new BorderLayout());
-        right.setPreferredSize(new Dimension(350, 0));
-        right.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.LIGHT_GRAY));
+        // Grid (Centro)
+        gridProdutos = new JPanel(new GridLayout(0, 3, 10, 10)); // 3 colunas
+        gridProdutos.setBackground(MainView.CONTENT_BG);
+        JScrollPane scrollGrid = new JScrollPane(gridProdutos);
+        scrollGrid.setBorder(null);
+        panelProdutos.add(scrollGrid, BorderLayout.CENTER);
+        
+        // Carregar produtos iniciais
+        carregarProdutos("Todos");
+
+        // --- COLUNA DIREITA (Carrinho) ---
+        JPanel panelCarrinho = new JPanel(new BorderLayout());
+        panelCarrinho.setPreferredSize(new Dimension(400, 0));
+        panelCarrinho.setBackground(Color.WHITE);
+        panelCarrinho.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.LIGHT_GRAY));
+        
+        // Header Carrinho
+        JLabel lblCart = new JLabel("Pedido Atual", SwingConstants.CENTER);
+        lblCart.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblCart.setBorder(new EmptyBorder(20, 0, 20, 0));
+        panelCarrinho.add(lblCart, BorderLayout.NORTH);
         
         // Tabela
-        JTable table = new JTable(new DefaultTableModel(new Object[]{"Item", "€"}, 0));
-        table.setRowHeight(30);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        right.add(new JScrollPane(table), BorderLayout.CENTER);
+        String[] colunas = {"Item", "Qtd", "Preço"};
+        cartModel = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        cartTable = new JTable(cartModel);
+        cartTable.setRowHeight(30);
+        cartTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cartTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        cartTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
-        // Botão Pagar
-        JButton btnPagar = new JButton("PAGAR / FINALIZAR");
-        btnPagar.setBackground(PRIMARY_COLOR);
-        btnPagar.setForeground(Color.WHITE);
-        btnPagar.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        btnPagar.setPreferredSize(new Dimension(0, 80));
-        btnPagar.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Pagamento simulado com sucesso! Recibo impresso.");
-            cardLayout.show(cardsContainer, "INICIO");
-        });
+        panelCarrinho.add(new JScrollPane(cartTable), BorderLayout.CENTER);
         
-        right.add(btnPagar, BorderLayout.SOUTH);
+        // Área de Totais e Ações
+        JPanel footer = new JPanel();
+        footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
+        footer.setBackground(Color.WHITE);
+        footer.setBorder(new EmptyBorder(20, 20, 20, 20));
         
-        p.add(left, BorderLayout.CENTER);
-        p.add(right, BorderLayout.EAST);
+        totalLabel = new JLabel("Total: € 0.00");
+        totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        totalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        return p;
+        // Botões de Ação
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        btnPanel.setBackground(Color.WHITE);
+        btnPanel.setBorder(new EmptyBorder(20,0,0,0));
+        
+        JButton btnNota = createBtn("📝 Nota", Color.ORANGE);
+        btnNota.addActionListener(e -> adicionarNota());
+        
+        JButton btnRemove = createBtn("❌ Remover", DANGER);
+        btnRemove.addActionListener(e -> removerItemSelecionado());
+        
+        JButton btnCancel = createBtn("🗑 Cancelar", Color.GRAY);
+        btnCancel.addActionListener(e -> cancelarPedido());
+        
+        JButton btnPay = createBtn("✅ Confirmar", SUCCESS);
+        btnPay.addActionListener(e -> finalizarPedido());
+        
+        btnPanel.add(btnNota);
+        btnPanel.add(btnRemove);
+        btnPanel.add(btnCancel);
+        btnPanel.add(btnPay);
+        
+        footer.add(totalLabel);
+        footer.add(btnPanel);
+        panelCarrinho.add(footer, BorderLayout.SOUTH);
+
+        // Adiciona painéis principais
+        add(panelProdutos, BorderLayout.CENTER);
+        add(panelCarrinho, BorderLayout.EAST);
     }
     
-    private JButton criarBotaoGrande(String texto, String icon, Color cor) {
-        JButton b = new JButton("<html><center><font size=6>"+icon+"</font><br>"+texto+"</center></html>");
-        b.setPreferredSize(new Dimension(250, 180));
-        b.setBackground(cor);
+    private void carregarProdutos(String filtro) {
+        gridProdutos.removeAll();
+        
+        // Simulação de busca no controller
+        // Na implementação real: List<Produto> lista = vendaController.getProdutos(filtro);
+        List<Produto> lista = new ArrayList<>();
+        if(vendaController != null) lista = vendaController.listarProdutos();
+        
+        // Se a lista estiver vazia (para teste de UI), cria fakes
+        if(lista.isEmpty()) {
+            criarProdutoFake("Hambúrguer Clássico", 5.50);
+            criarProdutoFake("Cheeseburger", 6.00);
+            criarProdutoFake("Batatas Fritas", 2.00);
+            criarProdutoFake("Cola Zero", 1.50);
+            criarProdutoFake("Gelado", 2.50);
+        } else {
+            for(Produto p : lista) {
+                adicionarCardProduto(p);
+            }
+        }
+        
+        gridProdutos.revalidate();
+        gridProdutos.repaint();
+    }
+    
+    private void criarProdutoFake(String nome, double preco) {
+        Produto p = new Produto();
+        p.setNome(nome);
+        p.setPreco(new java.math.BigDecimal(preco));
+        adicionarCardProduto(p);
+    }
+    
+    private void adicionarCardProduto(Produto p) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createLineBorder(new Color(220,220,220), 1));
+        card.setPreferredSize(new Dimension(150, 150));
+        
+        // Icone e Nome
+        JPanel center = new JPanel(new GridLayout(2,1));
+        center.setBackground(Color.WHITE);
+        JLabel icon = new JLabel("🍔", SwingConstants.CENTER); // Simplificação
+        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 32));
+        JLabel nome = new JLabel("<html><center>"+p.getNome()+"</center></html>", SwingConstants.CENTER);
+        nome.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        center.add(icon);
+        center.add(nome);
+        
+        // Botão Adicionar
+        JButton btnAdd = new JButton("Adicionar • €" + p.getPreco());
+        btnAdd.setBackground(MainView.ACCENT_COLOR);
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.setFocusPainted(false);
+        btnAdd.addActionListener(e -> popupQuantidade(p));
+        
+        card.add(center, BorderLayout.CENTER);
+        card.add(btnAdd, BorderLayout.SOUTH);
+        
+        gridProdutos.add(card);
+    }
+    
+    // --- LÓGICA DE INTERAÇÃO ---
+    
+    private void popupQuantidade(Produto p) {
+        String qtdStr = JOptionPane.showInputDialog(this, "Quantidade para " + p.getNome() + ":", "1");
+        if(qtdStr != null && !qtdStr.isEmpty()) {
+            try {
+                int qtd = Integer.parseInt(qtdStr);
+                if(qtd > 0) adicionarItemAoCarrinho(p, qtd);
+            } catch(NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Número inválido.");
+            }
+        }
+    }
+    
+    private void adicionarItemAoCarrinho(Produto p, int qtd) {
+        // Lógica Visual
+        double totalItem = p.getPreco().doubleValue() * qtd;
+        cartModel.addRow(new Object[]{p.getNome(), qtd, String.format("€ %.2f", totalItem)});
+        
+        // Lógica de Negócio (Controller)
+        if(vendaController != null) {
+            // vendaController.adicionarItem(pedidoAtual, p, qtd); // Exemplo
+        }
+        atualizarTotal();
+    }
+    
+    private void removerItemSelecionado() {
+        int row = cartTable.getSelectedRow();
+        if(row != -1) {
+            cartModel.removeRow(row);
+            // Chamar controller para remover do pedido backend
+            atualizarTotal();
+        } else {
+            JOptionPane.showMessageDialog(this, "Selecione um item para remover.");
+        }
+    }
+    
+    private void adicionarNota() {
+        String nota = JOptionPane.showInputDialog(this, "Nota para a cozinha:");
+        if(nota != null && !nota.isEmpty()) {
+            // vendaController.adicionarNota(pedidoAtual, nota);
+            JOptionPane.showMessageDialog(this, "Nota adicionada!");
+        }
+    }
+    
+    private void cancelarPedido() {
+        if(cartModel.getRowCount() > 0) {
+            int opt = JOptionPane.showConfirmDialog(this, "Tem a certeza?", "Cancelar", JOptionPane.YES_NO_OPTION);
+            if(opt == JOptionPane.YES_OPTION) {
+                cartModel.setRowCount(0);
+                pedidoAtual = new Pedido(); // Reset
+                atualizarTotal();
+            }
+        }
+    }
+    
+    private void finalizarPedido() {
+        if(cartModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "O carrinho está vazio.");
+            return;
+        }
+        
+        // Simulação de processamento
+        double total = calcularTotalVisual();
+        int tempoEspera = 15 + (cartModel.getRowCount() * 2); // Algoritmo fake
+        long numeroPedido = System.currentTimeMillis() % 1000;
+        
+        String msg = String.format("<html><body><h2>Pedido Confirmado! #%d</h2>" +
+                                   "<p>Total Pago: <b>€ %.2f</b></p>" +
+                                   "<p>Tempo estimado: <b>%d minutos</b></p></body></html>", 
+                                   numeroPedido, total, tempoEspera);
+        
+        JOptionPane.showMessageDialog(this, msg, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+        
+        // Limpar
+        cartModel.setRowCount(0);
+        pedidoAtual = new Pedido();
+        atualizarTotal();
+    }
+    
+    private void atualizarTotal() {
+        totalLabel.setText(String.format("Total: € %.2f", calcularTotalVisual()));
+    }
+    
+    private double calcularTotalVisual() {
+        double total = 0;
+        for(int i=0; i<cartModel.getRowCount(); i++) {
+            String priceStr = (String) cartModel.getValueAt(i, 2); // "€ 10.00"
+            try {
+                total += Double.parseDouble(priceStr.replace("€", "").replace(",", ".").trim());
+            } catch(Exception e) { /* ignore */ }
+        }
+        return total;
+    }
+    
+    private JButton createBtn(String txt, Color bg) {
+        JButton b = new JButton(txt);
+        b.setBackground(bg);
         b.setForeground(Color.WHITE);
+        b.setFont(new Font("Segoe UI", Font.BOLD, 14));
         b.setFocusPainted(false);
-        b.setFont(new Font("Segoe UI", Font.BOLD, 20));
         return b;
-    }
-    
-    private void adicionarAoCarrinho(String nome, double preco) {
-        JOptionPane.showMessageDialog(this, "Produto adicionado: " + nome + "\n(Lógica visual simulada)");
     }
 }

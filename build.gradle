@@ -8,10 +8,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.hibernate.orm:hibernate-core:6.4.0.Final'
-    // implementation 'com.mysql:mysql-connector-j:8.3.0'
+    implementation 'com.formdev:flatlaf:3.4.1'
 }
 
 application {
     mainClass = 'pt.uminho.dss.restaurante.app.App'
-}
+}    // implementation 'com.mysql:mysql-connector-j:8.3.0'

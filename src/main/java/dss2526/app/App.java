@@ -1,5 +1,6 @@
 package dss2526.app;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import dss2526.ui.controller.*;
 import dss2526.ui.view.MainView;
 
@@ -9,36 +10,44 @@ import java.awt.*;
 public class App {
 
     // Instanciação dos Controllers
+    // Nota: Em uma aplicação real, estes poderiam receber DAOs ou Facades no construtor
     private final VendaController vendaController = new VendaController();
     private final ProducaoController producaoController = new ProducaoController();
-    private final GestaoController GestaoController = new GestaoController();
+    private final GestaoController gestaoController = new GestaoController();
 
     public static void main(String[] args) {
-        // LookAndFeel Nimbus
+        // Configuração do FlatLaf para uma UI moderna
         try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    UIManager.put("nimbusBase", new Color(50, 50, 50));
-                    UIManager.put("nimbusBlueGrey", new Color(100, 100, 100));
-                    UIManager.put("control", new Color(240, 240, 240));
-                    break;
-                }
+            // Inicializa o FlatLaf Light (podes usar FlatDarkLaf.setup() para tema escuro)
+            FlatLightLaf.setup();
+        } catch (Exception e) {
+            // Fallback para o sistema caso o FlatLaf não esteja disponível ou ocorra erro
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ex) {
+                System.err.println("Falha ao inicializar LookAndFeel: " + ex.getMessage());
             }
-        } catch (Exception e) { /* Ignorar */ }
+        }
+        
+        // Definições globais de UI para melhorar a renderização de texto
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
+        
+        // Personalização extra (opcional) - Ex: Arredondar botões globalmente
+        UIManager.put("Button.arc", 12);
+        UIManager.put("Component.arc", 12);
 
         SwingUtilities.invokeLater(() -> new App().iniciar());
     }
 
     public void iniciar() {
-        JFrame frame = new JFrame("Sistema Restaurante DSS 25/26");
+        JFrame frame = new JFrame("DSS FOOD - Sistema Integrado");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // Tamanho maior pois agora é uma janela única
-        frame.setSize(1280, 800);
-        frame.setLocationRelativeTo(null); 
+        frame.setSize(1280, 800); // Tamanho HD padrão
+        frame.setLocationRelativeTo(null); // Centralizar no ecrã
 
-        // A App delega a UI inteira para a MainView
-        MainView mainView = new MainView(vendaController, producaoController, GestaoController);
+        // Inicializa a View Principal passando os controladores necessários
+        MainView mainView = new MainView(vendaController, producaoController, gestaoController);
         
         frame.setContentPane(mainView);
         frame.setVisible(true);
