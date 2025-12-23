@@ -1,51 +1,65 @@
 package pt.uminho.dss.restaurante.core.domain.entity;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Stock {
 
     private int idRestaurante;
-    // chave = id do Produto, valor = quantidade disponível
-    private Map<Integer, Integer> quantidadesPorProduto;
+    // chave = id do Ingrediente, valor = quantidade disponível
+    private Map<Integer, Integer> quantidadesPorIngrediente;
 
     public Stock(int idRestaurante) {
         this.idRestaurante = idRestaurante;
-        this.quantidadesPorProduto = new HashMap<>();
+        this.quantidadesPorIngrediente = new HashMap<>();
     }
 
-    public void adicionar(int idProduto, int quantidade) {
-        if (quantidade < 0) throw new IllegalArgumentException(
-            "Quantidade não pode ser negativa."
-        );
-        quantidadesPorProduto.merge(idProduto, quantidade, Integer::sum);
-    }
-
-    public void remover(int idProduto, int quantidade) {
+    public void adicionar(int idIngrediente, int quantidade) {
         if (quantidade <= 0) throw new IllegalArgumentException(
             "Quantidade deve ser positiva."
         );
-        int atual = consultarQuantidade(idProduto);
-        if (quantidade > atual) throw new IllegalStateException(
-            "Stock insuficiente para o produto " + idProduto
-        );
-        int novo = atual - quantidade;
-        if (novo == 0) {
-            quantidadesPorProduto.remove(idProduto);
-        } else {
-            quantidadesPorProduto.put(idProduto, novo);
+        quantidadesPorIngrediente.merge(idIngrediente, quantidade, Integer::sum);
+    }
+
+    public void removerLista(List<Integer> ingredientesRemover) {
+        for (int idIngrediente : ingredientesRemover) {
+            Integer quantidade = quantidadesPorIngrediente.get(idIngrediente);
+            if (quantidade != null && quantidade > 0) {
+                remover(idIngrediente, quantidade);
+            }
         }
     }
 
-    public int consultarQuantidade(int idProduto) {
-        return quantidadesPorProduto.getOrDefault(idProduto, 0);
+    public void remover(int idIngrediente, int quantidade) {
+        if (quantidade <= 0) throw new IllegalArgumentException(
+            "Quantidade deve ser positiva."
+        );
+        int atual = consultarQuantidade(idIngrediente);
+        if (quantidade > atual) throw new IllegalStateException(
+            "Stock insuficiente para o ingrediente " + idIngrediente
+        );
+        int novo = atual - quantidade;
+        
+        quantidadesPorIngrediente.put(idIngrediente, novo);
     }
 
-    public boolean temDisponivel(int idProduto, int quantidadeNecessaria) {
-        return consultarQuantidade(idProduto) >= quantidadeNecessaria;
+    public int consultarQuantidade(int idIngrediente) {
+        return quantidadesPorIngrediente.getOrDefault(idIngrediente, 0);
+    }
+
+    public boolean temDisponivel(int idIngrediente, int quantidadeNecessaria) {
+        return consultarQuantidade(idIngrediente) >= quantidadeNecessaria;
     }
 
     public int getIdRestaurante() {
         return idRestaurante;
+    }
+
+    public String toString() {
+        return "Stock do Restaurante " +
+            idRestaurante +
+            ": " +
+            quantidadesPorIngrediente.toString();
     }
 }
