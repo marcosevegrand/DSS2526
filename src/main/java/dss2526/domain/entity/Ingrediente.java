@@ -1,39 +1,32 @@
 package dss2526.domain.entity;
 
-import java.io.Serializable;
-
-import dss2526.domain.enumeration.Alergenico;
-
-/**
- * Entidade pura representando um ingrediente.
- */
-public class Ingrediente implements Serializable {
-    private Integer id;
+public class Ingrediente {
+    private int id;
     private String nome;
-    private String unidadeMedida;
-    private Alergenico alergenico;
+    private String unidade;
+    private String alergenico;
 
     // Construtores
 
     public Ingrediente() {}
 
-    public Ingrediente(String nome, String unidadeMedida, Alergenico alergenico) {
+    public Ingrediente(String nome, String unidade, String alergenico) {
         this.nome = nome;
-        this.unidadeMedida = unidadeMedida;
+        this.unidade = unidade;
         this.alergenico = alergenico;
     }
 
     // Getters e Setters
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
 
-    public String getUnidadeMedida() { return unidadeMedida; }
-    public void setUnidadeMedida(String unidadeMedida) { this.unidadeMedida = unidadeMedida; }
+    public String getUnidade() { return unidade; }
+    public void setUnidade(String unidade) { this.unidade = unidade; }
 
-    public Alergenico getAlergenico() { return alergenico; }
-    public void setAlergenico(Alergenico alergenico) { this.alergenico = alergenico; }
+    public String getAlergenico() { return alergenico; }
+    public void setAlergenico(String alergenico) { this.alergenico = alergenico; }
 }

@@ -1,5 +1,6 @@
 Exemplo de configuração - Copiar para db.properties e ajustar os valores
 
-db.url=jdbc:mysql://localhost:3306/restaurante_db?serverTimezone=Europe/Lisbon
+db.driver=com.mysql.cj.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/restaurante?serverTimezone=Europe/Lisbon
 db.user=teu_utilizador
 db.password=tua_password

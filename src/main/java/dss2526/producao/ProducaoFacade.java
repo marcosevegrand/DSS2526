@@ -72,7 +72,7 @@ public class ProducaoFacade implements IProducaoFacade {
     }
 
     @Override
-    public List<Tarefa> obterTarefasPorEstacao(EstacaoTrabalho estacao) {
+    public List<Tarefa> obterTarefasPorEstacao(Estacao estacao) {
         return tarefaDAO.findByEstacao(estacao).stream()
                 .filter(t -> !t.getConcluida())
                 .sorted((t1, t2) -> {

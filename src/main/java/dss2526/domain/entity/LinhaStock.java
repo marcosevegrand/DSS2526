@@ -1,28 +1,28 @@
 package dss2526.domain.entity;
 
 public class LinhaStock {
-    private Integer id;
+    private int id;
     private Ingrediente ingrediente;
-    private Double quantidade;
+    private double quantidade;
 
     // Construtores
 
     public LinhaStock() {}
 
-    public LinhaStock(Ingrediente ingrediente, Double quantidade) {
+    public LinhaStock(Ingrediente ingrediente, double quantidade) {
         this.ingrediente = ingrediente;
         this.quantidade = quantidade;
     }
 
     // Getters e Setters
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public Ingrediente getIngrediente() { return ingrediente; }
     public void setIngrediente(Ingrediente ingrediente) { this.ingrediente = ingrediente; }
     
-    public Double getQuantidade() { return quantidade; }
-    public void setQuantidade(Double quantidade) { this.quantidade = quantidade; }
+    public double getQuantidade() { return quantidade; }
+    public void setQuantidade(double quantidade) { this.quantidade = quantidade; }
 
 }

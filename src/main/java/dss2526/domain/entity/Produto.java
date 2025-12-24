@@ -2,82 +2,41 @@ package dss2526.domain.entity;
 
 import dss2526.domain.contract.Item;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class Produto implements Item, Serializable {
-    private Integer id;
+public class Produto implements Item {
+    private int id;
     private String nome;
-    private BigDecimal preco;
-    private boolean disponivel;
+    private double preco;
     private List<LinhaIngrediente> ingredientes = new ArrayList<>();
-    private List<PassoProducao> passos = new ArrayList<>();
+    private List<Tarefa> tarefas = new ArrayList<>();
 
     // Construtores
 
     public Produto() {
     }
 
-    public Produto(String nome, BigDecimal preco, boolean disponivel,
-            List<LinhaIngrediente> ingredientes, List<PassoProducao> passos) {
+    public Produto(String nome, int preco, List<LinhaIngrediente> ingredientes, List<Tarefa> tarefas) {
         this.nome = nome;
         this.preco = preco;
-        this.disponivel = disponivel;
         this.ingredientes = ingredientes;
-        this.passos = passos;
+        this.tarefas = tarefas;
     }
-
-    // Lógica simples
 
     // Getters e Setters
 
-    public Integer getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public String getNome() {
-        return nome;
-    }
+    public double getPreco() { return preco; }
+    public void setPreco(double preco) { this.preco = preco; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public List<LinhaIngrediente> getIngredientes() { return ingredientes; }
+    public void setIngredientes(List<LinhaIngrediente> ingredientes) { this.ingredientes = ingredientes; }
 
-    public BigDecimal getPreco() {
-        return preco;
-    }
-
-    public void setPreco(BigDecimal preco) {
-        this.preco = preco;
-    }
-
-    public boolean isDisponivel() {
-        return disponivel;
-    }
-
-    public void setDisponivel(boolean disponivel) {
-        this.disponivel = disponivel;
-    }
-
-    public List<LinhaIngrediente> getIngredientes() {
-        return ingredientes;
-    }
-
-    public void setIngredientes(List<LinhaIngrediente> ingredientes) {
-        this.ingredientes = ingredientes;
-    }
-
-    public List<PassoProducao> getPassos() {
-        return passos;
-    }
-
-    public void setPassos(List<PassoProducao> passos) {
-        this.passos = passos;
-    }
+    public List<Tarefa> getTarefas() { return tarefas; }
+    public void setTarefas(List<Tarefa> tarefas) { this.tarefas = tarefas; }
 }

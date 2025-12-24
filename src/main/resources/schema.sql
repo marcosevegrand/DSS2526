@@ -19,29 +19,33 @@ DROP TABLE IF EXISTS ingredientes;
 
 -- Entidades Base
 
-CREATE TABLE ingredientes (
-    id INT PRIMARY KEY,
+CREATE TABLE ingrediente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     unidade_medida VARCHAR(50),
     alergenico VARCHAR(50)
 );
 
-CREATE TABLE produtos (
-    id INT PRIMARY KEY,
+CREATE TABLE produto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     preco DECIMAL(10, 2) NOT NULL,
     disponivel BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE menus (
-    id INT PRIMARY KEY,
+CREATE TABLE menu (
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     preco DECIMAL(10, 2) NOT NULL,
     disponivel BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE catalogos (
-    id INT PRIMARY KEY
+CREATE TABLE catalogo (
+    id INT AUTO_INCREMENT PRIMARY KEY
+);
+
+CREATE TABLE stock (
+    id INT AUTO_INCREMENT PRIMARY KEY,
 );
 
 -- Relacionamentos de Produtos e Menus
@@ -102,7 +106,7 @@ CREATE TABLE catalogo_ingredientes (
 -- Pedidos e Tarefas
 
 CREATE TABLE pedidos (
-    id INT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     para_levar BOOLEAN NOT NULL DEFAULT FALSE,
     estado VARCHAR(50) NOT NULL,
     data_hora DATETIME
@@ -118,7 +122,7 @@ CREATE TABLE linha_pedido (
 );
 
 CREATE TABLE tarefas (
-    id INT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     pedido_id INT,
     produto_id INT,
     estacao VARCHAR(50),

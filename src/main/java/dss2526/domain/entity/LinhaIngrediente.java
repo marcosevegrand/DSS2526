@@ -1,17 +1,15 @@
 package dss2526.domain.entity;
 
-import java.io.Serializable;
-
-public class LinhaIngrediente implements Serializable {
-    private Integer id;
+public class LinhaIngrediente {
+    private int id;
     private Produto produto;
     private Ingrediente ingrediente;
     private Double quantidade;
 
     public LinhaIngrediente() {}
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public Produto getProduto() { return produto; }
     public void setProduto(Produto produto) { this.produto = produto; }

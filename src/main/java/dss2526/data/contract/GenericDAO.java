@@ -2,50 +2,34 @@ package dss2526.data.contract;
 
 import java.util.List;
 
+/**
+ * Generic interface for Data Access Objects.
+ */
 public interface GenericDAO<T, K> {
+    
     /**
-     * Adiciona ou atualiza uma entidade na base de dados.
-     * Corresponde ao `put` do Map: se a chave nao existe, insere; se existe,
-     * atualiza.
+     * Persists a new entity. 
+     * Handles ID auto-increment generation.
      */
-    void put(K key, T value);
+    T save(T entity);
 
     /**
-     * Guarda uma entidade na base de dados.
-     * Se a entidade nao tiver chave, gera uma e insere.
-     * Se tiver chave, atualiza.
-     * 
-     * @return a entidade com a chave atualizada (se for nova)
+     * Retrieves an entity by its ID.
      */
-    T save(T value);
+    T findById(K id);
 
     /**
-     * Obtém uma entidade pela chave.
-     * Corresponde ao `get` do Map.
+     * Retrieves all entities.
      */
-    T get(K key);
+    List<T> findAll();
 
     /**
-     * Remove a entidade pela chave.
-     * Corresponde ao `remove` do Map.
+     * Updates an existing entity.
      */
-    T remove(K key);
+    T update(T entity);
 
     /**
-     * Verifica se a chave existe.
-     * Corresponde ao `containsKey` do Map.
+     * Deletes an entity by its ID.
      */
-    boolean containsKey(K key);
-
-    /**
-     * Devolve todas as entidades.
-     * Corresponde ao `values` do Map.
-     */
-    List<T> values();
-
-    /**
-     * Devolve o número de entidades.
-     * Corresponde ao `size` do Map.
-     */
-    int size();
+    boolean delete(K id);
 }

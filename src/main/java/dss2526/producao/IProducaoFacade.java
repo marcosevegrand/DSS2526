@@ -1,7 +1,7 @@
 package dss2526.producao;
 
 import dss2526.domain.entity.*;
-import dss2526.domain.enumeration.EstacaoTrabalho;
+import dss2526.domain.enumeration.Trabalho;
 import java.util.List;
 
 public interface IProducaoFacade {
@@ -11,7 +11,7 @@ public interface IProducaoFacade {
 
     // Fluxo de Trabalho
     void registarNovoPedido(Pedido pedido); 
-    List<Tarefa> obterTarefasPorEstacao(EstacaoTrabalho estacao);
+    List<Tarefa> obterTarefasPorEstacao(Trabalho estacao);
     
     void iniciarTarefa(int idTarefa);
     void concluirTarefa(int idTarefa);

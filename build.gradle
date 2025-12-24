@@ -1,26 +1,14 @@
 plugins {
     id 'java'
     id 'application'
-    // Atualizado de 0.0.13 para 0.1.0 para compatibilidade com Gradle 8+
-    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 repositories {
     mavenCentral()
 }
 
-// Configuração do JavaFX
-javafx {
-    version = "17.0.6"
-    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
-}
-
 dependencies {
-    // Dependências existentes
-    implementation 'org.hibernate.orm:hibernate-core:6.4.0.Final'
     implementation 'mysql:mysql-connector-java:8.0.33' 
-    
-    // Testes
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
 }
 

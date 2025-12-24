@@ -2,15 +2,12 @@ package dss2526.domain.entity;
 
 import dss2526.domain.contract.Item;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class Menu implements Item, Serializable {
-    private Integer id;
+public class Menu implements Item {
+    private int id;
     private String nome;
-    private BigDecimal preco;
+    private double preco;
     private boolean disponivel;
     private List<LinhaMenu> linhasMenu = new ArrayList<>();
 
@@ -18,7 +15,7 @@ public class Menu implements Item, Serializable {
 
     public Menu() {}
 
-    public Menu(String nome, BigDecimal preco, List<LinhaMenu> linhasMenu) {
+    public Menu(String nome, double preco, List<LinhaMenu> linhasMenu) {
         this.nome = nome;
         this.preco = preco;
         this.linhasMenu = linhasMenu;
@@ -26,14 +23,14 @@ public class Menu implements Item, Serializable {
 
     // Getters e Setters
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
 
-    public BigDecimal getPreco() { return preco; }
-    public void setPreco(BigDecimal preco) { this.preco = preco; }
+    public double getPreco() { return preco; }
+    public void setPreco(double preco) { this.preco = preco; }
 
     public boolean isDisponivel() { return disponivel; }
     public void setDisponivel(boolean disponivel) { this.disponivel = disponivel; }

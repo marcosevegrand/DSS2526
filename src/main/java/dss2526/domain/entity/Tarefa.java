@@ -1,100 +1,20 @@
 package dss2526.domain.entity;
 
-import dss2526.domain.enumeration.EstacaoTrabalho;
+import dss2526.domain.enumeration.Trabalho;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-/**
- * Entidade Tarefa desacoplada da persistência.
- * O Lazy Loading de 'pedido' ou 'produto' será gerido externamente pelo ORM.
- */
-public class Tarefa implements Serializable {
-    private Integer id;
-    private Pedido pedido;
-    private Produto produto;
-    private PassoProducao passo;
-    private EstacaoTrabalho estacao;
-    private Boolean concluida;
-    private LocalDateTime dataCriacao;
-    private LocalDateTime dataConclusao;
-
-    // Construtor
-
-    public Tarefa() {
-        this.concluida = false;
-        this.dataCriacao = LocalDateTime.now();
-    }
-
-    // Lógica Simples
+public class Tarefa {
+    private int id;
+    private String nome;
+    private Trabalho trabalho;
 
     // Getters e Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public Integer getId() {
-        return id;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public Trabalho getTrabalho() { return trabalho; }
+    public void setTrabalho(Trabalho trabalho) { this.trabalho = trabalho; }
 
-    public Pedido getPedido() {
-        return pedido;
-    }
-
-    public void setPedido(Pedido pedido) {
-        this.pedido = pedido;
-    }
-
-    public Produto getProduto() {
-        return produto;
-    }
-
-    public void setProduto(Produto produto) {
-        this.produto = produto;
-    }
-
-    public void setPasso(PassoProducao passo) {
-        this.passo = passo;
-    }
-
-    public PassoProducao getPasso() {
-        return passo;
-    }
-
-    public EstacaoTrabalho getEstacao() {
-        if (estacao != null)
-            return estacao;
-        return passo != null ? passo.getEstacao() : null;
-    }
-
-    public void setEstacao(EstacaoTrabalho estacao) {
-        this.estacao = estacao;
-    }
-
-    public Boolean getConcluida() {
-        return concluida;
-    }
-
-    public void setConcluida(Boolean concluida) {
-        this.concluida = concluida;
-        if (concluida)
-            this.dataConclusao = LocalDateTime.now();
-    }
-
-    public LocalDateTime getDataCriacao() {
-        return dataCriacao;
-    }
-
-    public void setDataCriacao(LocalDateTime dataCriacao) {
-        this.dataCriacao = dataCriacao;
-    }
-
-    public LocalDateTime getDataConclusao() {
-        return dataConclusao;
-    }
-
-    public void setDataConclusao(LocalDateTime dataConclusao) {
-        this.dataConclusao = dataConclusao;
-    }
 }

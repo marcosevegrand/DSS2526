@@ -1,31 +1,37 @@
 package dss2526.domain.entity;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class Mensagem {
-    private final String texto;
-    private final LocalDateTime dataHora;
-    private final boolean urgente;
+    private int id;
+    private String texto;
+    private LocalDateTime dataHora;
+    private boolean urgente;
+
+    // Construtores
+
+    public Mensagem() {
+        this.dataHora = LocalDateTime.now();
+    }
 
     public Mensagem(String texto, boolean urgente) {
+        this();
         this.texto = texto;
-        this.dataHora = LocalDateTime.now();
         this.urgente = urgente;
     }
 
-    // Getters
-    public String getTexto() { return texto; }
-    public boolean isUrgente() { return urgente; }
-    
-    // Método útil para a UI de Produção mostrar a hora do aviso
-    public String getHoraFormatada() {
-        return dataHora.format(DateTimeFormatter.ofPattern("HH:mm"));
-    }
+    // Getters e Setters
 
-    @Override
-    public String toString() {
-        String prefixo = urgente ? "[URGENTE] " : "[AVISO] ";
-        return prefixo + "(" + getHoraFormatada() + "): " + texto;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getTexto() { return texto; }
+    public void setTexto(String texto) { this.texto = texto; }
+
+    public LocalDateTime getDataHora() { return dataHora; }
+    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+
+    public boolean isUrgente() { return urgente; }
+    public void setUrgente(boolean urgente) { this.urgente = urgente; }
+    
 }

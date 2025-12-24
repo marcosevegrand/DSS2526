@@ -2,32 +2,34 @@ package dss2526.domain.entity;
 
 import dss2526.domain.enumeration.EstadoPedido;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class Pedido implements Serializable {
-    private Integer id;
-    private boolean paraLevar;
+public class Pedido {
+    private int id;
     private EstadoPedido estado;
     private LocalDateTime dataHora;
+    private boolean paraLevar;
     private List<LinhaPedido> linhasPedido = new ArrayList<>();
-    private String notaGeral;
 
+    // Construtores
 
     public Pedido() {
         this.dataHora = LocalDateTime.now();
         this.estado = EstadoPedido.INICIADO;
-        this.notaGeral = "";
     }
 
+    public Pedido(boolean paraLevar) {
+        this();
+        this.paraLevar = paraLevar;
+    }
 
-    public BigDecimal calcularPrecoTotal() {
-        BigDecimal total = BigDecimal.ZERO;
+    // Lógica simples
+
+    public double calcularPrecoTotal() {
+        double total = 0.0;
         for (LinhaPedido linha : linhasPedido) {
-            total = total.add(linha.getPreco());
+            total += linha.getPreco();
         }
         return total;
     }
@@ -48,8 +50,4 @@ public class Pedido implements Serializable {
 
     public List<LinhaPedido> getLinhasPedido() { return linhasPedido; }
     public void setLinhasPedido(List<LinhaPedido> linhasPedido) { this.linhasPedido = linhasPedido; }
-
-    public String getNotaGeral() { return notaGeral; }
-    public void setNotaGeral(String notaGeral) { this.notaGeral = notaGeral; }
-
 }
