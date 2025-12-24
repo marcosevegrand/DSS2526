@@ -11,6 +11,15 @@ public interface GenericDAO<T, K> {
     void put(K key, T value);
 
     /**
+     * Guarda uma entidade na base de dados.
+     * Se a entidade nao tiver chave, gera uma e insere.
+     * Se tiver chave, atualiza.
+     * 
+     * @return a entidade com a chave atualizada (se for nova)
+     */
+    T save(T value);
+
+    /**
      * Obtém uma entidade pela chave.
      * Corresponde ao `get` do Map.
      */

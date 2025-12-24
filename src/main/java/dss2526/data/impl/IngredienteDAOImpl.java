@@ -51,6 +51,28 @@ public class IngredienteDAOImpl implements IngredienteDAO {
     }
 
     @Override
+    public Ingrediente save(Ingrediente value) {
+        if (value.getId() != null && value.getId() != 0) {
+            put(value.getId(), value);
+            return value;
+        }
+        try (Connection conn = DBConfig.getConnection()) {
+            int newId = 1;
+            try (Statement st = conn.createStatement();
+                    ResultSet rs = st.executeQuery("SELECT MAX(id) FROM ingredientes")) {
+                if (rs.next()) {
+                    newId = rs.getInt(1) + 1;
+                }
+            }
+            value.setId(newId);
+            put(newId, value);
+            return value;
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao gerar ID para ingrediente", e);
+        }
+    }
+
+    @Override
     public Ingrediente get(Integer key) {
         String sql = "SELECT * FROM ingredientes WHERE id = ?";
         try (Connection conn = DBConfig.getConnection();

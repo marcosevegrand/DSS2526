@@ -78,6 +78,28 @@ public class PedidoDAOImpl implements PedidoDAO {
         }
     }
 
+    @Override
+    public Pedido save(Pedido value) {
+        if (value.getId() != null && value.getId() != 0) {
+            put(value.getId(), value);
+            return value;
+        }
+        try (Connection conn = DBConfig.getConnection()) {
+            int newId = 1;
+            try (Statement st = conn.createStatement();
+                    ResultSet rs = st.executeQuery("SELECT MAX(id) FROM pedidos")) {
+                if (rs.next()) {
+                    newId = rs.getInt(1) + 1;
+                }
+            }
+            value.setId(newId);
+            put(newId, value);
+            return value;
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao gerar ID para pedido", e);
+        }
+    }
+
     private boolean containsKey(Connection conn, Integer key) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement("SELECT 1 FROM pedidos WHERE id=?")) {
             ps.setInt(1, key);
