@@ -5,6 +5,7 @@ import dss2526.data.impl.*;
 import dss2526.gestao.*;
 import dss2526.producao.*;
 import dss2526.venda.*;
+import dss2526.ui.view.AppUI;
 
 public class App {
 
@@ -18,11 +19,13 @@ public class App {
         TarefaDAO tarefaDAO = new TarefaDAOImpl();
 
         // 2. Instanciar Facades com Injeção de Dependências
-        IGestaoFacade gestaoFacade = new GestaoFacade(catalogoDAO, menuDAO, produtoDAO, ingredienteDAO);
-        
-        // CORREÇÃO AQUI: Passar pedidoDAO, produtoDAO e menuDAO (3 argumentos)
-        IVendaFacade vendaFacade = new VendaFacade(pedidoDAO, produtoDAO, menuDAO); 
-        
+        IVendaFacade vendaFacade = new VendaFacade(pedidoDAO, produtoDAO, menuDAO);
         IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO);
+        IGestaoFacade gestaoFacade = new GestaoFacade(catalogoDAO, menuDAO, produtoDAO, ingredienteDAO);
+
+
+        // 3. Instanciar e iniciar a App UI
+        AppUI appUI = new AppUI(vendaFacade, producaoFacade, gestaoFacade);
+        appUI.run();
     }
 }
