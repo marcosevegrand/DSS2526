@@ -4,21 +4,26 @@ import dss2526.domain.contract.Item;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class LinhaPedido implements Serializable {
     private Integer id;
     private Item item;
     private Integer quantidade;
     private BigDecimal precoUnitario;
+    private String observacao;
 
     // Construtores
 
-    public LinhaPedido() {}
-    
-    public LinhaPedido(Item item, Integer quantidade, BigDecimal precoUnitario) {
+    public LinhaPedido() {
+        this.observacao = "";
+    }
+
+    public LinhaPedido(Item item, Integer quantidade, BigDecimal precoUnitario, String observacao) {
         this.item = item;
         this.quantidade = quantidade;
         this.precoUnitario = precoUnitario;
+        this.observacao = (observacao == null) ? "" : observacao;
     }
 
     // Lógica simples
@@ -40,4 +45,21 @@ public class LinhaPedido implements Serializable {
 
     public BigDecimal getPrecoUnitario() { return precoUnitario; }
     public void setPrecoUnitario(BigDecimal precoUnitario) { this.precoUnitario = precoUnitario; }
+
+    public String getObservacao() { return observacao; }
+    public void setObservacao(String observacao) { this.observacao = observacao; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof LinhaPedido)) return false;
+        LinhaPedido that = (LinhaPedido) o;
+        return Objects.equals(item, that.item) && 
+               Objects.equals(observacao, that.observacao);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(item, observacao);
+    }
 }

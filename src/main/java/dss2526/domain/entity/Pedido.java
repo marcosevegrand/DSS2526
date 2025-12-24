@@ -14,10 +14,13 @@ public class Pedido implements Serializable {
     private EstadoPedido estado;
     private LocalDateTime dataHora;
     private List<LinhaPedido> linhasPedido = new ArrayList<>();
+    private String notaGeral;
+
 
     public Pedido() {
         this.dataHora = LocalDateTime.now();
         this.estado = EstadoPedido.INICIADO;
+        this.notaGeral = "";
     }
 
 
@@ -46,5 +49,7 @@ public class Pedido implements Serializable {
     public List<LinhaPedido> getLinhasPedido() { return linhasPedido; }
     public void setLinhasPedido(List<LinhaPedido> linhasPedido) { this.linhasPedido = linhasPedido; }
 
+    public String getNotaGeral() { return notaGeral; }
+    public void setNotaGeral(String notaGeral) { this.notaGeral = notaGeral; }
 
 }
