@@ -68,7 +68,10 @@ public class GestaoView {
         TableColumn<Ingrediente, String> colUnidade = new TableColumn<>("Unidade");
         colUnidade.setCellValueFactory(new PropertyValueFactory<>("unidade"));
 
-        tabela.getColumns().addAll(colId, colNome, colQtd, colUnidade);
+        tabela.getColumns().add(colId);
+        tabela.getColumns().add(colNome);
+        tabela.getColumns().add(colQtd);
+        tabela.getColumns().add(colUnidade);
 
         // Adicionar dados mockados para visualização
         // tabela.setItems(service.getIngredientes()); 
@@ -94,7 +97,8 @@ public class GestaoView {
         TableColumn<Produto, Double> colPreco = new TableColumn<>("Preço (€)");
         colPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
 
-        tabela.getColumns().addAll(colNome, colPreco);
+        tabela.getColumns().add(colNome);
+        tabela.getColumns().add(colPreco);
 
         VBox container = new VBox(toolBar, tabela);
         javafx.scene.layout.VBox.setVgrow(tabela, javafx.scene.layout.Priority.ALWAYS);

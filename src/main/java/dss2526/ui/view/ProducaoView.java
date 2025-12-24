@@ -54,8 +54,10 @@ public class ProducaoView {
 
         // Coluna de Ações (Botão dentro da tabela) pode ser complexo em JavaFX puro, 
         // simplificando para botões na toolbar que agem sobre a linha selecionada.
-        
-        tableOrdens.getColumns().addAll(colID, colHora, colMesa, colEstado);
+        tableOrdens.getColumns().add(colID);
+        tableOrdens.getColumns().add(colHora);
+        tableOrdens.getColumns().add(colMesa);
+        tableOrdens.getColumns().add(colEstado);
 
         // Rodapé: Ações sobre o pedido selecionado
         ToolBar actions = new ToolBar();

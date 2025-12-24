@@ -52,7 +52,8 @@ public class VendaView {
         colCatNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         TableColumn<Produto, Double> colCatPreco = new TableColumn<>("Preço Unit.");
         colCatPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
-        tableCatalogo.getColumns().addAll(colCatNome, colCatPreco);
+        tableCatalogo.getColumns().add(colCatNome);
+        tableCatalogo.getColumns().add(colCatPreco);
         tableCatalogo.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         VBox.setVgrow(tableCatalogo, Priority.ALWAYS);
 
@@ -75,7 +76,10 @@ public class VendaView {
         TableColumn<LinhaPedido, Double> colPedTotal = new TableColumn<>("Subtotal");
         // colPedTotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
 
-        tablePedido.getColumns().addAll(colPedItem, colPedQtd, colPedTotal);
+        tablePedido.getColumns().add(colPedItem);
+        tablePedido.getColumns().add(colPedQtd);
+        tablePedido.getColumns().add(colPedTotal);
+
         tablePedido.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         VBox.setVgrow(tablePedido, Priority.ALWAYS);
 
