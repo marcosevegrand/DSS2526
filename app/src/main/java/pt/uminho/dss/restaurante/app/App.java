@@ -53,7 +53,7 @@ public class App {
     private EstatisticaController estatisticaController;
 
     public App() {
-        // Inicializa DAOs (substitui pelos teus Impl concretos)
+        // Inicializa DAOs
         this.produtoDAO = new ProdutoDAOImpl();
         this.menuDAO = new MenuDAOImpl();
         this.pedidoDAO = new PedidoDAOImpl();
