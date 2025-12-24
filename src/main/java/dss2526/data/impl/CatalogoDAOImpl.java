@@ -5,7 +5,6 @@ import dss2526.domain.contract.Item;
 import dss2526.domain.entity.Produto;
 import dss2526.domain.entity.Menu;
 import dss2526.domain.entity.Ingrediente;
-import dss2526.domain.entity.Alergenico;
 import dss2526.data.config.DBConfig;
 import dss2526.data.contract.CatalogoDAO;
 

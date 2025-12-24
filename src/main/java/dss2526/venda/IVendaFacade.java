@@ -1,6 +1,9 @@
 package dss2526.venda;
 
 import dss2526.domain.entity.Pedido;
+import dss2526.domain.contract.Item;
+
+import java.util.List;
 
 public interface IVendaFacade {
 

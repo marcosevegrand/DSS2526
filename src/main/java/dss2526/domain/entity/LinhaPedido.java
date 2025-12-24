@@ -19,11 +19,10 @@ public class LinhaPedido implements Serializable {
         this.observacao = "";
     }
 
-    public LinhaPedido(Item item, Integer quantidade, BigDecimal precoUnitario, String observacao) {
+    public LinhaPedido(Item item, Integer quantidade, BigDecimal precoUnitario) {
         this.item = item;
         this.quantidade = quantidade;
         this.precoUnitario = precoUnitario;
-        this.observacao = (observacao == null) ? "" : observacao;
     }
 
     // Lógica simples
