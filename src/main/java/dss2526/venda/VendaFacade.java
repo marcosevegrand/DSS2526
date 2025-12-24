@@ -1,122 +1,122 @@
 package dss2526.venda;
 
-import dss2526.domain.entity.*;
-import dss2526.domain.contract.Item;
-import dss2526.domain.enumeration.EstadoPedido;
-import dss2526.data.contract.*;
+// import dss2526.domain.entity.*;
+// import dss2526.domain.contract.Item;
+// import dss2526.domain.enumeration.EstadoPedido;
+// import dss2526.data.contract.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+// import java.util.ArrayList;
+// import java.util.List;
+// import java.util.Optional;
 
-public class VendaFacade implements IVendaFacade {
+public class VendaFacade {
 
-    private final ProdutoDAO produtoDAO;
-    private final MenuDAO menuDAO;
-    private final PedidoDAO pedidoDAO;
+    // private final ProdutoDAO produtoDAO;
+    // private final MenuDAO menuDAO;
+    // private final PedidoDAO pedidoDAO;
 
-    public VendaFacade(ProdutoDAO produtoDAO, MenuDAO menuDAO, PedidoDAO pedidoDAO) {
-        this.produtoDAO = produtoDAO;
-        this.menuDAO = menuDAO;
-        this.pedidoDAO = pedidoDAO;
-    }
+    // public VendaFacade(ProdutoDAO produtoDAO, MenuDAO menuDAO, PedidoDAO pedidoDAO) {
+    //     this.produtoDAO = produtoDAO;
+    //     this.menuDAO = menuDAO;
+    //     this.pedidoDAO = pedidoDAO;
+    // }
 
-    @Override
-    public Pedido criarPedido(boolean paraLevar) {
-        Pedido pedido = new Pedido();
-        pedido.setParaLevar(paraLevar);
-        pedido.setEstado(EstadoPedido.INICIADO);
-        pedidoDAO.save(pedido);
-        return pedido;
-    }
+    // @Override
+    // public Pedido criarPedido(boolean paraLevar) {
+    //     Pedido pedido = new Pedido();
+    //     pedido.setParaLevar(paraLevar);
+    //     pedido.setEstado(EstadoPedido.INICIADO);
+    //     pedidoDAO.put(pedido);
+    //     return pedido;
+    // }
 
-    @Override
-    public void adicionarItem(int idPedido, int idItem, int quantidade) {
-        Pedido pedido = findPedidoOrThrow(idPedido);
+    // @Override
+    // public void adicionarItem(int idPedido, int idItem, int quantidade) {
+    //     Pedido pedido = findPedidoOrThrow(idPedido);
 
-        // Try to find the item as a product
-        Optional<Produto> optProduto = produtoDAO.findById(idItem);
-        if (optProduto.isPresent()) {
-            Produto produto = optProduto.get();
-            produto.validarDisponibilidade();
-            LinhaPedido linha = new LinhaPedido(produto, quantidade, produto.getPreco());
-            pedido.getLinhasPedido().add(linha);
-            pedidoDAO.update(pedido);
-            return;
-        }
+    //     // Try to find the item as a product
+    //     Optional<Produto> optProduto = produtoDAO.findById(idItem);
+    //     if (optProduto.isPresent()) {
+    //         Produto produto = optProduto.get();
+    //         produto.validarDisponibilidade();
+    //         LinhaPedido linha = new LinhaPedido(produto, quantidade, produto.getPreco());
+    //         pedido.getLinhasPedido().add(linha);
+    //         pedidoDAO.put(pedido);
+    //         return;
+    //     }
 
-        // Try to find the item as a menu
-        Optional<Menu> optMenu = menuDAO.findById(idItem);
-        if (optMenu.isPresent()) {
-            Menu menu = optMenu.get();
-            menu.validarDisponibilidade();
-            LinhaPedido linha = new LinhaPedido(menu, quantidade, menu.getPreco());
-            pedido.getLinhasPedido().add(linha);
-            pedidoDAO.update(pedido);
-            return;
-        }
+    //     // Try to find the item as a menu
+    //     Optional<Menu> optMenu = menuDAO.get(idItem);
+    //     if (optMenu.isPresent()) {
+    //         Menu menu = optMenu.get();
+    //         menu.validarDisponibilidade();
+    //         LinhaPedido linha = new LinhaPedido(menu, quantidade, menu.getPreco());
+    //         pedido.getLinhasPedido().add(linha);
+    //         pedidoDAO.put(pedido);
+    //         return;
+    //     }
 
-        throw new IllegalArgumentException("Item não encontrado: ID " + idItem);
-    }
+    //     throw new IllegalArgumentException("Item não encontrado: ID " + idItem);
+    // }
 
-    @Override
-    public void removerItem(int idPedido, int idItem, int quantidade) {
-        Pedido pedido = findPedidoOrThrow(idPedido);
+    // @Override
+    // public void removerItem(int idPedido, int idItem, int quantidade) {
+    //     Pedido pedido = findPedidoOrThrow(idPedido);
         
-        List<LinhaPedido> linhas = pedido.getLinhasPedido();
-        LinhaPedido linhaEncontrada = linhas.stream()
-                .filter(l -> l.getItem().equals(idItem))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Item não encontrado no pedido"));
+    //     List<LinhaPedido> linhas = pedido.getLinhasPedido();
+    //     LinhaPedido linhaEncontrada = linhas.stream()
+    //             .filter(l -> l.getItem().equals(idItem))
+    //             .findFirst()
+    //             .orElseThrow(() -> new IllegalArgumentException("Item não encontrado no pedido"));
 
-        if (linhaEncontrada.getQuantidade() <= quantidade) {
-            linhas.remove(linhaEncontrada);
-        } else {
-            linhaEncontrada.setQuantidade(linhaEncontrada.getQuantidade() - quantidade);
-        }
+    //     if (linhaEncontrada.getQuantidade() <= quantidade) {
+    //         linhas.remove(linhaEncontrada);
+    //     } else {
+    //         linhaEncontrada.setQuantidade(linhaEncontrada.getQuantidade() - quantidade);
+    //     }
 
-        pedidoDAO.update(pedido);
-    }
+    //     pedidoDAO.update(pedido);
+    // }
 
-    @Override
-    public void adicionarNota(int idPedido, String nota) {
-        Pedido pedido = findPedidoOrThrow(idPedido);
-        // Assuming Pedido has a nota field - if not, you'll need to add it
-        // pedido.setNota(nota);
-        pedidoDAO.update(pedido);
-    }
+    // @Override
+    // public void adicionarNota(int idPedido, String nota) {
+    //     Pedido pedido = findPedidoOrThrow(idPedido);
+    //     // Assuming Pedido has a nota field - if not, you'll need to add it
+    //     // pedido.setNota(nota);
+    //     pedidoDAO.put(pedido);
+    // }
 
-    @Override
-    public void confirmarPedido(int idPedido) {
-        Pedido pedido = findPedidoOrThrow(idPedido);
-        pedido.setEstado(EstadoPedido.CONFIRMADO);
-        pedidoDAO.update(pedido);
-    }
+    // @Override
+    // public void confirmarPedido(int idPedido) {
+    //     Pedido pedido = findPedidoOrThrow(idPedido);
+    //     pedido.setEstado(EstadoPedido.CONFIRMADO);
+    //     pedidoDAO.put(pedido);
+    // }
 
-    @Override
-    public void cancelarPedido(int idPedido) {
-        Pedido pedido = findPedidoOrThrow(idPedido);
-        pedido.setEstado(EstadoPedido.CANCELADO);
-        pedidoDAO.update(pedido);
-    }
+    // @Override
+    // public void cancelarPedido(int idPedido) {
+    //     Pedido pedido = findPedidoOrThrow(idPedido);
+    //     pedido.setEstado(EstadoPedido.CANCELADO);
+    //     pedidoDAO.update(pedido);
+    // }
 
-    @Override
-    public Pedido obterPedido(int idPedido) {
-        return findPedidoOrThrow(idPedido);
-    }
+    // @Override
+    // public Pedido obterPedido(int idPedido) {
+    //     return findPedidoOrThrow(idPedido);
+    // }
 
-    @Override
-    public List<Item> obterItemsDisponiveis() {
-        List<Item> items = new ArrayList<>();
-        items.addAll(produtoDAO.findAll());
-        items.addAll(menuDAO.findAll());
-        return items.stream()
-                .filter(Item::isDisponivel)
-                .toList();
-    }
+    // @Override
+    // public List<Item> obterItemsDisponiveis() {
+    //     List<Item> items = new ArrayList<>();
+    //     items.addAll(produtoDAO.findAll());
+    //     items.addAll(menuDAO.findAll());
+    //     return items.stream()
+    //             .filter(Item::isDisponivel)
+    //             .toList();
+    // }
 
-    private Pedido findPedidoOrThrow(int idPedido) {
-        return pedidoDAO.findById(idPedido)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: ID " + idPedido));
-    }
+    // private Pedido findPedidoOrThrow(int idPedido) {
+    //     return pedidoDAO.findById(idPedido)
+    //             .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: ID " + idPedido));
+    // }
 }

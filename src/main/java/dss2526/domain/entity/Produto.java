@@ -17,10 +17,11 @@ public class Produto implements Item, Serializable {
 
     // Construtores
 
-    public Produto() {}
+    public Produto() {
+    }
 
     public Produto(String nome, BigDecimal preco, boolean disponivel,
-                   List<LinhaIngrediente> ingredientes, List<PassoProducao> passos) {
+            List<LinhaIngrediente> ingredientes, List<PassoProducao> passos) {
         this.nome = nome;
         this.preco = preco;
         this.disponivel = disponivel;
@@ -30,24 +31,53 @@ public class Produto implements Item, Serializable {
 
     // Lógica simples
 
-
     // Getters e Setters
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public BigDecimal getPreco() { return preco; }
-    public void setPreco(BigDecimal preco) { this.preco = preco; }
+    public String getNome() {
+        return nome;
+    }
 
-    public boolean isDisponivel() { return disponivel; }
-    public void setDisponivel(boolean disponivel) { this.disponivel = disponivel; }
-        
-    public List<LinhaIngrediente> getIngredientes() { return ingredientes; }
-    public void setIngredientes(List<LinhaIngrediente> ingredientes) { this.ingredientes = ingredientes; }
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 
-    public List<PassoProducao> getPassos() { return passos; }
-    public void setPassos(List<PassoProducao> passos) { this.passos = passos; }
+    public BigDecimal getPreco() {
+        return preco;
+    }
+
+    public void setPreco(BigDecimal preco) {
+        this.preco = preco;
+    }
+
+    public boolean isDisponivel() {
+        return disponivel;
+    }
+
+    public void setDisponivel(boolean disponivel) {
+        this.disponivel = disponivel;
+    }
+
+    public List<LinhaIngrediente> getIngredientes() {
+        return ingredientes;
+    }
+
+    public void setIngredientes(List<LinhaIngrediente> ingredientes) {
+        this.ingredientes = ingredientes;
+    }
+
+    public List<PassoProducao> getPassos() {
+        return passos;
+    }
+
+    public void setPassos(List<PassoProducao> passos) {
+        this.passos = passos;
+    }
 }

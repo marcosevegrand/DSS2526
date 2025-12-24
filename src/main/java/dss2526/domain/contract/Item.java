@@ -8,6 +8,8 @@ import java.math.BigDecimal;
  */
 public interface Item {
 
+    Integer getId();
+
     BigDecimal getPreco();
 
     boolean isDisponivel();

@@ -4,29 +4,39 @@ import java.util.List;
 
 public interface GenericDAO<T, K> {
     /**
-     * Guarda uma nova entidade na base de dados.
-     * Se a chave ainda não existir, insere; caso exista, podes decidir lançar exceção.
+     * Adiciona ou atualiza uma entidade na base de dados.
+     * Corresponde ao `put` do Map: se a chave nao existe, insere; se existe,
+     * atualiza.
      */
-    void save(T entity);
+    void put(K key, T value);
 
     /**
-     * Procura uma entidade pela chave primária.
-     * Devolve null se não existir; se preferires, podes usar Optional<T>.
+     * Obtém uma entidade pela chave.
+     * Corresponde ao `get` do Map.
      */
-    T findById(K id);
+    T get(K key);
 
     /**
-     * Atualiza o estado persistido de uma entidade existente.
+     * Remove a entidade pela chave.
+     * Corresponde ao `remove` do Map.
      */
-    void update(T entity);
+    T remove(K key);
 
     /**
-     * Remove a entidade identificada pela chave primária.
+     * Verifica se a chave existe.
+     * Corresponde ao `containsKey` do Map.
      */
-    void delete(K id);
+    boolean containsKey(K key);
 
     /**
-     * Devolve todas as entidades do tipo T.
+     * Devolve todas as entidades.
+     * Corresponde ao `values` do Map.
      */
-    List<T> findAll();
+    List<T> values();
+
+    /**
+     * Devolve o número de entidades.
+     * Corresponde ao `size` do Map.
+     */
+    int size();
 }

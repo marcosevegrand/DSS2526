@@ -14,6 +14,7 @@ public class Tarefa implements Serializable {
     private Pedido pedido;
     private Produto produto;
     private PassoProducao passo;
+    private EstacaoTrabalho estacao;
     private Boolean concluida;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
@@ -27,29 +28,73 @@ public class Tarefa implements Serializable {
 
     // Lógica Simples
 
-    public EstacaoTrabalho getEstacao() { return passo.getEstacao(); }
-
     // Getters e Setters
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    
-    public Pedido getPedido() { return pedido; }
-    public void setPedido(Pedido pedido) { this.pedido = pedido; }
-    
-    public Produto getProduto() { return produto; }
-    public void setProduto(Produto produto) { this.produto = produto; }
-    
-    public void setPasso(PassoProducao passo) { this.passo = passo; }
-    public PassoProducao getPasso() { return passo; }
-
-    public Boolean getConcluida() { return concluida; }
-
-    public void setConcluida(Boolean concluida) { 
-        this.concluida = concluida;
-        if (concluida) this.dataConclusao = LocalDateTime.now();
+    public Integer getId() {
+        return id;
     }
 
-    public LocalDateTime getDataCriacao() { return dataCriacao; }
-    public LocalDateTime getDataConclusao() { return dataConclusao; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Pedido getPedido() {
+        return pedido;
+    }
+
+    public void setPedido(Pedido pedido) {
+        this.pedido = pedido;
+    }
+
+    public Produto getProduto() {
+        return produto;
+    }
+
+    public void setProduto(Produto produto) {
+        this.produto = produto;
+    }
+
+    public void setPasso(PassoProducao passo) {
+        this.passo = passo;
+    }
+
+    public PassoProducao getPasso() {
+        return passo;
+    }
+
+    public EstacaoTrabalho getEstacao() {
+        if (estacao != null)
+            return estacao;
+        return passo != null ? passo.getEstacao() : null;
+    }
+
+    public void setEstacao(EstacaoTrabalho estacao) {
+        this.estacao = estacao;
+    }
+
+    public Boolean getConcluida() {
+        return concluida;
+    }
+
+    public void setConcluida(Boolean concluida) {
+        this.concluida = concluida;
+        if (concluida)
+            this.dataConclusao = LocalDateTime.now();
+    }
+
+    public LocalDateTime getDataCriacao() {
+        return dataCriacao;
+    }
+
+    public void setDataCriacao(LocalDateTime dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+
+    public LocalDateTime getDataConclusao() {
+        return dataConclusao;
+    }
+
+    public void setDataConclusao(LocalDateTime dataConclusao) {
+        this.dataConclusao = dataConclusao;
+    }
 }
