@@ -131,29 +131,37 @@ public class PedidoDAOImpl implements PedidoDAO {
     }
 
     private void loadLines(Connection conn, Pedido p) throws SQLException {
-        // Warning: Reconstructing 'Item' is hard. I'll instantiate a dummy Product or
-        // check persistence strategy.
-        // For this exercise, I will assume it's a Product.
         String sql = "SELECT * FROM linha_pedido WHERE pedido_id = ?";
+
+        // 1. Declarar a lista FORA do bloco try do ResultSet
+        List<LinhaPedido> lines = new ArrayList<>(); 
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, p.getId());
+
             try (ResultSet rs = ps.executeQuery()) {
-                List<LinhaPedido> lines = new ArrayList<>();
                 while (rs.next()) {
-                    // Create minimal item
+                    // Criar o item (neste caso Produto como base)
                     Produto prod = new Produto();
                     prod.setId(rs.getInt("item_id"));
-                    // We might want to fetch item name?
 
-                    LinhaPedido lp = new LinhaPedido(prod, rs.getInt("quantidade"), rs.getBigDecimal("preco_unitario"));
-                    lp.setId(rs.getInt("id")); // if LP has ID
+                    // 2. Usar o construtor de 4 argumentos que criámos na LinhaPedido
+                    LinhaPedido lp = new LinhaPedido(
+                        prod, 
+                        rs.getInt("quantidade"), 
+                        rs.getBigDecimal("preco_unitario"),
+                        rs.getString("observacao") // <--- Lê a nota da BD
+                    );
+
+                    lp.setId(rs.getInt("id"));
                     lines.add(lp);
                 }
-                p.setLinhasPedido(lines);
-            }
-        }
-    }
+            } 
+        } 
 
+        p.setLinhasPedido(lines);
+    }
+    
     @Override
     public Pedido remove(Integer key) {
         Pedido p = get(key);
@@ -271,6 +279,7 @@ public class PedidoDAOImpl implements PedidoDAO {
         p.setParaLevar(rs.getBoolean("para_levar"));
         p.setEstado(EstadoPedido.valueOf(rs.getString("estado")));
         p.setDataHora(rs.getTimestamp("data_hora").toLocalDateTime());
+        p.setNotaGeral(rs.getString("nota_geral"));
         return p;
     }
 }

@@ -9,20 +9,20 @@ import dss2526.venda.*;
 public class App {
 
     public static void main(String[] args) {
-        // 1. Instantiate DAOs (Data Access Layer)
-        // These are the single instances that will be reused throughout the app
-        CatalogoDAO catalogoDAO = new CatalogoDAOImpl();
+        // 1. Instanciar DAOs
+        CatalogoDAO catalogoDAO = new CatalogoDAOImpl(); // Podes manter se for usado noutro lado
         MenuDAO menuDAO = new MenuDAOImpl();
         ProdutoDAO produtoDAO = new ProdutoDAOImpl();
         IngredienteDAO ingredienteDAO = new IngredienteDAOImpl();
         PedidoDAO pedidoDAO = new PedidoDAOImpl();
         TarefaDAO tarefaDAO = new TarefaDAOImpl();
-        // Assuming you might have a StockDAO or similar for production, add it here
 
-        // 2. Instantiate Facades (Service Layer) with Dependency Injection
-        // We inject the specific DAOs required by each Facade
+        // 2. Instanciar Facades com Injeção de Dependências
         IGestaoFacade gestaoFacade = new GestaoFacade(catalogoDAO, menuDAO, produtoDAO, ingredienteDAO);
-        IVendaFacade vendaFacade = new VendaFacade(pedidoDAO, catalogoDAO); // Venda needs access to products/catalogs and orders
-        IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO); // Production needs tasks and orders
+        
+        // CORREÇÃO AQUI: Passar pedidoDAO, produtoDAO e menuDAO (3 argumentos)
+        IVendaFacade vendaFacade = new VendaFacade(pedidoDAO, produtoDAO, menuDAO); 
+        
+        IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO);
     }
 }

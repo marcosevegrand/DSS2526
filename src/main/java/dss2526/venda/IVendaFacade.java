@@ -1,25 +1,25 @@
 package dss2526.venda;
 
-// import dss2526.domain.entity.Pedido;
-// import dss2526.domain.contract.Item;
+import dss2526.domain.entity.Pedido;
+import dss2526.domain.contract.Item;
 
-// import java.util.List;
+import java.util.List;
 
 public interface IVendaFacade {
 
-    // Pedido criarPedido(boolean paraLevar);
+    Pedido criarPedido(boolean paraLevar);
 
-    // void adicionarItem(int idPedido, int idItem, int quantidade, String observacao);
+    void adicionarItem(int idPedido, int idItem, int quantidade, String observacao);
 
-    // void removerItem(int idPedido, int idItem, int quantidade);
+    void removerItem(int idPedido, int idItem, int quantidade);
 
-    // void adicionarNota(int idPedido, String nota);
+    void adicionarNota(int idPedido, String nota);
 
-    // void confirmarPedido(int idPedido);
+    void confirmarPedido(int idPedido);
 
-    // void cancelarPedido(int idPedido);
+    void cancelarPedido(int idPedido);
 
-    // Pedido obterPedido(int idPedido);
+    Pedido obterPedido(int idPedido);
 
-    // List<Item> obterItemsDisponiveis();
+    List<Item> obterItemsDisponiveis();
 }
