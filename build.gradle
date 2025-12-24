@@ -16,7 +16,7 @@ javafx {
 }
 
 dependencies {
-    // Dependências existentes (mantém as que tinhas para Hibernate/SQL)
+    // Dependências existentes
     implementation 'org.hibernate.orm:hibernate-core:6.4.0.Final'
     implementation 'mysql:mysql-connector-java:8.0.33' 
     
@@ -25,7 +25,6 @@ dependencies {
 }
 
 application {
-    // Define a classe principal da aplicação JavaFX
     mainClass = 'dss2526.app.Launcher'
 }
 
