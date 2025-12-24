@@ -14,20 +14,20 @@ public class ProducaoFacade implements IProducaoFacade {
         this.tarefas = tarefas;
     }
 
-    // @Override
-    // public List<Tarefa> listarTarefasPorEstacao(EstacaoTrabalho estacao) {
-    //     return tarefas.stream()
-    //             .filter(t -> t.getPasso().getEstacao() == estacao)
-    //             .collect(Collectors.toList());
-    // }
+    @Override
+    public List<Tarefa> listarTarefasPorEstacao(EstacaoTrabalho estacao) {
+        return tarefas.stream()
+                .filter(t -> t.getPasso().getEstacao() == estacao)
+                .collect(Collectors.toList());
+    }
 
-    // @Override
-    // public void concluirTarefa(int idTarefa) {
-    //     Tarefa tarefa = tarefas.stream()
-    //             .filter(t -> t.getId() == idTarefa)
-    //             .findFirst()
-    //             .orElseThrow(() -> new IllegalArgumentException("Tarefa não encontrada: ID " + idTarefa));
+    @Override
+    public void concluirTarefa(int idTarefa) {
+        Tarefa tarefa = tarefas.stream()
+                .filter(t -> t.getId() == idTarefa)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Tarefa não encontrada: ID " + idTarefa));
 
-    //     tarefa.setConcluida(true);
-    // }
+        tarefa.setConcluida(true);
+    }
 }
