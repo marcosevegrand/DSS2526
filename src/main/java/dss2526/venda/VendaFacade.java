@@ -1,5 +1,8 @@
 package dss2526.venda;
 
+import dss2526.data.contract.CatalogoDAO;
+import dss2526.data.contract.PedidoDAO;
+
 // import dss2526.domain.entity.*;
 // import dss2526.domain.contract.Item;
 // import dss2526.domain.enumeration.EstadoPedido;
@@ -9,7 +12,16 @@ package dss2526.venda;
 // import java.util.List;
 // import java.util.Optional;
 
-public class VendaFacade {
+public class VendaFacade implements IVendaFacade{
+
+    private final PedidoDAO pedidoDAO;
+    private final CatalogoDAO catalogoDAO;
+
+    // Constructor Injection
+    public VendaFacade(PedidoDAO pedidoDAO, CatalogoDAO catalogoDAO) {
+        this.pedidoDAO = pedidoDAO;
+        this.catalogoDAO = catalogoDAO;
+    }
 
     // private final ProdutoDAO produtoDAO;
     // private final MenuDAO menuDAO;

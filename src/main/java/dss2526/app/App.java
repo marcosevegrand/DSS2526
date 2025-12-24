@@ -2,60 +2,27 @@ package dss2526.app;
 
 import dss2526.data.contract.*;
 import dss2526.data.impl.*;
-import dss2526.domain.contract.*;
-import dss2526.domain.entity.*;
 import dss2526.gestao.*;
 import dss2526.producao.*;
 import dss2526.venda.*;
-import dss2526.ui.controller.*;
-import dss2526.ui.view.*;
 
-import javax.swing.*;
-import java.awt.*;
-
-/**
- * Fachada Mestre (Sistema) que garante a unicidade do Inventário.
- * Inicializa DAOs, cria fachadas, controllers e lança UIs para teste.
- */
 public class App {
 
-    private final ProdutoDAO produtoDAO;
-    private final MenuDAO menuDAO;
-    private final PedidoDAO pedidoDAO;
-    private final IngredienteDAO ingredienteDAO;
-    private final TarefaDAO tarefaDAO;
-
-    private VendaFacade vendaFacade;
-    private VendaController vendaController;
-
-    // Produção (singletons para UI)
-    private ProducaoFacade producaoFacade;
-    private ProducaoController producaoController;
-
-    // Estatísticas
-    private GestaoFacade gestaoFacade;
-    private GestaoController gestaoController;
-
-    public App() {
-        // Inicializa DAOs
-        this.produtoDAO = new ProdutoDAOImpl();
-        this.menuDAO = new MenuDAOImpl();
-        this.pedidoDAO = new PedidoDAOImpl();
-        this.ingredienteDAO = new IngredienteDAOImpl();
-        this.tarefaDAO = new TarefaDAOImpl();
-
-        // Facade / controllers
-        this.vendaFacade = new VendaFacade(produtoDAO, menuDAO, pedidoDAO);
-        this.vendaController = new VendaController(vendaFacade);
-
-        this.producaoFacade = new ProducaoFacade(tarefaDAO);
-        this.producaoController = new ProducaoController(producaoFacade);
-
-        this.gestaoFacade = new GestaoFacade(pedidoDAO);
-        this.gestaoController = new GestaoController(gestaoFacade);
-    }
-
     public static void main(String[] args) {
-        App app = new App();
+        // 1. Instantiate DAOs (Data Access Layer)
+        // These are the single instances that will be reused throughout the app
+        CatalogoDAO catalogoDAO = new CatalogoDAOImpl();
+        MenuDAO menuDAO = new MenuDAOImpl();
+        ProdutoDAO produtoDAO = new ProdutoDAOImpl();
+        IngredienteDAO ingredienteDAO = new IngredienteDAOImpl();
+        PedidoDAO pedidoDAO = new PedidoDAOImpl();
+        TarefaDAO tarefaDAO = new TarefaDAOImpl();
+        // Assuming you might have a StockDAO or similar for production, add it here
+
+        // 2. Instantiate Facades (Service Layer) with Dependency Injection
+        // We inject the specific DAOs required by each Facade
+        IGestaoFacade gestaoFacade = new GestaoFacade(catalogoDAO, menuDAO, produtoDAO, ingredienteDAO);
+        IVendaFacade vendaFacade = new VendaFacade(pedidoDAO, catalogoDAO); // Venda needs access to products/catalogs and orders
+        IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO); // Production needs tasks and orders
     }
 }

@@ -25,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'dss2526.app.Launcher'
+    mainClass = 'dss2526.app.App'
 }
 
 java {
