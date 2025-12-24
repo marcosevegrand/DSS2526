@@ -30,7 +30,7 @@ public class AppUI {
             "Subsistema de Produção",
             "Subsistema de Gestão",
         });
-        menu.setHandler(1, () -> vendaUI.run());
+        menu.setHandler(1, () -> vendaUI.show());
         menu.setHandler(2, () -> producaoUI.run());
         menu.setHandler(3, () -> gestaoUI.run());
         menu.run();

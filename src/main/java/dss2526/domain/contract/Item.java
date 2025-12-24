@@ -8,6 +8,9 @@ import java.math.BigDecimal;
  */
 public interface Item {
 
+
+    String getNome();
+
     Integer getId();
 
     BigDecimal getPreco();

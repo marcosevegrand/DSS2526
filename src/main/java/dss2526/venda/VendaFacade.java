@@ -10,7 +10,6 @@ import dss2526.domain.enumeration.EstadoPedido;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class VendaFacade implements IVendaFacade {
 

@@ -134,7 +134,7 @@ public class NewMenu {
     /** Ler uma opção válida */
     private int readOption() {
         int op;
-        System.out.print("Enter your choice: ");
+        System.out.print(">>>> ");
         try {
             if (!is.hasNextLine()) {
                 System.out.println("\nNo input detected. Exiting menu.");
