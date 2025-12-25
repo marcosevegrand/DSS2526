@@ -2,10 +2,13 @@ package dss2526.data.impl;
 
 import dss2526.data.DBConfig;
 import dss2526.data.contract.MenuDAO;
-import dss2526.domain.entity.*;
+import dss2526.domain.entity.Menu;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MenuDAOImpl implements MenuDAO {
 
@@ -14,103 +17,101 @@ public class MenuDAOImpl implements MenuDAO {
 
     @Override
     public Menu save(Menu m) {
-        String sql = "INSERT INTO Menu (Nome, Preco, Disponivel) VALUES (?, ?, ?)";
-        try (Connection conn = dbConfig.getConnection()) {
-            conn.setAutoCommit(false);
-            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                ps.setString(1, m.getNome());
-                ps.setDouble(2, m.getPreco());
-                ps.executeUpdate();
-                try (ResultSet rs = ps.getGeneratedKeys()) {
+        String sql = (m.getId() > 0) ?
+            "INSERT INTO Menus (ID, Nome, Preco) VALUES (?, ?, ?)" :
+            "INSERT INTO Menus (Nome, Preco) VALUES (?, ?)";
+
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            int idx = 1;
+            if (m.getId() > 0) pstmt.setInt(idx++, m.getId());
+            pstmt.setString(idx++, m.getNome());
+            pstmt.setDouble(idx++, m.getPreco());
+            
+            pstmt.executeUpdate();
+            
+            if (m.getId() == 0) {
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
                     if (rs.next()) m.setId(rs.getInt(1));
                 }
-                saveLines(conn, m);
-                conn.commit();
-                identityMap.put(m.getId(), m);
-            } catch (SQLException e) { conn.rollback(); throw e; }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return m;
-    }
-
-    @Override
-    public Menu update(Menu m) {
-        String sql = "UPDATE Menu SET Nome = ?, Preco = ?, Disponivel = ? WHERE ID = ?";
-        try (Connection conn = dbConfig.getConnection()) {
-            conn.setAutoCommit(false);
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, m.getNome());
-                ps.setDouble(2, m.getPreco());
-                ps.setInt(3, m.getId());
-                ps.executeUpdate();
-
-                try (PreparedStatement del = conn.prepareStatement("DELETE FROM LinhaMenu WHERE MenuID = ?")) {
-                    del.setInt(1, m.getId()); del.executeUpdate();
-                }
-                saveLines(conn, m);
-                conn.commit();
-                identityMap.put(m.getId(), m);
-            } catch (SQLException e) { conn.rollback(); throw e; }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return m;
-    }
-
-    private void saveLines(Connection conn, Menu m) throws SQLException {
-        if (m.getLinhasMenu() != null) {
-            String sql = "INSERT INTO LinhaMenu (MenuID, ProdutoID, Quantidade) VALUES (?, ?, ?)";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                for (LinhaMenu lm : m.getLinhasMenu()) {
-                    ps.setInt(1, m.getId());
-                    ps.setInt(2, lm.getProduto().getId());
-                    ps.setInt(3, lm.getQuantidade());
-                    ps.addBatch();
-                }
-                ps.executeBatch();
             }
+            identityMap.put(m.getId(), m);
+            return m;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
     @Override
     public Menu findById(Integer id) {
         if (identityMap.containsKey(id)) return identityMap.get(id);
-        String sql = "SELECT * FROM Menu WHERE ID = ?";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
+
+        String sql = "SELECT * FROM Menus WHERE ID = ?";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Menu m = new Menu();
                     m.setId(rs.getInt("ID"));
                     m.setNome(rs.getString("Nome"));
                     m.setPreco(rs.getDouble("Preco"));
                     identityMap.put(m.getId(), m);
-                    loadLines(conn, m);
                     return m;
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
-    private void loadLines(Connection conn, Menu m) throws SQLException {
-        List<LinhaMenu> list = new ArrayList<>();
-        String sql = "SELECT ProdutoID, Quantidade FROM LinhaMenu WHERE MenuID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, m.getId());
-            ResultSet rs = ps.executeQuery();
-            ProdutoDAOImpl pDao = new ProdutoDAOImpl();
-            while (rs.next()) list.add(new LinhaMenu(pDao.findById(rs.getInt(1)), rs.getInt(2)));
+    @Override
+    public List<Menu> findAll() {
+        List<Menu> lista = new ArrayList<>();
+        String sql = "SELECT ID FROM Menus";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) lista.add(findById(rs.getInt("ID")));
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        m.setLinhasMenu(list);
+        return lista;
     }
 
-    @Override public List<Menu> findAll() {
-        List<Menu> res = new ArrayList<>();
-        try (Connection conn = dbConfig.getConnection(); Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT ID FROM Menu")) {
-            while (rs.next()) res.add(findById(rs.getInt(1)));
-        } catch (SQLException e) { e.printStackTrace(); }
-        return res;
+    @Override
+    public Menu update(Menu m) {
+        String sql = "UPDATE Menus SET Nome = ?, Preco = ? WHERE ID = ?";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, m.getNome());
+            pstmt.setDouble(2, m.getPreco());
+            pstmt.setInt(3, m.getId());
+            pstmt.executeUpdate();
+            identityMap.put(m.getId(), m);
+            return m;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
-    @Override public boolean delete(Integer id) { identityMap.remove(id); return false; }
+    @Override
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM Menus WHERE ID = ?";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            if (pstmt.executeUpdate() > 0) {
+                identityMap.remove(id);
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

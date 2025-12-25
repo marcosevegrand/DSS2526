@@ -14,26 +14,7 @@ public class Pedido {
 
     // Construtores
 
-    public Pedido() {
-        this.dataHora = LocalDateTime.now();
-        this.estado = EstadoPedido.INICIADO;
-    }
-
-    public Pedido(int restauranteId, boolean paraLevar) {
-        this();
-        this.restauranteId = restauranteId;
-        this.paraLevar = paraLevar;
-    }
-
-    public Pedido(int restauranteId, EstadoPedido estado,
-        LocalDateTime dataHora,
-        boolean paraLevar,
-        List<LinhaPedido> linhasPedido) {
-        this(restauranteId, paraLevar);
-        this.estado = estado;
-        this.dataHora = dataHora;
-        this.linhasPedido = linhasPedido;
-    }
+    public Pedido() {}
 
     // Lógica de Negócio
 
@@ -41,9 +22,7 @@ public class Pedido {
      * Calcula o preço total somando todas as linhas.
      */
     public double calcularPrecoTotal() {
-        return linhasPedido.stream()
-                .mapToDouble(LinhaPedido::getPreco)
-                .sum();
+        return linhasPedido.stream().mapToDouble(LinhaPedido::getPreco).sum();
     }
 
     // Getters e Setters

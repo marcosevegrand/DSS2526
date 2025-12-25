@@ -6,30 +6,14 @@ import java.util.*;
 public class Estacao {
     private int id;
     private int restauranteId;
-    private Trabalho trabalho; // Define a função (Grelha, Fritura, etc.)
-    private List<LinhaEstacao> tarefas;
+    private Trabalho trabalho;
+    private List<LinhaEstacao> tarefas = new ArrayList<>();
 
     // Construtores
 
-    public Estacao() {
-        this.tarefas = new ArrayList<>();
-    }
-
-    public Estacao(int restauranteId, Trabalho trabalho, List<LinhaEstacao> tarefas) {
-        this();
-        this.restauranteId = restauranteId;
-        this.trabalho = trabalho;
-        this.tarefas = tarefas;
-    }
+    public Estacao() {}
 
     // Lógica de Apoio aos Cenários
-
-    /**
-     * Retorna apenas as tarefas que ainda não foram concluídas.
-     */
-    public List<LinhaEstacao> obterFilaEspera() {
-        return this.tarefas; 
-    }
 
     // Getters e Setters
 

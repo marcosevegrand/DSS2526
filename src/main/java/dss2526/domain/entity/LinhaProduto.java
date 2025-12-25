@@ -5,12 +5,11 @@ public class LinhaProduto {
     private int idIngrediente;
     private Double quantidade;
 
+    // Construtores
+
     public LinhaProduto() {}
 
-    public LinhaProduto(int idIngrediente, Double quantidade) {
-        this.idIngrediente = idIngrediente;
-        this.quantidade = quantidade;
-    }
+    // Getters e Setters
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }

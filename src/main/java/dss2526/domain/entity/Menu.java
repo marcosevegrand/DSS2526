@@ -14,12 +14,6 @@ public class Menu implements Item {
 
     public Menu() {}
 
-    public Menu(String nome, double preco, List<LinhaMenu> linhasMenu) {
-        this.nome = nome;
-        this.preco = preco;
-        this.linhasMenu = linhasMenu;
-    }
-
     // Getters e Setters
 
     public int getId() { return id; }

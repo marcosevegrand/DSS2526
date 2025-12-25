@@ -13,12 +13,6 @@ public class Passo {
     // Construtores
     public Passo() {}
 
-    public Passo(String nome, Duration duracao, Trabalho trabalho) {
-        this.nome = nome;
-        this.duracao = duracao;
-        this.trabalho = trabalho;
-    }
-
     // Getters e Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }

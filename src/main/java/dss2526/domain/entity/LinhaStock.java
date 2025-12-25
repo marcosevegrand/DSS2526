@@ -9,11 +9,6 @@ public class LinhaStock {
 
     public LinhaStock() {}
 
-    public LinhaStock(int idIngrediente, double quantidade) {
-        this.idIngrediente = idIngrediente;
-        this.quantidade = quantidade;
-    }
-
     // Getters e Setters
 
     public int getId() { return id; }

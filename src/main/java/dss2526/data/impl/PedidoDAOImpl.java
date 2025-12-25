@@ -2,12 +2,14 @@ package dss2526.data.impl;
 
 import dss2526.data.DBConfig;
 import dss2526.data.contract.PedidoDAO;
-import dss2526.domain.contract.Item;
-import dss2526.domain.entity.*;
+import dss2526.domain.entity.Pedido;
 import dss2526.domain.enumeration.EstadoPedido;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PedidoDAOImpl implements PedidoDAO {
 
@@ -16,112 +18,122 @@ public class PedidoDAOImpl implements PedidoDAO {
 
     @Override
     public Pedido save(Pedido p) {
-        String sql = "INSERT INTO Pedido (Estado, DataHora, ParaLevar) VALUES (?, ?, ?)";
-        try (Connection conn = dbConfig.getConnection()) {
-            conn.setAutoCommit(false);
-            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                ps.setString(1, p.getEstado().name());
-                ps.setTimestamp(2, Timestamp.valueOf(p.getDataHora()));
-                ps.setBoolean(3, p.isParaLevar());
-                ps.executeUpdate();
-                try (ResultSet rs = ps.getGeneratedKeys()) {
+        String sql = (p.getId() > 0) ?
+            "INSERT INTO Pedidos (ID, Restaurante_ID, Estado, DataHora, Para_Levar) VALUES (?, ?, ?, ?, ?)" :
+            "INSERT INTO Pedidos (Restaurante_ID, Estado, DataHora, Para_Levar) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            int idx = 1;
+            if (p.getId() > 0) pstmt.setInt(idx++, p.getId());
+            pstmt.setInt(idx++, p.getRestauranteId());
+            pstmt.setString(idx++, p.getEstado().name());
+            pstmt.setTimestamp(idx++, Timestamp.valueOf(p.getDataHora()));
+            pstmt.setBoolean(idx++, p.isParaLevar());
+            
+            pstmt.executeUpdate();
+            
+            if (p.getId() == 0) {
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
                     if (rs.next()) p.setId(rs.getInt(1));
                 }
-                saveLines(conn, p);
-                conn.commit();
-                identityMap.put(p.getId(), p);
-            } catch (SQLException e) { conn.rollback(); throw e; }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return p;
-    }
-
-    @Override
-    public Pedido update(Pedido p) {
-        String sql = "UPDATE Pedido SET Estado = ?, ParaLevar = ? WHERE ID = ?";
-        try (Connection conn = dbConfig.getConnection()) {
-            conn.setAutoCommit(false);
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, p.getEstado().name());
-                ps.setBoolean(2, p.isParaLevar());
-                ps.setInt(3, p.getId());
-                ps.executeUpdate();
-
-                try (PreparedStatement del = conn.prepareStatement("DELETE FROM LinhaPedido WHERE PedidoID = ?")) {
-                    del.setInt(1, p.getId()); del.executeUpdate();
-                }
-                saveLines(conn, p);
-                conn.commit();
-                identityMap.put(p.getId(), p);
-            } catch (SQLException e) { conn.rollback(); throw e; }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return p;
-    }
-
-    private void saveLines(Connection conn, Pedido p) throws SQLException {
-        if (p.getLinhasPedido() != null) {
-            String sql = "INSERT INTO LinhaPedido (PedidoID, ItemID, ItemTipo, Quantidade, PrecoUnitario, Observacao) VALUES (?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                for (LinhaPedido lp : p.getLinhasPedido()) {
-                    ps.setInt(1, p.getId());
-                    ps.setInt(2, lp.getItem().getId());
-                    ps.setString(3, (lp.getItem() instanceof Menu) ? "MENU" : "PRODUTO");
-                    ps.setInt(4, lp.getQuantidade());
-                    ps.setDouble(5, lp.getPrecoUnitario());
-                    ps.setString(6, lp.getObservacao());
-                    ps.addBatch();
-                }
-                ps.executeBatch();
             }
+            identityMap.put(p.getId(), p);
+            return p;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
     @Override
     public Pedido findById(Integer id) {
         if (identityMap.containsKey(id)) return identityMap.get(id);
-        String sql = "SELECT * FROM Pedido WHERE ID = ?";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
+
+        String sql = "SELECT * FROM Pedidos WHERE ID = ?";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Pedido p = new Pedido();
                     p.setId(rs.getInt("ID"));
+                    p.setRestauranteId(rs.getInt("Restaurante_ID"));
                     p.setEstado(EstadoPedido.valueOf(rs.getString("Estado")));
                     p.setDataHora(rs.getTimestamp("DataHora").toLocalDateTime());
-                    p.setParaLevar(rs.getBoolean("ParaLevar"));
+                    p.setParaLevar(rs.getBoolean("Para_Levar"));
+                    // carregar linhasPedido aqui se necessario
                     identityMap.put(p.getId(), p);
-                    loadLines(conn, p);
                     return p;
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
-    private void loadLines(Connection conn, Pedido p) throws SQLException {
-        List<LinhaPedido> list = new ArrayList<>();
-        String sql = "SELECT ItemID, ItemTipo, Quantidade, PrecoUnitario, Observacao FROM LinhaPedido WHERE PedidoID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, p.getId());
-            ResultSet rs = ps.executeQuery();
-            ProdutoDAOImpl pDao = new ProdutoDAOImpl();
-            MenuDAOImpl mDao = new MenuDAOImpl();
-            while (rs.next()) {
-                Item item = rs.getString("ItemTipo").equals("MENU") ? mDao.findById(rs.getInt(1)) : pDao.findById(rs.getInt(1));
-                list.add(new LinhaPedido(item, rs.getInt(3), rs.getDouble(4), rs.getString(5)));
-            }
+    @Override
+    public List<Pedido> findAll() {
+        List<Pedido> lista = new ArrayList<>();
+        String sql = "SELECT ID FROM Pedidos";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) lista.add(findById(rs.getInt("ID")));
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        p.setLinhasPedido(list);
+        return lista;
     }
 
-    @Override public List<Pedido> findAll() {
-        List<Pedido> res = new ArrayList<>();
-        try (Connection conn = dbConfig.getConnection(); Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT ID FROM Pedido")) {
-            while (rs.next()) res.add(findById(rs.getInt(1)));
-        } catch (SQLException e) { e.printStackTrace(); }
-        return res;
+    @Override
+    public Pedido update(Pedido p) {
+        String sql = "UPDATE Pedidos SET Restaurante_ID = ?, Estado = ?, DataHora = ?, Para_Levar = ? WHERE ID = ?";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, p.getRestauranteId());
+            pstmt.setString(2, p.getEstado().name());
+            pstmt.setTimestamp(3, Timestamp.valueOf(p.getDataHora()));
+            pstmt.setBoolean(4, p.isParaLevar());
+            pstmt.setInt(5, p.getId());
+            pstmt.executeUpdate();
+            identityMap.put(p.getId(), p);
+            return p;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
-    @Override public boolean delete(Integer id) { identityMap.remove(id); return true; }
+    @Override
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM Pedidos WHERE ID = ?";
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            if (pstmt.executeUpdate() > 0) {
+                identityMap.remove(id);
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public List<Pedido> getPendentes() {
+        List<Pedido> lista = new ArrayList<>();
+        String sql = "SELECT ID FROM Pedidos WHERE Estado != 'PAGO' AND Estado != 'ENTREGUE'"; 
+        try (Connection conn = this.dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) lista.add(findById(rs.getInt("ID")));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
 }

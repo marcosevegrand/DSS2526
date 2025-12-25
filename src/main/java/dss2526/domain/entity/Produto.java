@@ -13,15 +13,7 @@ public class Produto implements Item {
 
     // Construtores
 
-    public Produto() {
-    }
-
-    public Produto(String nome, int preco, List<LinhaProduto> ingredientes, List<Passo> tarefas) {
-        this.nome = nome;
-        this.preco = preco;
-        this.ingredientes = ingredientes;
-        this.tarefas = tarefas;
-    }
+    public Produto() {}
 
     // Getters e Setters
 

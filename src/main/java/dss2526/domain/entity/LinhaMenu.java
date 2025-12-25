@@ -9,11 +9,6 @@ public class LinhaMenu {
 
     public LinhaMenu() {}
 
-    public LinhaMenu(int idProduto, int quantidade) {
-        this.idProduto = idProduto;
-        this.quantidade = quantidade;
-    }
-
     // Getters e Setters
 
     public int getId() { return id; }

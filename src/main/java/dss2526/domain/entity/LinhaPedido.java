@@ -11,13 +11,6 @@ public class LinhaPedido {
 
     public LinhaPedido() {}
 
-    public LinhaPedido(int idItem, int quantidade, double precoUnitario, String observacao) {
-        this.idItem = idItem;
-        this.quantidade = quantidade;
-        this.precoUnitario = precoUnitario;
-        this.observacao = (observacao == null) ? "" : observacao;
-    }
-
     // Lógica simples
 
     public double getPreco() {

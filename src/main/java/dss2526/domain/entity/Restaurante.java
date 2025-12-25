@@ -1,7 +1,5 @@
 package dss2526.domain.entity;
 
-import dss2526.domain.contract.Item;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,25 +8,14 @@ public class Restaurante {
     private String nome;
     private String localizacao;
 
-    private List<Estacao> estacoes;
-    private List<Funcionario> funcionarios;
-    private List<LinhaStock> stock;
-    private List<Pedido> pedidos;
+    private List<Estacao> estacoes = new ArrayList<>();
+    private List<Funcionario> funcionarios = new ArrayList<>();
+    private List<LinhaStock> stock = new ArrayList<>();
+    private List<Pedido> pedidos = new ArrayList<>();
     
     // Construtores
 
-    public Restaurante() {
-        this.estacoes = new ArrayList<>();
-        this.funcionarios = new ArrayList<>();
-        this.stock = new ArrayList<>();
-        this.pedidos = new ArrayList<>();
-    }
-
-    public Restaurante(String nome, String localizacao) {
-        this();
-        this.nome = nome;
-        this.localizacao = localizacao;
-    }
+    public Restaurante() {}
 
     // Getters e Setters
     public int getId() { return id; }

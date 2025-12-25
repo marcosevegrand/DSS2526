@@ -14,16 +14,6 @@ public class Mensagem {
         this.dataHora = LocalDateTime.now();
     }
 
-    public Mensagem(String texto, boolean urgente) {
-        this();
-        this.texto = texto;
-        this.urgente = urgente;
-    }
-
-    public Mensagem(String texto, LocalDateTime dataHora, boolean urgente) {
-        this(texto, false);
-    }
-
     // Getters e Setters
 
     public int getId() { return id; }

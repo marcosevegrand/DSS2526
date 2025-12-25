@@ -9,12 +9,6 @@ public class LinhaEstacao {
     // Construtores
     public LinhaEstacao() {}
 
-    public LinhaEstacao(int idTarefa, int idPedido, boolean concluido) {
-        this.idTarefa = idTarefa;
-        this.idPedido = idPedido;
-        this.concluido = concluido;
-    }
-
     // Getters e Setters
 
     public int getId() { return id; }

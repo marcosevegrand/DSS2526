@@ -10,12 +10,6 @@ public class Ingrediente {
 
     public Ingrediente() {}
 
-    public Ingrediente(String nome, String unidade, String alergenico) {
-        this.nome = nome;
-        this.unidade = unidade;
-        this.alergenico = alergenico;
-    }
-
     // Getters e Setters
 
     public int getId() { return id; }

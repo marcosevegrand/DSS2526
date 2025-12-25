@@ -12,10 +12,6 @@ public class Catalogo {
 
     public Catalogo() {}
 
-    public Catalogo(List<Item> items) {
-        this.items = items;
-    }
-
     // Lógica simples
 
     public void adicionarItem(Item item) {
