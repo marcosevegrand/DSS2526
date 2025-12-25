@@ -1,173 +1,206 @@
--- Restaurante Management System Schema
+-- Restaurante Management System Schema (MySQL Compatible)
 
-CREATE DATABASE IF NOT EXISTS restaurante;
-USE restaurante;
+-- Disable foreign key checks to allow dropping tables in any order
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Apagar tabelas se existirem para recriar limpo
-DROP TABLE IF EXISTS LinhaEstacao;
+-- Clean up existing tables
+DROP TABLE IF EXISTS Tarefa;
 DROP TABLE IF EXISTS LinhaStock;
 DROP TABLE IF EXISTS LinhaProduto;
 DROP TABLE IF EXISTS LinhaMenu;
 DROP TABLE IF EXISTS LinhaPedido;
-DROP TABLE IF EXISTS Produto_Passo; -- Tabela de associação Produto <-> Passo (Tarefas)
-DROP TABLE IF EXISTS Passos;
-DROP TABLE IF EXISTS Mensagens;
-DROP TABLE IF EXISTS Pedidos;
-DROP TABLE IF EXISTS Menus;
-DROP TABLE IF EXISTS Produtos;
-DROP TABLE IF EXISTS Ingredientes;
-DROP TABLE IF EXISTS Estacoes;
-DROP TABLE IF EXISTS Funcionarios;
-DROP TABLE IF EXISTS Catalogos;
+DROP TABLE IF EXISTS Produto_Passo;
+DROP TABLE IF EXISTS Passo_Ingrediente;
+DROP TABLE IF EXISTS Catalogo_Produto;
+DROP TABLE IF EXISTS Catalogo_Menu;
+DROP TABLE IF EXISTS Passo;
+DROP TABLE IF EXISTS Mensagem;
+DROP TABLE IF EXISTS Pedido;
+DROP TABLE IF EXISTS Menu;
+DROP TABLE IF EXISTS Produto;
+DROP TABLE IF EXISTS Ingrediente;
+DROP TABLE IF EXISTS Estacao;
+DROP TABLE IF EXISTS Funcionario;
+DROP TABLE IF EXISTS Catalogo;
 DROP TABLE IF EXISTS Restaurante;
 
--- 1. Restaurante
+-- Re-enable foreign key checks for table creation
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 1. Catalogo
+CREATE TABLE Catalogo (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    nome TEXT
+);
+
+-- 2. Restaurante
 CREATE TABLE Restaurante (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nome TEXT NOT NULL,
-    Localizacao TEXT
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    nome TEXT NOT NULL,
+    localizacao TEXT,
+    catalogo_id INTEGER,
+    FOREIGN KEY (catalogo_id) REFERENCES Catalogo(id)
 );
 
--- 2. Catalogos
-CREATE TABLE Catalogos (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT
-    -- Assumindo que o catálogo agrega items via tabelas de associação ou lógica de negócio
+-- 3. Funcionario
+CREATE TABLE Funcionario (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    restaurante_id INTEGER,
+    utilizador VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    funcao VARCHAR(50) NOT NULL, -- Enum name
+    FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id)
 );
 
--- 3. Funcionarios
-CREATE TABLE Funcionarios (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Restaurante_ID INTEGER,
-    Utilizador TEXT NOT NULL UNIQUE,
-    Password TEXT NOT NULL,
-    Funcao TEXT NOT NULL, -- Enum armazenado como String
-    FOREIGN KEY (Restaurante_ID) REFERENCES Restaurante(ID)
+-- 4. Estacao
+CREATE TABLE Estacao (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    restaurante_id INTEGER,
+    trabalho VARCHAR(50), -- Enum name
+    FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id)
 );
 
--- 4. Estacoes
-CREATE TABLE Estacoes (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Restaurante_ID INTEGER,
-    Trabalho TEXT, -- Enum armazenado como String
-    FOREIGN KEY (Restaurante_ID) REFERENCES Restaurante(ID)
+-- 5. Ingrediente
+CREATE TABLE Ingrediente (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(255) NOT NULL UNIQUE,
+    unidade VARCHAR(50),
+    alergenico VARCHAR(255)
 );
 
--- 5. Ingredientes
-CREATE TABLE Ingredientes (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nome TEXT NOT NULL UNIQUE,
-    Unidade TEXT,
-    Alergenico TEXT
+-- 6. Produto
+CREATE TABLE Produto (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(255) NOT NULL,
+    preco DECIMAL(10, 2) DEFAULT 0.0
 );
 
--- 6. Produtos (Item)
-CREATE TABLE Produtos (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nome TEXT NOT NULL,
-    Preco REAL DEFAULT 0.0
+-- 7. Menu
+CREATE TABLE Menu (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(255) NOT NULL,
+    preco DECIMAL(10, 2) DEFAULT 0.0
 );
 
--- 7. Menus (Item)
-CREATE TABLE Menus (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nome TEXT NOT NULL,
-    Preco REAL DEFAULT 0.0
+-- 8. Pedido
+CREATE TABLE Pedido (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    restaurante_id INTEGER,
+    para_levar BOOLEAN DEFAULT 0,
+    estado VARCHAR(50) NOT NULL, -- Enum name
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id)
 );
 
--- 8. Pedidos
-CREATE TABLE Pedidos (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Restaurante_ID INTEGER,
-    Estado TEXT NOT NULL, -- Enum: REGISTADO, PREPARACAO, PRONTO, ENTREGUE, PAGO
-    DataHora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Para_Levar BOOLEAN DEFAULT 0,
-    FOREIGN KEY (Restaurante_ID) REFERENCES Restaurante(ID)
+-- 9. Mensagem
+CREATE TABLE Mensagem (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    restaurante_id INTEGER,
+    texto TEXT NOT NULL,
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id)
 );
 
--- 9. Mensagens
-CREATE TABLE Mensagens (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Texto TEXT NOT NULL,
-    DataHora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Urgente BOOLEAN DEFAULT 0
+-- 10. Passo
+CREATE TABLE Passo (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(255) NOT NULL,
+    duracao_minutos BIGINT,
+    trabalho VARCHAR(50)
 );
 
--- 10. Passos (Tarefas definidas)
-CREATE TABLE Passos (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nome TEXT NOT NULL,
-    Duracao BIGINT, -- Armazenado em segundos (Duration)
-    Trabalho TEXT -- Tipo de trabalho necessário
+-- --- Association Tables ---
+
+-- Catalogo -> Menu
+CREATE TABLE Catalogo_Menu (
+    catalogo_id INTEGER,
+    menu_id INTEGER,
+    PRIMARY KEY (catalogo_id, menu_id),
+    FOREIGN KEY (catalogo_id) REFERENCES Catalogo(id),
+    FOREIGN KEY (menu_id) REFERENCES Menu(id)
 );
 
--- --- Tabelas de Associação e Linhas ---
+-- Catalogo -> Produto
+CREATE TABLE Catalogo_Produto (
+    catalogo_id INTEGER,
+    produto_id INTEGER,
+    PRIMARY KEY (catalogo_id, produto_id),
+    FOREIGN KEY (catalogo_id) REFERENCES Catalogo(id),
+    FOREIGN KEY (produto_id) REFERENCES Produto(id)
+);
 
--- Associação Produto -> Passos (Lista de tarefas do produto)
+-- Produto -> Passo
 CREATE TABLE Produto_Passo (
-    Produto_ID INTEGER,
-    Passo_ID INTEGER,
-    Ordem INTEGER, -- Para manter a sequência
-    PRIMARY KEY (Produto_ID, Passo_ID),
-    FOREIGN KEY (Produto_ID) REFERENCES Produtos(ID),
-    FOREIGN KEY (Passo_ID) REFERENCES Passos(ID)
+    produto_id INTEGER,
+    passo_id INTEGER,
+    PRIMARY KEY (produto_id, passo_id),
+    FOREIGN KEY (produto_id) REFERENCES Produto(id),
+    FOREIGN KEY (passo_id) REFERENCES Passo(id)
 );
 
--- LinhaPedido (Item num Pedido)
--- Nota: Item pode ser Produto ou Menu. Uma forma simples é ter FKs opcionais ou tratar ID genericamente se a lógica aplicacional gerir.
--- Aqui uso colunas separadas para clareza, ou apenas Item_ID se houver uma tabela pai "Itens". 
--- Dado o esquema Java, Item é interface. Vamos assumir que guardamos o ID e um "Tipo" ou tabelas separadas. 
--- Simplificação: LinhaPedido aponta para Produto ou Menu.
+-- Passo -> Ingrediente
+CREATE TABLE Passo_Ingrediente (
+    passo_id INTEGER,
+    ingrediente_id INTEGER,
+    PRIMARY KEY (passo_id, ingrediente_id),
+    FOREIGN KEY (passo_id) REFERENCES Passo(id),
+    FOREIGN KEY (ingrediente_id) REFERENCES Ingrediente(id)
+);
+
+-- --- Line/Detail Tables ---
+
+-- LinhaPedido
 CREATE TABLE LinhaPedido (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Pedido_ID INTEGER NOT NULL,
-    Produto_ID INTEGER, -- Pode ser NULL se for Menu
-    Menu_ID INTEGER,    -- Pode ser NULL se for Produto
-    Quantidade INTEGER NOT NULL,
-    PrecoUnitario REAL,
-    Observacao TEXT,
-    FOREIGN KEY (Pedido_ID) REFERENCES Pedidos(ID),
-    FOREIGN KEY (Produto_ID) REFERENCES Produtos(ID),
-    FOREIGN KEY (Menu_ID) REFERENCES Menus(ID)
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    pedido_id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL, -- ID of Produto or Menu
+    tipo VARCHAR(50) NOT NULL, -- 'PRODUTO' or 'MENU'
+    quantidade INTEGER NOT NULL,
+    preco_unitario DECIMAL(10, 2),
+    observacao TEXT,
+    FOREIGN KEY (pedido_id) REFERENCES Pedido(id)
 );
 
--- LinhaMenu (Produtos dentro de um Menu)
+-- LinhaMenu
 CREATE TABLE LinhaMenu (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Menu_ID INTEGER NOT NULL,
-    Produto_ID INTEGER NOT NULL,
-    Quantidade INTEGER DEFAULT 1,
-    FOREIGN KEY (Menu_ID) REFERENCES Menus(ID),
-    FOREIGN KEY (Produto_ID) REFERENCES Produtos(ID)
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    menu_id INTEGER NOT NULL,
+    produto_id INTEGER NOT NULL,
+    quantidade INTEGER DEFAULT 1,
+    FOREIGN KEY (menu_id) REFERENCES Menu(id),
+    FOREIGN KEY (produto_id) REFERENCES Produto(id)
 );
 
--- LinhaProduto (Ingredientes dentro de um Produto - Receita)
+-- LinhaProduto (Receita)
 CREATE TABLE LinhaProduto (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Produto_ID INTEGER NOT NULL,
-    Ingrediente_ID INTEGER NOT NULL,
-    Quantidade REAL NOT NULL,
-    FOREIGN KEY (Produto_ID) REFERENCES Produtos(ID),
-    FOREIGN KEY (Ingrediente_ID) REFERENCES Ingredientes(ID)
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    produto_id INTEGER NOT NULL,
+    ingrediente_id INTEGER NOT NULL,
+    quantidade DECIMAL(10, 3) NOT NULL,
+    FOREIGN KEY (produto_id) REFERENCES Produto(id),
+    FOREIGN KEY (ingrediente_id) REFERENCES Ingrediente(id)
 );
 
--- LinhaStock (Stock de ingredientes num Restaurante)
+-- LinhaStock
 CREATE TABLE LinhaStock (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Restaurante_ID INTEGER NOT NULL,
-    Ingrediente_ID INTEGER NOT NULL,
-    Quantidade REAL DEFAULT 0,
-    FOREIGN KEY (Restaurante_ID) REFERENCES Restaurante(ID),
-    FOREIGN KEY (Ingrediente_ID) REFERENCES Ingredientes(ID)
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    restaurante_id INTEGER NOT NULL,
+    ingrediente_id INTEGER NOT NULL,
+    quantidade DECIMAL(10, 3) DEFAULT 0,
+    FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id),
+    FOREIGN KEY (ingrediente_id) REFERENCES Ingrediente(id)
 );
 
--- LinhaEstacao (Tarefas atribuídas/em execução numa Estação para um Pedido)
-CREATE TABLE LinhaEstacao (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Estacao_ID INTEGER,
-    Pedido_ID INTEGER,
-    Passo_ID INTEGER, -- A "Tarefa"
-    Concluido BOOLEAN DEFAULT 0,
-    FOREIGN KEY (Estacao_ID) REFERENCES Estacoes(ID),
-    FOREIGN KEY (Pedido_ID) REFERENCES Pedidos(ID),
-    FOREIGN KEY (Passo_ID) REFERENCES Passos(ID)
+-- Tarefa
+CREATE TABLE Tarefa (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    passo_id INTEGER,
+    produto_id INTEGER,
+    pedido_id INTEGER,
+    data_criacao TIMESTAMP NULL DEFAULT NULL,
+    data_conclusao TIMESTAMP NULL DEFAULT NULL,
+    concluido BOOLEAN DEFAULT 0,
+    FOREIGN KEY (passo_id) REFERENCES Passo(id),
+    FOREIGN KEY (produto_id) REFERENCES Produto(id),
+    FOREIGN KEY (pedido_id) REFERENCES Pedido(id)
 );
