@@ -2,9 +2,10 @@ package dss2526.app;
 
 import dss2526.data.contract.*;
 import dss2526.data.impl.*;
-import dss2526.gestao.*;
-import dss2526.producao.*;
-import dss2526.venda.*;
+import dss2526.service.gestao.*;
+import dss2526.service.producao.*;
+import dss2526.service.venda.*;
+import dss2526.ui.controller.*;
 import dss2526.ui.view.AppUI;
 
 public class App {
@@ -18,19 +19,18 @@ public class App {
         PedidoDAO pedidoDAO = new PedidoDAOImpl();
         PassoDAO tarefaDAO = new PassoDAOImpl();
 
-        // 2. Instanciar a Produção primeiro
-        // Ela precisa do ingredienteDAO para gerir os alertas de falta de stock
+        // 2. Instanciar Facades (Camada de Serviço)
         IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO, ingredienteDAO);
-
-        // 3. Instanciar a Gestão
-        // Agora passamos a producaoFacade para que o Gerente possa enviar avisos à cozinha
         IGestaoFacade gestaoFacade = new GestaoFacade(pedidoDAO, produtoDAO, producaoFacade);
-        
-        // 4. Instanciar a Venda
         IVendaFacade vendaFacade = new VendaFacade(pedidoDAO, produtoDAO, menuDAO);
 
+        // Instanciar Controllers (Camada de Controle)
+        VendaController vendaController = new VendaController(vendaFacade);
+        ProducaoController producaoController = new ProducaoController(producaoFacade);
+        GestaoController gestaoController = new GestaoController(gestaoFacade);
+
         // 3. Instanciar e iniciar a App UI
-        AppUI appUI = new AppUI(vendaFacade, producaoFacade, gestaoFacade);
+        AppUI appUI = new AppUI(vendaController, producaoController, gestaoController);
         appUI.run();
     }
 }
