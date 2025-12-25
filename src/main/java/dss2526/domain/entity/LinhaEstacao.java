@@ -3,16 +3,17 @@ package dss2526.domain.entity;
 public class LinhaEstacao {
     int id;
     Tarefa tarefa;
+    Pedido pedido;
     boolean concluido;
 
     // Construtores
     public LinhaEstacao() {}
 
-    public LinhaEstacao(Tarefa tarefa, boolean concluido) {
+    public LinhaEstacao(Tarefa tarefa, Pedido pedido, boolean concluido) {
         this.tarefa = tarefa;
+        this.pedido = pedido;
         this.concluido = concluido;
     }
-
 
     // Getters e Setters
 
@@ -21,6 +22,9 @@ public class LinhaEstacao {
 
     public Tarefa getTarefa() { return tarefa; }
     public void setTarefa(Tarefa tarefa) { this.tarefa = tarefa; }
+
+    public Pedido getPedido() { return pedido; }
+    public void setPedido(Pedido pedido) { this.pedido = pedido; }
 
     public boolean isConcluido() { return concluido; }
     public void setConcluido(boolean concluido) { this.concluido = concluido; }

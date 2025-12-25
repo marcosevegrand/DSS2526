@@ -8,7 +8,7 @@ public class Produto implements Item {
     private int id;
     private String nome;
     private double preco;
-    private List<LinhaIngrediente> ingredientes = new ArrayList<>();
+    private List<LinhaProduto> ingredientes = new ArrayList<>();
     private List<Tarefa> tarefas = new ArrayList<>();
 
     // Construtores
@@ -16,7 +16,7 @@ public class Produto implements Item {
     public Produto() {
     }
 
-    public Produto(String nome, int preco, List<LinhaIngrediente> ingredientes, List<Tarefa> tarefas) {
+    public Produto(String nome, int preco, List<LinhaProduto> ingredientes, List<Tarefa> tarefas) {
         this.nome = nome;
         this.preco = preco;
         this.ingredientes = ingredientes;
@@ -34,8 +34,8 @@ public class Produto implements Item {
     public double getPreco() { return preco; }
     public void setPreco(double preco) { this.preco = preco; }
 
-    public List<LinhaIngrediente> getIngredientes() { return ingredientes; }
-    public void setIngredientes(List<LinhaIngrediente> ingredientes) { this.ingredientes = ingredientes; }
+    public List<LinhaProduto> getIngredientes() { return ingredientes; }
+    public void setIngredientes(List<LinhaProduto> ingredientes) { this.ingredientes = ingredientes; }
 
     public List<Tarefa> getTarefas() { return tarefas; }
     public void setTarefas(List<Tarefa> tarefas) { this.tarefas = tarefas; }

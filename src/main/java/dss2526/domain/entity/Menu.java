@@ -8,7 +8,6 @@ public class Menu implements Item {
     private int id;
     private String nome;
     private double preco;
-    private boolean disponivel;
     private List<LinhaMenu> linhasMenu = new ArrayList<>();
 
     // Construtores
@@ -31,9 +30,6 @@ public class Menu implements Item {
 
     public double getPreco() { return preco; }
     public void setPreco(double preco) { this.preco = preco; }
-
-    public boolean isDisponivel() { return disponivel; }
-    public void setDisponivel(boolean disponivel) { this.disponivel = disponivel; }
 
     public List<LinhaMenu> getLinhasMenu() { return linhasMenu; }
     public void setLinhasMenu(List<LinhaMenu> linhasMenu) { this.linhasMenu = linhasMenu; }

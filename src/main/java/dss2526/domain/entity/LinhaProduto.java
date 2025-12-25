@@ -1,18 +1,19 @@
 package dss2526.domain.entity;
 
-public class LinhaIngrediente {
+public class LinhaProduto {
     private int id;
-    private Produto produto;
     private Ingrediente ingrediente;
     private Double quantidade;
 
-    public LinhaIngrediente() {}
+    public LinhaProduto() {}
+
+    public LinhaProduto(Ingrediente ingrediente, Double quantidade) {
+        this.ingrediente = ingrediente;
+        this.quantidade = quantidade;
+    }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-
-    public Produto getProduto() { return produto; }
-    public void setProduto(Produto produto) { this.produto = produto; }
 
     public Ingrediente getIngrediente() { return ingrediente; }
     public void setIngrediente(Ingrediente ingrediente) { this.ingrediente = ingrediente; }
