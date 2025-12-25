@@ -13,22 +13,24 @@ public class App {
 
     public static void main(String[] args) {
         // 1. Instanciar DAOs (Camada de Dados)
-        CatalogoDAO catalogoDAO = 
-        EstacaoDAO estacaoDAO = new EstacaoDAOImpl();
-        FuncionarioDAO funcionarioDAO = new FuncionarioDAOImpl();
-        MenuDAO menuDAO = new MenuDAOImpl();
-        ProdutoDAO produtoDAO = new ProdutoDAOImpl();
-        IngredienteDAO ingredienteDAO = new IngredienteDAOImpl();
-        PedidoDAO pedidoDAO = new PedidoDAOImpl();
-        PassoDAO tarefaDAO = new PassoDAOImpl();
-        RestauranteDAO restauranteDAO = new RestauranteDAOImpl();
-        MensagemDAO mensagemDAO = new MensagemDAOImpl();
+        CatalogoDAO catalogoDAO = CatalogoDAOImpl.getInstance();
+        EstacaoDAO estacaoDAO = EstacaoDAOImpl.getInstance();
+        FuncionarioDAO funcionarioDAO = FuncionarioDAOImpl.getInstance();
+        MenuDAO menuDAO = MenuDAOImpl.getInstance();
+        ProdutoDAO produtoDAO = ProdutoDAOImpl.getInstance();
+        IngredienteDAO ingredienteDAO = IngredienteDAOImpl.getInstance();
+        PedidoDAO pedidoDAO = PedidoDAOImpl.getInstance();
+        PassoDAO passoDAO = PassoDAOImpl.getInstance();
+        TarefaDAO tarefaDAO = TarefaDAOImpl.getInstance();
+        RestauranteDAO restauranteDAO = RestauranteDAOImpl.getInstance();
+        MensagemDAO mensagemDAO = MensagemDAOImpl.getInstance();
 
 
         // 2. Instanciar Facades (Camada de Serviço)
-        IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO, ingredienteDAO);
-        IGestaoFacade gestaoFacade = new GestaoFacade(pedidoDAO, produtoDAO, producaoFacade);
         IVendaFacade vendaFacade = new VendaFacade(pedidoDAO, produtoDAO, menuDAO);
+        IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO, ingredienteDAO);
+        IGestaoFacade gestaoFacade = new GestaoFacade(pedidoDAO, produtoDAO);
+
 
         // Instanciar Controllers (Camada de Controle)
         VendaController vendaController = new VendaController(vendaFacade);
