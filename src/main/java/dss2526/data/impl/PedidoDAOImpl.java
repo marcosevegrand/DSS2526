@@ -7,6 +7,7 @@ import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.EstadoPedido;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.*;
 
 public class PedidoDAOImpl implements PedidoDAO {
@@ -74,6 +75,24 @@ public class PedidoDAOImpl implements PedidoDAO {
             }
         }
     }
+
+    @Override
+    public List<Pedido> findByData(LocalDate data) {
+        List<Pedido> res = new ArrayList<>();
+        // Filtra pela data (ignorando a hora no Timestamp)
+        String sql = "SELECT ID FROM Pedido WHERE DATE(DataHora) = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(data));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    res.add(findById(rs.getInt("ID")));
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return res;
+    }
+
 
     @Override
     public Pedido findById(Integer id) {

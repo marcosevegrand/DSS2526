@@ -4,9 +4,9 @@ import dss2526.data.contract.PedidoDAO;
 import dss2526.data.contract.ProdutoDAO;
 import dss2526.data.contract.MenuDAO;
 import dss2526.domain.entity.*;
-import dss2526.domain.entity.LinhaPedido;
 import dss2526.domain.contract.Item;
 import dss2526.domain.enumeration.EstadoPedido;
+import dss2526.producao.IProducaoFacade; 
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +16,13 @@ public class VendaFacade implements IVendaFacade {
     private final PedidoDAO pedidoDAO;
     private final ProdutoDAO produtoDAO;
     private final MenuDAO menuDAO;
+    private final IProducaoFacade producaoFacade; 
 
-    public VendaFacade(PedidoDAO pedidoDAO, ProdutoDAO produtoDAO, MenuDAO menuDAO) {
+    public VendaFacade(PedidoDAO pedidoDAO, ProdutoDAO produtoDAO, MenuDAO menuDAO, IProducaoFacade producaoFacade) {
         this.pedidoDAO = pedidoDAO;
         this.produtoDAO = produtoDAO;
         this.menuDAO = menuDAO;
+        this.producaoFacade = producaoFacade;
     }
 
     @Override
@@ -29,9 +31,7 @@ public class VendaFacade implements IVendaFacade {
         pedido.setParaLevar(paraLevar);
         pedido.setEstado(EstadoPedido.INICIADO);
         
-        // No teu DAO de Ingredientes, o put recebe (Key, Value)
-        // Se o ID for gerado pelo banco (Auto-increment), o ID virá nulo aqui 
-        // e o DAO tratará. Se for manual, precisas de gerar um ID.
+        // Se o teu DAO usa put, mantém put. Se mudaste para save, usa save.
         pedidoDAO.put(pedido.getId(), pedido); 
         return pedido;
     }
@@ -40,12 +40,12 @@ public class VendaFacade implements IVendaFacade {
     public void adicionarItem(int idPedido, int idItem, int quantidade, String observacao) {
         Pedido pedido = obterPedidoOuErro(idPedido);
 
-        // 1. Tenta buscar como Produto no ProdutoDAO (usando .get como no teu exemplo)
+        // 1. Tenta buscar como Produto
         Produto produto = produtoDAO.get(idItem);
         if (produto != null) {
             LinhaPedido linha = new LinhaPedido(produto, quantidade, produto.getPreco(), observacao);
             pedido.getLinhasPedido().add(linha);
-            pedidoDAO.put(pedido.getId(), pedido); // Atualiza o pedido com a nova linha
+            pedidoDAO.put(pedido.getId(), pedido);
             return;
         }
 
@@ -66,9 +66,9 @@ public class VendaFacade implements IVendaFacade {
         Pedido pedido = obterPedidoOuErro(idPedido);
         List<LinhaPedido> linhas = pedido.getLinhasPedido();
 
-        // Encontra a linha que contém o item com o ID pretendido
+        // CORREÇÃO: Usar == para tipos primitivos (int), corrigindo o erro de dereferência
         LinhaPedido linhaEncontrada = linhas.stream()
-                .filter(l -> l.getItem().getId().equals(idItem))
+                .filter(l -> l.getItem().getId() == idItem)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Item não está no pedido"));
 
@@ -78,13 +78,6 @@ public class VendaFacade implements IVendaFacade {
             linhaEncontrada.setQuantidade(linhaEncontrada.getQuantidade() - quantidade);
         }
 
-        pedidoDAO.put(pedido.getId(), pedido); // Sincroniza com a base de dados
-    }
-
-    @Override
-    public void adicionarNota(int idPedido, String nota) {
-        Pedido pedido = obterPedidoOuErro(idPedido);
-        pedido.setNotaGeral(nota);
         pedidoDAO.put(pedido.getId(), pedido);
     }
 
@@ -93,6 +86,11 @@ public class VendaFacade implements IVendaFacade {
         Pedido pedido = obterPedidoOuErro(idPedido);
         pedido.setEstado(EstadoPedido.CONFIRMADO);
         pedidoDAO.put(pedido.getId(), pedido);
+
+        // LIGAÇÃO COM A PRODUÇÃO: Cria as tarefas na cozinha automaticamente
+        if (producaoFacade != null) {
+            producaoFacade.registarNovoPedido(pedido);
+        }
     }
 
     @Override
@@ -103,14 +101,8 @@ public class VendaFacade implements IVendaFacade {
     }
 
     @Override
-    public Pedido obterPedido(int idPedido) {
-        return obterPedidoOuErro(idPedido);
-    }
-
-    @Override
     public List<Item> obterItemsDisponiveis() {
         List<Item> items = new ArrayList<>();
-        // Usa o método .values() que tens no teu DAO de exemplo
         items.addAll(produtoDAO.values());
         items.addAll(menuDAO.values());
         
@@ -119,7 +111,18 @@ public class VendaFacade implements IVendaFacade {
                 .toList();
     }
 
-    // Método auxiliar para evitar repetição de código
+    @Override
+    public Pedido obterPedido(int idPedido) {
+        return obterPedidoOuErro(idPedido);
+    }
+
+    @Override
+    public void adicionarNota(int idPedido, String nota) {
+        Pedido pedido = obterPedidoOuErro(idPedido);
+        pedido.setNotaGeral(nota);
+        pedidoDAO.put(pedido.getId(), pedido);
+    }
+
     private Pedido obterPedidoOuErro(int idPedido) {
         Pedido p = pedidoDAO.get(idPedido);
         if (p == null) {
