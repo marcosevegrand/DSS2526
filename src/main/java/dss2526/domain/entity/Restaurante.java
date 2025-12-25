@@ -7,11 +7,15 @@ public class Restaurante {
     private int id;
     private String nome;
     private String localizacao;
+    private Integer catalogoId;
 
-    private List<Estacao> estacoes = new ArrayList<>();
-    private List<Funcionario> funcionarios = new ArrayList<>();
+    // Referências por ID (Entidades independentes)
+    private List<Integer> estacaoIds = new ArrayList<>();
+    private List<Integer> funcionarioIds = new ArrayList<>();
+    private List<Integer> pedidoIds = new ArrayList<>();
+
+    // Composição direta (Parte do estado do Restaurante)
     private List<LinhaStock> stock = new ArrayList<>();
-    private List<Pedido> pedidos = new ArrayList<>();
     
     // Construtores
 
@@ -27,23 +31,30 @@ public class Restaurante {
     public String getLocalizacao() { return localizacao; }
     public void setLocalizacao(String localizacao) { this.localizacao = localizacao; }
 
-    public List<Estacao> getEstacoes() { return estacoes; }
-    public void setEstacoes(List<Estacao> estacoes) { this.estacoes = estacoes; }
-    public void adicionaEstacao(Estacao estacao) { this.estacoes.add(estacao); }
-    public void removeEstacao(Estacao estacao) { this.estacoes.remove(estacao); }
+    public Integer getCatalogoId() { return catalogoId; }
+    public void setCatalogoId(Integer catalogoId) { this.catalogoId = catalogoId; }
 
-    public List<Funcionario> getFuncionarios() { return funcionarios; }
-    public void setFuncionarios(List<Funcionario> funcionarios) { this.funcionarios = funcionarios; }
-    public void adicionaFuncionario(Funcionario funcionario) { this.funcionarios.add(funcionario); }
-    public void removeFuncionario(Funcionario funcionario) { this.funcionarios.remove(funcionario); }
+    // Gestão de IDs de Estações
+    public List<Integer> getEstacaoIds() { return estacaoIds; }
+    public void setEstacaoIds(List<Integer> estacaoIds) { this.estacaoIds = estacaoIds; }
+    public void addEstacaoId(Integer estacaoId) { this.estacaoIds.add(estacaoId); }
+    public void removeEstacaoId(Integer estacaoId) { this.estacaoIds.remove(estacaoId); }
 
+    // Gestão de IDs de Funcionários
+    public List<Integer> getFuncionarioIds() { return funcionarioIds; }
+    public void setFuncionarioIds(List<Integer> funcionarioIds) { this.funcionarioIds = funcionarioIds; }
+    public void addFuncionarioId(Integer funcionarioId) { this.funcionarioIds.add(funcionarioId); }
+    public void removeFuncionarioId(Integer funcionarioId) { this.funcionarioIds.remove(funcionarioId); }
+
+    // Gestão de IDs de Pedidos
+    public List<Integer> getPedidoIds() { return pedidoIds; }
+    public void setPedidoIds(List<Integer> pedidoIds) { this.pedidoIds = pedidoIds; }
+    public void addPedidoId(Integer pedidoId) { this.pedidoIds.add(pedidoId); }
+    public void removePedidoId(Integer pedidoId) { this.pedidoIds.remove(pedidoId); }
+
+    // Gestão de Stock (Instâncias reais)
     public List<LinhaStock> getStock() { return stock; }
     public void setStock(List<LinhaStock> stock) { this.stock = stock; }
-    public void adicionaLinhaStock(LinhaStock linhaStock) { this.stock.add(linhaStock); }
+    public void addLinhaStock(LinhaStock linhaStock) { this.stock.add(linhaStock); }
     public void removeLinhaStock(LinhaStock linhaStock) { this.stock.remove(linhaStock); }
-
-    public List<Pedido> getPedidos() { return pedidos; }
-    public void setPedidos(List<Pedido> pedidos) { this.pedidos = pedidos; }
-    public void adicionaPedido(Pedido pedido) { this.pedidos.add(pedido); }
-    public void removePedido(Pedido pedido) { this.pedidos.remove(pedido); }
 }

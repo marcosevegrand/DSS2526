@@ -7,10 +7,10 @@ import java.util.*;
 public class Pedido {
     private int id;
     private int restauranteId;
+    private boolean paraLevar; 
     private EstadoPedido estado;
     private LocalDateTime dataHora;
-    private boolean paraLevar; 
-    private List<LinhaPedido> linhasPedido = new ArrayList<>();
+    private List<LinhaPedido> linhas = new ArrayList<>();
 
     // Construtores
 
@@ -18,11 +18,8 @@ public class Pedido {
 
     // Lógica de Negócio
 
-    /**
-     * Calcula o preço total somando todas as linhas.
-     */
     public double calcularPrecoTotal() {
-        return linhasPedido.stream().mapToDouble(LinhaPedido::getPreco).sum();
+        return linhas.stream().mapToDouble(LinhaPedido::getPreco).sum();
     }
 
     // Getters e Setters
@@ -42,6 +39,8 @@ public class Pedido {
     public LocalDateTime getDataHora() { return dataHora; }
     public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
 
-    public List<LinhaPedido> getLinhasPedido() { return linhasPedido; }
-    public void setLinhasPedido(List<LinhaPedido> linhasPedido) { this.linhasPedido = linhasPedido; }
+    public List<LinhaPedido> getLinhas() { return linhas; }
+    public void setLinhas(List<LinhaPedido> linhas) { this.linhas = linhas; }
+    public void addLinha(LinhaPedido linha) { this.linhas.add(linha); }
+    public void removeLinha(LinhaPedido linha) { this.linhas.remove(linha); }
 }

@@ -4,37 +4,29 @@ import java.util.*;
 
 public class Catalogo {
     private int id;
-    private List<Menu> menus = new ArrayList<>();
-    private List<Produto> produtos = new ArrayList<>();
+    private String nome;
+    private List<Integer> menuIds = new ArrayList<>();
+    private List<Integer> produtoIds = new ArrayList<>();
 
     // Construtores
 
     public Catalogo() {}
 
-    // Lógica simples
-
-    public void adicionarMenu(Menu menu) {
-        this.menus.add(menu);
-    }
-    public void removerMenu(Menu menu) {
-        this.menus.remove(menu);
-    }
-
-    public void adicionarProduto(Produto produto) {
-        this.produtos.add(produto);
-    }
-    public void removerProduto(Produto produto) {
-        this.produtos.remove(produto);
-    }
-
     // Getters e Setters
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    
-    public List<Menu> getMenus() { return menus; }
-    public void setMenus(List<Menu> menus) { this.menus = menus; }
 
-    public List<Produto> getProdutos() { return produtos; }
-    public void setProdutos(List<Produto> produtos) { this.produtos = produtos; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    
+    public List<Integer> getMenuIds() { return menuIds; }
+    public void setMenuIds(List<Integer> menuIds) { this.menuIds = menuIds; }
+    public void addMenuId(Integer menuId) { this.menuIds.add(menuId); }
+    public void removeMenuId(Integer menuId) { this.menuIds.remove(menuId); }
+
+    public List<Integer> getProdutoIds() { return produtoIds; }
+    public void setProdutoIds(List<Integer> produtoIds) { this.produtoIds = produtoIds; }
+    public void addProdutoId(Integer produtoId) { this.produtoIds.add(produtoId); }
+    public void removeProdutoId(Integer produtoId) { this.produtoIds.remove(produtoId); }
 }

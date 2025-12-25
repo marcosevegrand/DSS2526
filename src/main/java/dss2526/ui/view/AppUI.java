@@ -1,7 +1,5 @@
 package dss2526.ui.view;
 
-import java.util.*;
-
 import dss2526.ui.controller.*;
 import dss2526.ui.delegate.NewMenu;
 

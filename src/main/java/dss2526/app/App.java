@@ -2,6 +2,7 @@ package dss2526.app;
 
 import dss2526.data.contract.*;
 import dss2526.data.impl.*;
+import dss2526.domain.entity.Estacao;
 import dss2526.service.gestao.*;
 import dss2526.service.producao.*;
 import dss2526.service.venda.*;
@@ -12,12 +13,17 @@ public class App {
 
     public static void main(String[] args) {
         // 1. Instanciar DAOs (Camada de Dados)
-        CatalogoDAO catalogoDAO = new CatalogoDAOImpl();
+        CatalogoDAO catalogoDAO = 
+        EstacaoDAO estacaoDAO = new EstacaoDAOImpl();
+        FuncionarioDAO funcionarioDAO = new FuncionarioDAOImpl();
         MenuDAO menuDAO = new MenuDAOImpl();
         ProdutoDAO produtoDAO = new ProdutoDAOImpl();
         IngredienteDAO ingredienteDAO = new IngredienteDAOImpl();
         PedidoDAO pedidoDAO = new PedidoDAOImpl();
         PassoDAO tarefaDAO = new PassoDAOImpl();
+        RestauranteDAO restauranteDAO = new RestauranteDAOImpl();
+        MensagemDAO mensagemDAO = new MensagemDAOImpl();
+
 
         // 2. Instanciar Facades (Camada de Serviço)
         IProducaoFacade producaoFacade = new ProducaoFacade(tarefaDAO, pedidoDAO, ingredienteDAO);

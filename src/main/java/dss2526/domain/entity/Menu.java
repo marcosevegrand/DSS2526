@@ -6,7 +6,7 @@ public class Menu {
     private int id;
     private String nome;
     private double preco;
-    private List<LinhaMenu> linhasMenu = new ArrayList<>();
+    private List<LinhaMenu> linhas = new ArrayList<>();
 
     // Construtores
 
@@ -23,6 +23,8 @@ public class Menu {
     public double getPreco() { return preco; }
     public void setPreco(double preco) { this.preco = preco; }
 
-    public List<LinhaMenu> getLinhasMenu() { return linhasMenu; }
-    public void setLinhasMenu(List<LinhaMenu> linhasMenu) { this.linhasMenu = linhasMenu; }
+    public List<LinhaMenu> getLinha() { return linhas; }
+    public void setLinhas(List<LinhaMenu> linhas) { this.linhas = linhas; }
+    public void addLinha(LinhaMenu linha) { this.linhas.add(linha); }
+    public void removeLinha(LinhaMenu linha) { this.linhas.remove(linha); }
 }

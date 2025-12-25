@@ -4,5 +4,5 @@ public enum EstadoTarefa {
     PENDENTE,
     EM_ANDAMENTO,
     CONCLUIDA,
-    EM_ATRASO
+    ATRASADA
 }

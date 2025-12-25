@@ -6,8 +6,8 @@ public class Produto {
     private int id;
     private String nome;
     private double preco;
-    private List<LinhaProduto> ingredientes = new ArrayList<>();
-    private List<Passo> tarefas = new ArrayList<>();
+    private List<Integer> passoIds = new ArrayList<>();
+    private List<LinhaProduto> linhas = new ArrayList<>();
 
     // Construtores
 
@@ -24,9 +24,13 @@ public class Produto {
     public double getPreco() { return preco; }
     public void setPreco(double preco) { this.preco = preco; }
 
-    public List<LinhaProduto> getIngredientes() { return ingredientes; }
-    public void setIngredientes(List<LinhaProduto> ingredientes) { this.ingredientes = ingredientes; }
+    public List<Integer> getPassoIds() { return passoIds; }
+    public void setPassoIds(List<Integer> passoIds) { this.passoIds = passoIds; }
+    public void addPassoId(Integer passoId) { this.passoIds.add(passoId); }
+    public void removePassoId(Integer passoId) { this.passoIds.remove(passoId); }
 
-    public List<Passo> getTarefas() { return tarefas; }
-    public void setTarefas(List<Passo> tarefas) { this.tarefas = tarefas; }
+    public List<LinhaProduto> getLinhas() { return linhas; }
+    public void setLinhas(List<LinhaProduto> linhas) { this.linhas = linhas; }
+    public void addLinha(LinhaProduto linha) { this.linhas.add(linha); }
+    public void removeLinha(LinhaProduto linha) { this.linhas.remove(linha); }
 }

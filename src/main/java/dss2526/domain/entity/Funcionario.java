@@ -15,6 +15,9 @@ public class Funcionario {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
+    public Integer getRestauranteId() { return restauranteId; }
+    public void setRestauranteId(Integer restauranteId) { this.restauranteId = restauranteId; }
+
     public String getUtilizador() { return utilizador; }
     public void setUtilizador(String utilizador) { this.utilizador = utilizador; }
 
@@ -23,7 +26,4 @@ public class Funcionario {
 
     public Funcao getFuncao() { return funcao; }
     public void setFuncao(Funcao funcao) { this.funcao = funcao; }
-
-    public Integer getRestauranteId() { return restauranteId; }
-    public void setRestauranteId(Integer restauranteId) { this.restauranteId = restauranteId; }
 }

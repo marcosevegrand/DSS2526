@@ -1,8 +1,12 @@
 package dss2526.domain.entity;
 
+import dss2526.domain.enumeration.TipoItem;
+
 public class LinhaPedido {
     private int id;
-    private int idItem;
+    private int pedidoId;
+    private int itemId;
+    private TipoItem tipo; // PRODUTO ou MENU
     private int quantidade;
     private double precoUnitario;
     private String observacao;
@@ -22,8 +26,14 @@ public class LinhaPedido {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public int getIdItem() { return idItem; }
-    public void setIdItem(int idItem) { this.idItem = idItem; }
+    public int getPedidoId() { return pedidoId; }
+    public void setPedidoId(int pedidoId) { this.pedidoId = pedidoId; }
+
+    public int getItemId() { return itemId; }
+    public void setItemId(int itemId) { this.itemId = itemId; }
+
+    public TipoItem getTipo() { return tipo; }
+    public void setTipo(TipoItem tipo) { this.tipo = tipo; }
 
     public int getQuantidade() { return quantidade; }
     public void setQuantidade(int quantidade) { this.quantidade = quantidade; }

@@ -2,7 +2,7 @@ package dss2526.domain.entity;
 
 public class LinhaMenu {
     private int id;
-    private int idProduto;
+    private int produtoId;
     private int quantidade;
 
     // Construtores
@@ -14,8 +14,8 @@ public class LinhaMenu {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public int getIdProduto() { return idProduto; }
-    public void setIdProduto(int idProduto) { this.idProduto = idProduto; }
+    public int getProdutoId() { return produtoId; }
+    public void setProdutoId(int produtoId) { this.produtoId = produtoId; }
 
     public int getQuantidade() { return quantidade; }
     public void setQuantidade(int quantidade) { this.quantidade = quantidade; }

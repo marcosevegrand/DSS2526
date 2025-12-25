@@ -33,10 +33,15 @@ public class RestauranteDAOImpl implements RestauranteDAO {
             conn = dbConfig.getConnection();
             conn.setAutoCommit(false);
 
-            String sql = "INSERT INTO Restaurante (Nome, Localizacao) VALUES (?, ?)";
+            String sql = "INSERT INTO Restaurante (Nome, Localizacao, CatalogoId) VALUES (?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, restaurante.getNome());
                 stmt.setString(2, restaurante.getLocalizacao());
+                if (restaurante.getCatalogoId() != null) {
+                    stmt.setInt(3, restaurante.getCatalogoId());
+                } else {
+                    stmt.setNull(3, java.sql.Types.INTEGER);
+                }
                 stmt.executeUpdate();
 
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -46,7 +51,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
                 }
             }
 
-            // Save Composition: Stock (LinhaStock)
+            // Guardar Composição: Stock (Objetos completos)
             if (restaurante.getStock() != null && !restaurante.getStock().isEmpty()) {
                 String sqlStock = "INSERT INTO LinhaStock (RestauranteId, IngredienteId, Quantidade) VALUES (?, ?, ?)";
                 try (PreparedStatement stmtStock = conn.prepareStatement(sqlStock)) {
@@ -75,7 +80,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
     public Restaurante findById(Integer id) {
         Restaurante r = null;
         try (Connection conn = dbConfig.getConnection()) {
-            // Read Restaurante
+            // 1. Ler Restaurante
             try (PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Restaurante WHERE Id = ?")) {
                 stmt.setInt(1, id);
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -84,12 +89,17 @@ public class RestauranteDAOImpl implements RestauranteDAO {
                         r.setId(rs.getInt("Id"));
                         r.setNome(rs.getString("Nome"));
                         r.setLocalizacao(rs.getString("Localizacao"));
+                        
+                        int catId = rs.getInt("CatalogoId");
+                        if (!rs.wasNull()) {
+                            r.setCatalogoId(catId);
+                        }
                     }
                 }
             }
 
             if (r != null) {
-                // Read Composition: Stock
+                // 2. Ler Composição: Stock (Objetos completos)
                 String sqlStock = "SELECT * FROM LinhaStock WHERE RestauranteId = ?";
                 List<LinhaStock> stock = new ArrayList<>();
                 try (PreparedStatement stmt = conn.prepareStatement(sqlStock)) {
@@ -105,6 +115,36 @@ public class RestauranteDAOImpl implements RestauranteDAO {
                     }
                 }
                 r.setStock(stock);
+                
+                // 3. Carregar IDs de Estações
+                List<Integer> estacaoIds = new ArrayList<>();
+                try (PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Estacao WHERE RestauranteId = ?")) {
+                    stmt.setInt(1, r.getId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) estacaoIds.add(rs.getInt("Id"));
+                    }
+                }
+                r.setEstacaoIds(estacaoIds);
+
+                // 4. Carregar IDs de Funcionários
+                List<Integer> funcionarioIds = new ArrayList<>();
+                try (PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Funcionario WHERE RestauranteId = ?")) {
+                    stmt.setInt(1, r.getId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) funcionarioIds.add(rs.getInt("Id"));
+                    }
+                }
+                r.setFuncionarioIds(funcionarioIds);
+
+                // 5. Carregar IDs de Pedidos
+                List<Integer> pedidoIds = new ArrayList<>();
+                try (PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Pedido WHERE RestauranteId = ?")) {
+                    stmt.setInt(1, r.getId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) pedidoIds.add(rs.getInt("Id"));
+                    }
+                }
+                r.setPedidoIds(pedidoIds);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -119,16 +159,21 @@ public class RestauranteDAOImpl implements RestauranteDAO {
             conn = dbConfig.getConnection();
             conn.setAutoCommit(false);
 
-            // Update Restaurante
-            String sql = "UPDATE Restaurante SET Nome = ?, Localizacao = ? WHERE Id = ?";
+            // 1. Atualizar dados do Restaurante
+            String sql = "UPDATE Restaurante SET Nome = ?, Localizacao = ?, CatalogoId = ? WHERE Id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, restaurante.getNome());
                 stmt.setString(2, restaurante.getLocalizacao());
-                stmt.setInt(3, restaurante.getId());
+                if (restaurante.getCatalogoId() != null) {
+                    stmt.setInt(3, restaurante.getCatalogoId());
+                } else {
+                    stmt.setNull(3, java.sql.Types.INTEGER);
+                }
+                stmt.setInt(4, restaurante.getId());
                 stmt.executeUpdate();
             }
 
-            // Update Stock (Delete all + Insert new)
+            // 2. Atualizar Stock (Composição: Delete + Insert)
             try (PreparedStatement stmtDel = conn.prepareStatement("DELETE FROM LinhaStock WHERE RestauranteId = ?")) {
                 stmtDel.setInt(1, restaurante.getId());
                 stmtDel.executeUpdate();
@@ -165,6 +210,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
             conn = dbConfig.getConnection();
             conn.setAutoCommit(false);
 
+            // Apagar Stock
             try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM LinhaStock WHERE RestauranteId = ?")) {
                 stmt.setInt(1, id);
                 stmt.executeUpdate();

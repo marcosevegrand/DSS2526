@@ -7,5 +7,4 @@ public enum EstadoPedido {
     EM_PREPARACAO,
     PRONTO,
     ENTREGUE,
-    PAGO
 }
