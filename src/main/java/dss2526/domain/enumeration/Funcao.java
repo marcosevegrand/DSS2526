@@ -1,6 +1,6 @@
 package dss2526.domain.enumeration;
 
-public enum RoleTrabalhador {
+public enum Funcao {
     FUNCIONARIO,
     CHEFERESTAURANTE,
     COO;

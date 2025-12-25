@@ -78,7 +78,7 @@ public class ProdutoDAOImpl implements ProdutoDAO {
         if (p.getTarefas() != null) {
             String sqlT = "INSERT INTO Produto_Tarefa (ProdutoID, TarefaID) VALUES (?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sqlT)) {
-                for (Tarefa t : p.getTarefas()) {
+                for (Passo t : p.getTarefas()) {
                     ps.setInt(1, p.getId());
                     ps.setInt(2, t.getId());
                     ps.addBatch();
@@ -123,12 +123,12 @@ public class ProdutoDAOImpl implements ProdutoDAO {
         p.setIngredientes(ingreds);
 
         // Tarefas
-        List<Tarefa> tarefas = new ArrayList<>();
+        List<Passo> tarefas = new ArrayList<>();
         String sqlT = "SELECT TarefaID FROM Produto_Tarefa WHERE ProdutoID = ?";
         try (PreparedStatement ps = conn.prepareStatement(sqlT)) {
             ps.setInt(1, p.getId());
             ResultSet rs = ps.executeQuery();
-            TarefaDAOImpl tDao = new TarefaDAOImpl();
+            PassoDAOImpl tDao = new PassoDAOImpl();
             while (rs.next()) tarefas.add(tDao.findById(rs.getInt(1)));
         }
         p.setTarefas(tarefas);

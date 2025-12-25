@@ -9,14 +9,14 @@ public class Produto implements Item {
     private String nome;
     private double preco;
     private List<LinhaProduto> ingredientes = new ArrayList<>();
-    private List<Tarefa> tarefas = new ArrayList<>();
+    private List<Passo> tarefas = new ArrayList<>();
 
     // Construtores
 
     public Produto() {
     }
 
-    public Produto(String nome, int preco, List<LinhaProduto> ingredientes, List<Tarefa> tarefas) {
+    public Produto(String nome, int preco, List<LinhaProduto> ingredientes, List<Passo> tarefas) {
         this.nome = nome;
         this.preco = preco;
         this.ingredientes = ingredientes;
@@ -37,6 +37,6 @@ public class Produto implements Item {
     public List<LinhaProduto> getIngredientes() { return ingredientes; }
     public void setIngredientes(List<LinhaProduto> ingredientes) { this.ingredientes = ingredientes; }
 
-    public List<Tarefa> getTarefas() { return tarefas; }
-    public void setTarefas(List<Tarefa> tarefas) { this.tarefas = tarefas; }
+    public List<Passo> getTarefas() { return tarefas; }
+    public void setTarefas(List<Passo> tarefas) { this.tarefas = tarefas; }
 }

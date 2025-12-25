@@ -3,18 +3,17 @@ package dss2526.domain.entity;
 import dss2526.domain.enumeration.Trabalho;
 
 import java.time.Duration;
-import java.util.*;
 
-public class Tarefa {
+public class Passo {
     private int id;
     private String nome;
     private Duration duracao;
     private Trabalho trabalho;
 
     // Construtores
-    public Tarefa() {}
+    public Passo() {}
 
-    public Tarefa(String nome, Duration duracao, Trabalho trabalho) {
+    public Passo(String nome, Duration duracao, Trabalho trabalho) {
         this.nome = nome;
         this.duracao = duracao;
         this.trabalho = trabalho;

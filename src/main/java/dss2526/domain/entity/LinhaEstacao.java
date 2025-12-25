@@ -2,16 +2,16 @@ package dss2526.domain.entity;
 
 public class LinhaEstacao {
     int id;
-    Tarefa tarefa;
-    Pedido pedido;
+    int idTarefa;
+    int idPedido;
     boolean concluido;
 
     // Construtores
     public LinhaEstacao() {}
 
-    public LinhaEstacao(Tarefa tarefa, Pedido pedido, boolean concluido) {
-        this.tarefa = tarefa;
-        this.pedido = pedido;
+    public LinhaEstacao(int idTarefa, int idPedido, boolean concluido) {
+        this.idTarefa = idTarefa;
+        this.idPedido = idPedido;
         this.concluido = concluido;
     }
 
@@ -20,11 +20,11 @@ public class LinhaEstacao {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public Tarefa getTarefa() { return tarefa; }
-    public void setTarefa(Tarefa tarefa) { this.tarefa = tarefa; }
+    public int getIdTarefa() { return idTarefa; }
+    public void setIdTarefa(int idTarefa) { this.idTarefa = idTarefa; }
 
-    public Pedido getPedido() { return pedido; }
-    public void setPedido(Pedido pedido) { this.pedido = pedido; }
+    public int getIdPedido() { return idPedido; }
+    public void setIdPedido(int idPedido) { this.idPedido = idPedido; }
 
     public boolean isConcluido() { return concluido; }
     public void setConcluido(boolean concluido) { this.concluido = concluido; }

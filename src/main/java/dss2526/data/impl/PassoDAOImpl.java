@@ -1,21 +1,21 @@
 package dss2526.data.impl;
 
 import dss2526.data.DBConfig;
-import dss2526.data.contract.TarefaDAO;
-import dss2526.domain.entity.Tarefa;
+import dss2526.data.contract.PassoDAO;
+import dss2526.domain.entity.Passo;
 import dss2526.domain.enumeration.Trabalho;
 
 import java.sql.*;
 import java.time.Duration;
 import java.util.*;
 
-public class TarefaDAOImpl implements TarefaDAO {
+public class PassoDAOImpl implements PassoDAO {
 
     private DBConfig dbConfig = DBConfig.getInstance();
-    private static Map<Integer, Tarefa> identityMap = new HashMap<>();
+    private static Map<Integer, Passo> identityMap = new HashMap<>();
 
     @Override
-    public Tarefa save(Tarefa t) {
+    public Passo save(Passo t) {
         String sql = "INSERT INTO Tarefa (Nome, DuracaoSegundos, Trabalho) VALUES (?, ?, ?)";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -34,7 +34,7 @@ public class TarefaDAOImpl implements TarefaDAO {
     }
 
     @Override
-    public Tarefa findById(Integer id) {
+    public Passo findById(Integer id) {
         if (identityMap.containsKey(id)) return identityMap.get(id);
         String sql = "SELECT * FROM Tarefa WHERE ID = ?";
         try (Connection conn = dbConfig.getConnection();
@@ -42,7 +42,7 @@ public class TarefaDAOImpl implements TarefaDAO {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    Tarefa t = new Tarefa();
+                    Passo t = new Passo();
                     t.setId(rs.getInt("ID"));
                     t.setNome(rs.getString("Nome"));
                     t.setDuracao(Duration.ofSeconds(rs.getLong("DuracaoSegundos")));
@@ -56,8 +56,8 @@ public class TarefaDAOImpl implements TarefaDAO {
     }
 
     @Override
-    public List<Tarefa> findAll() {
-        List<Tarefa> result = new ArrayList<>();
+    public List<Passo> findAll() {
+        List<Passo> result = new ArrayList<>();
         String sql = "SELECT ID FROM Tarefa";
         try (Connection conn = dbConfig.getConnection();
              Statement st = conn.createStatement();
@@ -68,7 +68,7 @@ public class TarefaDAOImpl implements TarefaDAO {
     }
 
     @Override
-    public Tarefa update(Tarefa t) {
+    public Passo update(Passo t) {
         String sql = "UPDATE Tarefa SET Nome = ?, DuracaoSegundos = ?, Trabalho = ? WHERE ID = ?";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

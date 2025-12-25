@@ -20,6 +20,10 @@ public class Mensagem {
         this.urgente = urgente;
     }
 
+    public Mensagem(String texto, LocalDateTime dataHora, boolean urgente) {
+        this(texto, false);
+    }
+
     // Getters e Setters
 
     public int getId() { return id; }

@@ -9,7 +9,6 @@ public class Pedido {
     private int restauranteId;
     private EstadoPedido estado;
     private LocalDateTime dataHora;
-    private LocalDateTime horaEntrega; 
     private boolean paraLevar; 
     private List<LinhaPedido> linhasPedido = new ArrayList<>();
 
@@ -26,6 +25,16 @@ public class Pedido {
         this.paraLevar = paraLevar;
     }
 
+    public Pedido(int restauranteId, EstadoPedido estado,
+        LocalDateTime dataHora,
+        boolean paraLevar,
+        List<LinhaPedido> linhasPedido) {
+        this(restauranteId, paraLevar);
+        this.estado = estado;
+        this.dataHora = dataHora;
+        this.linhasPedido = linhasPedido;
+    }
+
     // Lógica de Negócio
 
     /**
@@ -35,14 +44,6 @@ public class Pedido {
         return linhasPedido.stream()
                 .mapToDouble(LinhaPedido::getPreco)
                 .sum();
-    }
-
-    /**
-     * Calcula o tempo de atendimento em minutos.
-     */
-    public long calcularTempoAtendimento() {
-        if (horaEntrega == null) return 0;
-        return java.time.Duration.between(dataHora, horaEntrega).toMinutes();
     }
 
     // Getters e Setters
@@ -61,9 +62,6 @@ public class Pedido {
 
     public LocalDateTime getDataHora() { return dataHora; }
     public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
-
-    public LocalDateTime getHoraEntrega() { return horaEntrega; }
-    public void setHoraEntrega(LocalDateTime horaEntrega) { this.horaEntrega = horaEntrega; }
 
     public List<LinhaPedido> getLinhasPedido() { return linhasPedido; }
     public void setLinhasPedido(List<LinhaPedido> linhasPedido) { this.linhasPedido = linhasPedido; }

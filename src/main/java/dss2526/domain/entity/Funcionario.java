@@ -1,21 +1,20 @@
 package dss2526.domain.entity;
 
-import dss2526.domain.enumeration.RoleTrabalhador;
-import java.io.Serializable;
+import dss2526.domain.enumeration.Funcao;
 
-public class Funcionario implements Serializable {
+public class Funcionario {
     private int id;
+    private int restauranteId;
     private String nome;
-    private String username;
+    private String utilizador;
     private String password;
-    private RoleTrabalhador papel;
-    private int restauranteId; // ID do restaurante onde trabalha (0 ou null se for COO)
+    private Funcao papel;
 
     public Funcionario() {}
 
-    public Funcionario(String nome, String username, String password, RoleTrabalhador papel, int restauranteId) {
+    public Funcionario(String nome, String utilizador, String password, Funcao papel, int restauranteId) {
         this.nome = nome;
-        this.username = username;
+        this.utilizador = utilizador;
         this.password = password;
         this.papel = papel;
         this.restauranteId = restauranteId;
@@ -28,29 +27,29 @@ public class Funcionario implements Serializable {
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getUtilizador() { return utilizador; }
+    public void setUtilizador(String utilizador) { this.utilizador = utilizador; }
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public RoleTrabalhador getPapel() { return papel; }
-    public void setPapel(RoleTrabalhador papel) { this.papel = papel; }
+    public Funcao getPapel() { return papel; }
+    public void setPapel(Funcao papel) { this.papel = papel; }
 
     public Integer getRestauranteId() { return restauranteId; }
     public void setRestauranteId(Integer restauranteId) { this.restauranteId = restauranteId; }
 
     // Métodos utilitários de permissão
     public boolean podeAcederGestaoGlobal() {
-        return this.papel == RoleTrabalhador.COO;
+        return this.papel == Funcao.COO;
     }
 
 
     public boolean podeVerEstatisticas(Integer idAlvo) {
-        if (this.papel == RoleTrabalhador.COO) {
+        if (this.papel == Funcao.COO) {
             return true; 
         }
-        if (this.papel == RoleTrabalhador.CHEFERESTAURANTE && idAlvo != null) {
+        if (this.papel == Funcao.CHEFERESTAURANTE && idAlvo != null) {
             return this.restauranteId == idAlvo;
         }
         return false;

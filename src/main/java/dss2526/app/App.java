@@ -16,7 +16,7 @@ public class App {
         ProdutoDAO produtoDAO = new ProdutoDAOImpl();
         IngredienteDAO ingredienteDAO = new IngredienteDAOImpl();
         PedidoDAO pedidoDAO = new PedidoDAOImpl();
-        TarefaDAO tarefaDAO = new TarefaDAOImpl();
+        PassoDAO tarefaDAO = new PassoDAOImpl();
 
         // 2. Instanciar a Produção primeiro
         // Ela precisa do ingredienteDAO para gerir os alertas de falta de stock

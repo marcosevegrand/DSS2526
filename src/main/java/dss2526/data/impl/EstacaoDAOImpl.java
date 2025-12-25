@@ -96,7 +96,7 @@ public class EstacaoDAOImpl implements EstacaoDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, e.getId());
             ResultSet rs = ps.executeQuery();
-            TarefaDAOImpl tDao = new TarefaDAOImpl();
+            PassoDAOImpl tDao = new PassoDAOImpl();
             PedidoDAOImpl pDao = new PedidoDAOImpl();
             while (rs.next()) {
                 list.add(new LinhaEstacao(tDao.findById(rs.getInt(1)), pDao.findById(rs.getInt(2)), rs.getBoolean(3)));

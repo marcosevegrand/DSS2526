@@ -11,7 +11,7 @@ public interface IProducaoFacade {
 
     // Fluxo de Trabalho
     void registarNovoPedido(Pedido pedido); 
-    List<Tarefa> obterTarefasPorEstacao(Trabalho estacao);
+    List<Passo> obterTarefasPorEstacao(Trabalho estacao);
     
     void iniciarTarefa(int idTarefa);
     void concluirTarefa(int idTarefa);

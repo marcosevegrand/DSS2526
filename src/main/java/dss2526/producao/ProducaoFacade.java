@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ProducaoFacade implements IProducaoFacade {
-    private final TarefaDAO tarefaDAO;
+    private final PassoDAO tarefaDAO;
     private final PedidoDAO pedidoDAO;
     private final IngredienteDAO ingredienteDAO;
     
@@ -17,7 +17,7 @@ public class ProducaoFacade implements IProducaoFacade {
     // Controlo de bloqueios: PedidoID -> IngredienteID que falta
     private final Map<Integer, Integer> pedidosEmAtraso = new HashMap<>();
 
-    public ProducaoFacade(TarefaDAO tarefaDAO, PedidoDAO pedidoDAO, IngredienteDAO ingredienteDAO) {
+    public ProducaoFacade(PassoDAO tarefaDAO, PedidoDAO pedidoDAO, IngredienteDAO ingredienteDAO) {
         this.tarefaDAO = tarefaDAO;
         this.pedidoDAO = pedidoDAO;
         this.ingredienteDAO = ingredienteDAO;
@@ -30,7 +30,7 @@ public class ProducaoFacade implements IProducaoFacade {
                 Produto prod = (Produto) linha.getItem(); 
 
                 for (PassoProducao passo : prod.getPassos()) {
-                    Tarefa t = new Tarefa();
+                    Passo t = new Passo();
                     t.setPedido(pedido);
                     t.setProduto(prod);
                     t.setPasso(passo);
@@ -43,7 +43,7 @@ public class ProducaoFacade implements IProducaoFacade {
 
     @Override
     public void iniciarTarefa(int idTarefa) {
-        Tarefa t = tarefaDAO.get(idTarefa);
+        Passo t = tarefaDAO.get(idTarefa);
         if (t != null) {
             Pedido p = t.getPedido();
             // Sincronização: Se é a primeira tarefa, avisa que o pedido começou
@@ -56,7 +56,7 @@ public class ProducaoFacade implements IProducaoFacade {
 
     @Override
     public void reportarFaltaIngrediente(int idTarefa, int idIngrediente) {
-        Tarefa t = tarefaDAO.get(idTarefa);
+        Passo t = tarefaDAO.get(idTarefa);
         if (t == null) return;
 
         int pId = t.getPedido().getId();
@@ -72,7 +72,7 @@ public class ProducaoFacade implements IProducaoFacade {
     }
 
     @Override
-    public List<Tarefa> obterTarefasPorEstacao(Estacao estacao) {
+    public List<Passo> obterTarefasPorEstacao(Estacao estacao) {
         return tarefaDAO.findByEstacao(estacao).stream()
                 .filter(t -> !t.getConcluida())
                 .sorted((t1, t2) -> {
@@ -94,7 +94,7 @@ public class ProducaoFacade implements IProducaoFacade {
 
     @Override
     public void concluirTarefa(int idTarefa) {
-        Tarefa t = tarefaDAO.get(idTarefa);
+        Passo t = tarefaDAO.get(idTarefa);
         if (t != null) {
             t.setConcluida(true);
             tarefaDAO.put(idTarefa, t);
@@ -104,11 +104,11 @@ public class ProducaoFacade implements IProducaoFacade {
 
     private void verificarPedidoConcluido(int pedidoId) {
         // Busca todas as tarefas deste pedido
-        List<Tarefa> tarefas = tarefaDAO.values().stream()
+        List<Passo> tarefas = tarefaDAO.values().stream()
                 .filter(t -> t.getPedido().getId() == pedidoId)
                 .toList();
 
-        if (tarefas.stream().allMatch(Tarefa::getConcluida)) {
+        if (tarefas.stream().allMatch(Passo::getConcluida)) {
             Pedido p = pedidoDAO.get(pedidoId);
             p.setEstado(EstadoPedido.PRONTO); // Pronto para a Estação de Entrega
             pedidoDAO.put(pedidoId, p);

@@ -20,7 +20,6 @@ public class MenuDAOImpl implements MenuDAO {
             try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, m.getNome());
                 ps.setDouble(2, m.getPreco());
-                ps.setBoolean(3, m.isDisponivel());
                 ps.executeUpdate();
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) m.setId(rs.getInt(1));
@@ -41,8 +40,7 @@ public class MenuDAOImpl implements MenuDAO {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, m.getNome());
                 ps.setDouble(2, m.getPreco());
-                ps.setBoolean(3, m.isDisponivel());
-                ps.setInt(4, m.getId());
+                ps.setInt(3, m.getId());
                 ps.executeUpdate();
 
                 try (PreparedStatement del = conn.prepareStatement("DELETE FROM LinhaMenu WHERE MenuID = ?")) {
@@ -84,7 +82,6 @@ public class MenuDAOImpl implements MenuDAO {
                     m.setId(rs.getInt("ID"));
                     m.setNome(rs.getString("Nome"));
                     m.setPreco(rs.getDouble("Preco"));
-                    m.setDisponivel(rs.getBoolean("Disponivel"));
                     identityMap.put(m.getId(), m);
                     loadLines(conn, m);
                     return m;

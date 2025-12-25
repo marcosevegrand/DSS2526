@@ -5,7 +5,7 @@ import java.util.*;
 
 public class Estacao {
     private int id;
-    private int restauranteId; // Fundamental para isolar a produção por unidade física
+    private int restauranteId;
     private Trabalho trabalho; // Define a função (Grelha, Fritura, etc.)
     private List<LinhaEstacao> tarefas;
 
@@ -15,10 +15,11 @@ public class Estacao {
         this.tarefas = new ArrayList<>();
     }
 
-    public Estacao(int restauranteId, Trabalho trabalho) {
+    public Estacao(int restauranteId, Trabalho trabalho, List<LinhaEstacao> tarefas) {
         this();
         this.restauranteId = restauranteId;
         this.trabalho = trabalho;
+        this.tarefas = tarefas;
     }
 
     // Lógica de Apoio aos Cenários
