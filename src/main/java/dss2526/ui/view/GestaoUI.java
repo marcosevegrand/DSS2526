@@ -1,8 +1,8 @@
 package dss2526.ui.view;
 
+import dss2526.gestao.IGestaoFacade; // IMPORTANTE: Resolve o erro de "cannot be resolved"
 import dss2526.domain.enumeration.RoleTrabalhador;
 import dss2526.domain.enumeration.Trabalho;
-import dss2526.gestao.IGestaoFacade;
 import dss2526.ui.delegate.NewMenu;
 
 import java.util.List;
@@ -21,10 +21,10 @@ public class GestaoUI {
     /**
      * Menu Principal de Gestão (Backoffice OCC)
      */
-    public void show() {
+    public void run() { // Nomeado como 'run' para coincidir com a chamada na AppUI
         String[] opcoes = {
             "Registar Novo Restaurante",
-            "Configurar Estações de Trabalho",
+            "Configurar Estação de Trabalho",
             "Contratar Funcionário",
             "Enviar Mensagem à Produção",
             "Consultar Alertas de Stock",
@@ -33,12 +33,12 @@ public class GestaoUI {
 
         NewMenu menu = new NewMenu("Backoffice - Gestão Central (OCC)", opcoes);
 
-        menu.setHandler(1, () -> registarRestaurante());
-        menu.setHandler(2, () -> adicionarEstacao());
-        menu.setHandler(3, () -> contratarFuncionario());
-        menu.setHandler(4, () -> enviarMensagem());
-        menu.setHandler(5, () -> consultarAlertas());
-        menu.setHandler(6, () -> atualizarStock());
+        menu.setHandler(1, this::registarRestaurante);
+        menu.setHandler(2, this::adicionarEstacao);
+        menu.setHandler(3, this::contratarFuncionario);
+        menu.setHandler(4, this::enviarMensagem);
+        menu.setHandler(5, this::consultarAlertas);
+        menu.setHandler(6, this::atualizarStock);
 
         menu.run();
     }
@@ -51,8 +51,8 @@ public class GestaoUI {
         String local = lerString("Localização: ");
         
         try {
-            gestaoFacade.registarRestaurante(nome, local);
-            System.out.println(">> Restaurante '" + nome + "' registado com sucesso!");
+            int id = gestaoFacade.registarRestaurante(nome, local);
+            System.out.println(">> Restaurante '" + nome + "' registado com ID: " + id);
         } catch (Exception e) {
             System.out.println(">> Erro ao registar: " + e.getMessage());
         }
@@ -68,7 +68,7 @@ public class GestaoUI {
         try {
             Trabalho tipo = Trabalho.valueOf(tipoStr);
             gestaoFacade.adicionarEstacao(resId, tipo);
-            System.out.println(">> Estação de " + tipo + " adicionada ao restaurante #" + resId);
+            System.out.println(">> Estação de " + tipo + " adicionada com sucesso.");
         } catch (IllegalArgumentException e) {
             System.out.println(">> Erro: Tipo de trabalho inválido.");
         } catch (Exception e) {
@@ -97,7 +97,7 @@ public class GestaoUI {
 
     private void enviarMensagem() {
         System.out.println("\n>> Enviar Mensagem à Produção");
-        int resId = lerInteiro("ID do Restaurante Alvo: ");
+        int resId = lerInteiro("ID do Restaurante (0 para todos): ");
         String texto = lerString("Mensagem: ");
         boolean urgente = lerString("Urgente? (S/N): ").equalsIgnoreCase("S");
 
@@ -115,14 +115,13 @@ public class GestaoUI {
         
         try {
             List<String> alertas = gestaoFacade.getAlertasStock(resId);
-            System.out.println("\n--- Alertas Pendentes ---");
             if (alertas.isEmpty()) {
-                System.out.println("Nenhum alerta de rutura de stock.");
+                System.out.println("Nenhum alerta crítico de stock.");
             } else {
-                alertas.forEach(alerta -> System.out.println(" [!] " + alerta));
+                alertas.forEach(a -> System.out.println(" [!] ALERTA: " + a));
             }
         } catch (Exception e) {
-            System.out.println(">> Erro ao consultar: " + e.getMessage());
+            System.out.println(">> Erro: " + e.getMessage());
         }
     }
 
@@ -132,27 +131,27 @@ public class GestaoUI {
         int ingId = lerInteiro("ID do Ingrediente: ");
         System.out.print("Quantidade a adicionar: ");
         float qtd = scanner.nextFloat();
-        scanner.nextLine(); // limpar buffer
+        scanner.nextLine(); 
 
         try {
             gestaoFacade.atualizarStockLocal(ingId, resId, qtd);
-            System.out.println(">> Stock atualizado. Os pedidos bloqueados serão reavaliados.");
+            System.out.println(">> Stock atualizado.");
         } catch (Exception e) {
-            System.out.println(">> Erro ao atualizar: " + e.getMessage());
+            System.out.println(">> Erro: " + e.getMessage());
         }
     }
 
-    // --- Helpers de Input (Estilo VendaUI) ---
+    // --- Helpers ---
 
     private int lerInteiro(String msg) {
         System.out.print(msg);
         while (!scanner.hasNextInt()) {
             scanner.next(); 
-            System.out.print("Número inválido. Tente novamente: ");
+            System.out.print("Inválido. Insira um número: ");
         }
-        int num = scanner.nextInt();
+        int n = scanner.nextInt();
         scanner.nextLine(); 
-        return num;
+        return n;
     }
 
     private String lerString(String msg) {

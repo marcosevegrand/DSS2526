@@ -4,11 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Stock {
-    private Integer id;
+    private int id; // Alterado de Integer para int para consistência com as outras entidades
     private List<LinhaStock> ingredientes;
     private int restauranteId;
-
-    // Construtores
 
     public Stock() {
         this.ingredientes = new ArrayList<>();
@@ -19,9 +17,12 @@ public class Stock {
         this.restauranteId = restauranteId;
     }
 
+    /**
+     * Verifica se existe quantidade suficiente de um ingrediente.
+     */
     public boolean temStockDisponivel(int idIngrediente, float quantidadeNecessaria) {
         return ingredientes.stream()
-                .filter(l -> l.getIngrediente().getId() == idIngrediente)
+                .filter(l -> l.getIngrediente() != null && l.getIngrediente().getId() == idIngrediente)
                 .anyMatch(l -> l.getQuantidade() >= quantidadeNecessaria);
     }
 
@@ -33,6 +34,6 @@ public class Stock {
     public List<LinhaStock> getIngredientes() { return ingredientes; }
     public void setIngredientes(List<LinhaStock> ingredientes) { this.ingredientes = ingredientes; }
 
-    public int  getRestauranteId() { return restauranteId; }
+    public int getRestauranteId() { return restauranteId; }
     public void setRestauranteId(int restauranteId) { this.restauranteId = restauranteId; }
 }

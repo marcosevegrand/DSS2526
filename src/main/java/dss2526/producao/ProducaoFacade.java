@@ -9,17 +9,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
-/**
- * Fachada de Produção corrigida para lidar com a hierarquia:
- * Menu -> LinhaMenu -> Produto -> Tarefas
- */
 public class ProducaoFacade implements IProducaoFacade {
     private final TarefaDAO tarefaDAO;
     private final PedidoDAO pedidoDAO;
     private final IngredienteDAO ingredienteDAO;
     private final EstacaoDAO estacaoDAO;
     
-    // Controlo de avisos e atrasos em memória
     private final Map<Integer, Queue<Mensagem>> avisosPorRestaurante = new HashMap<>();
     private final Map<Integer, Integer> pedidosEmAtraso = new HashMap<>();
 
@@ -35,38 +30,47 @@ public class ProducaoFacade implements IProducaoFacade {
     public void registarNovoPedido(Pedido pedido) {
         for (LinhaPedido linha : pedido.getLinhasPedido()) {
             Item item = linha.getItem();
-            
             if (item instanceof Produto) {
-                processarProduto((Produto) item, pedido);
-            } 
-            else if (item instanceof Menu) {
-                Menu menu = (Menu) item;
-                // Navega pela lista de LinhaMenu que o teu Menu possui
-                if (menu.getLinhasMenu() != null) {
-                    for (LinhaMenu lm : menu.getLinhasMenu()) {
-                        // LinhaMenu -> Produto
-                        processarProduto(lm.getProduto(), pedido);
-                    }
+                gerarTarefas((Produto) item, pedido);
+            } else if (item instanceof Menu) {
+                Menu m = (Menu) item;
+                for (LinhaMenu lm : m.getLinhasMenu()) {
+                    gerarTarefas(lm.getProduto(), pedido);
                 }
             }
         }
     }
 
-    private void processarProduto(Produto prod, Pedido pedido) {
-        // Acede à lista de tarefas (moldes) definida no Produto
-        if (prod != null && prod.getTarefas() != null) {
-            for (Tarefa modelo : prod.getTarefas()) {
-                Tarefa nova = new Tarefa();
-                nova.setPedidoId(pedido.getId());
-                nova.setRestauranteId(pedido.getRestauranteId());
-                nova.setNome(modelo.getNome());
-                // Garante que a classe Tarefa tem o método getTrabalho()
-                nova.setTrabalho(modelo.getTrabalho()); 
-                nova.setConcluida(false);
-                // Persiste a tarefa individual para este pedido
-                tarefaDAO.save(nova);
-            }
+    private void gerarTarefas(Produto p, Pedido ped) {
+        if (p == null || p.getTarefas() == null) return;
+        for (Tarefa modelo : p.getTarefas()) {
+            Tarefa nova = new Tarefa();
+            nova.setPedidoId(ped.getId());
+            nova.setRestauranteId(ped.getRestauranteId());
+            nova.setNome(modelo.getNome());
+            nova.setTrabalho(modelo.getTrabalho());
+            nova.setConcluida(false);
+            tarefaDAO.save(nova);
         }
+    }
+
+    @Override
+    public void difundirMensagem(Mensagem msg, int restauranteId) {
+        if (restauranteId == 0) {
+            avisosPorRestaurante.keySet().forEach(id -> avisosPorRestaurante.get(id).add(msg));
+        } else {
+            avisosPorRestaurante.computeIfAbsent(restauranteId, k -> new ConcurrentLinkedQueue<>()).add(msg);
+        }
+    }
+
+    @Override
+    public void atualizarStockLocal(int ingredienteId, int restauranteId, float quantidade) {
+        reportarReabastecimento(ingredienteId, restauranteId);
+    }
+
+    @Override
+    public List<String> getAlertasStock(int restauranteId) {
+        return new ArrayList<>(); 
     }
 
     @Override
@@ -76,7 +80,6 @@ public class ProducaoFacade implements IProducaoFacade {
                 .filter(t -> t.getTrabalho() == tipoEstacao)
                 .filter(t -> !t.isConcluida())
                 .sorted((t1, t2) -> {
-                    // Prioriza pedidos que estão em atraso por falta de ingredientes
                     boolean b1 = pedidosEmAtraso.containsKey(t1.getPedidoId());
                     boolean b2 = pedidosEmAtraso.containsKey(t2.getPedidoId());
                     if (b1 && !b2) return -1;
@@ -91,7 +94,7 @@ public class ProducaoFacade implements IProducaoFacade {
         Tarefa t = tarefaDAO.findById(idTarefa);
         if (t != null) {
             Pedido p = pedidoDAO.findById(t.getPedidoId());
-            if (p != null && p.getEstado() == EstadoPedido.CONFIRMADO) {
+            if (p != null) {
                 p.setEstado(EstadoPedido.EM_PREPARACAO);
                 pedidoDAO.update(p);
             }
@@ -103,18 +106,17 @@ public class ProducaoFacade implements IProducaoFacade {
         Tarefa t = tarefaDAO.findById(idTarefa);
         if (t != null) {
             t.setConcluida(true);
+            t.setDataFim(java.time.LocalDateTime.now());
             tarefaDAO.update(t);
             verificarPedidoConcluido(t.getPedidoId());
         }
     }
 
     private void verificarPedidoConcluido(int pedidoId) {
-        // Vai buscar todas as tarefas reais deste pedido
         List<Tarefa> tarefas = tarefaDAO.findAll().stream()
                 .filter(t -> t.getPedidoId() == pedidoId)
                 .collect(Collectors.toList());
 
-        // Se todas as tarefas do pedido estiverem concluídas, o pedido está pronto
         if (!tarefas.isEmpty() && tarefas.stream().allMatch(Tarefa::isConcluida)) {
             Pedido p = pedidoDAO.findById(pedidoId);
             if (p != null) {
@@ -130,14 +132,14 @@ public class ProducaoFacade implements IProducaoFacade {
         Tarefa t = tarefaDAO.findById(idTarefa);
         if (t != null) {
             pedidosEmAtraso.put(t.getPedidoId(), idIngrediente);
-            String texto = "ALERTA: Falta de stock do ingrediente #" + idIngrediente + " na tarefa " + t.getNome();
-            receberMensagemGerencia(new Mensagem(texto, true), restauranteId);
+            Mensagem m = new Mensagem();
+            m.setTexto("FALTA STOCK: Ingrediente #" + idIngrediente + " para " + t.getNome());
+            m.setUrgente(true);
+            difundirMensagem(m, restauranteId);
         }
     }
 
-    @Override
-    public void reportarReabastecimento(int idIngrediente, int restauranteId) {
-        // Remove dos atrasos os pedidos que dependiam deste ingrediente
+    private void reportarReabastecimento(int idIngrediente, int restauranteId) {
         pedidosEmAtraso.entrySet().removeIf(entry -> {
             Pedido p = pedidoDAO.findById(entry.getKey());
             return p != null && p.getRestauranteId() == restauranteId && entry.getValue() == idIngrediente;
@@ -145,19 +147,10 @@ public class ProducaoFacade implements IProducaoFacade {
     }
 
     @Override
-    public void receberMensagemGerencia(Mensagem msg, int restauranteId) {
-        avisosPorRestaurante.computeIfAbsent(restauranteId, k -> new ConcurrentLinkedQueue<>()).add(msg);
-    }
-
-    @Override
     public List<Mensagem> lerAvisosPendentes(int restauranteId) {
         Queue<Mensagem> fila = avisosPorRestaurante.get(restauranteId);
         List<Mensagem> lista = new ArrayList<>();
-        if (fila != null) {
-            while (!fila.isEmpty()) {
-                lista.add(fila.poll());
-            }
-        }
+        if (fila != null) while (!fila.isEmpty()) lista.add(fila.poll());
         return lista;
     }
 
@@ -166,5 +159,5 @@ public class ProducaoFacade implements IProducaoFacade {
         return estacaoDAO.findAll().stream()
                 .filter(e -> e.getRestauranteId() == restauranteId)
                 .collect(Collectors.toList());
-    }    
+    }
 }

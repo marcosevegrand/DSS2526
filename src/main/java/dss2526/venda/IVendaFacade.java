@@ -2,12 +2,11 @@ package dss2526.venda;
 
 import dss2526.domain.entity.Pedido;
 import dss2526.domain.contract.Item;
-
 import java.util.List;
 
 public interface IVendaFacade {
-
-    Pedido criarPedido(boolean paraLevar);
+    // Mantemos a versão com restauranteId pois o teu Pedido precisa dele
+    Pedido criarPedido(int restauranteId, boolean paraLevar);
 
     void adicionarItem(int idPedido, int idItem, int quantidade, String observacao);
 

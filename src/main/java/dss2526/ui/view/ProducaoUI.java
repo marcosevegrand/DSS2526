@@ -15,7 +15,8 @@ public class ProducaoUI {
     private final IProducaoFacade producaoFacade;
     private final Scanner scanner;
     
-    private int restauranteId Atual = -1;
+    // Corrigido: Nome da variável sem espaços
+    private int restauranteIdAtual = -1;
 
     public ProducaoUI(IProducaoFacade producaoFacade) {
         this.producaoFacade = producaoFacade;
@@ -24,12 +25,11 @@ public class ProducaoUI {
 
     public void run() {
         System.out.println("\n=== Acesso ao Terminal de Produção ===");
+        // Corrigido: Atribuição à variável correta
         this.restauranteIdAtual = lerInteiro("Introduza o ID do Restaurante: ");
         
-        // Antes de mostrar as tarefas, verifica se há avisos da gerência (OCC)
         verificarAvisos();
 
-        // Lista as estações disponíveis neste restaurante
         List<Estacao> estacoes = producaoFacade.listarEstacoesPorRestaurante(restauranteIdAtual);
         
         if (estacoes.isEmpty()) {
@@ -38,26 +38,24 @@ public class ProducaoUI {
         }
 
         String[] nomesEstacoes = estacoes.stream()
-                .map(e -> e.getTipoTrabalho().toString())
+                .map(e -> e.getTrabalho().toString())
                 .toArray(String[]::new);
 
         NewMenu menuEstacoes = new NewMenu("Selecione a Estação de Trabalho", nomesEstacoes);
 
-        // Configura handlers dinamicamente para cada estação
         for (int i = 0; i < estacoes.size(); i++) {
             Estacao est = estacoes.get(i);
-            menuEstacoes.setHandler(i + 1, () -> gerirTarefasEstacao(est.getTipoTrabalho()));
+            // Definimos o handler para abrir o sub-menu da estação
+            menuEstacoes.setHandler(i + 1, () -> gerirTarefasEstacao(est.getTrabalho()));
         }
 
         menuEstacoes.run();
     }
 
-    /**
-     * Loop de gestão de tarefas para uma estação específica (ex: GRELHADOS)
-     */
     private void gerirTarefasEstacao(Trabalho tipoEstacao) {
-        boolean voltar = false;
-        while (!voltar) {
+        boolean[] voltar = {false}; // Usamos array para permitir alteração dentro da lambda
+        
+        while (!voltar[0]) {
             verificarAvisos();
             List<Tarefa> tarefas = producaoFacade.obterTarefas(restauranteIdAtual, tipoEstacao);
 
@@ -74,42 +72,51 @@ public class ProducaoUI {
             String[] opcoes = {"Atualizar Lista", "Iniciar Próxima Tarefa", "Concluir Tarefa", "Reportar Falta de Stock", "Voltar"};
             NewMenu menuTarefa = new NewMenu("Operações - " + tipoEstacao, opcoes);
 
-            menuTarefa.setHandler(1, () -> {}); // Apenas refresca o loop
+            menuTarefa.setHandler(1, () -> {}); 
             menuTarefa.setHandler(2, () -> iniciarTarefa(tarefas));
             menuTarefa.setHandler(3, () -> concluirTarefa(tarefas));
             menuTarefa.setHandler(4, () -> reportarStock(tarefas));
-            menuTarefa.setHandler(5, () -> { return true; }); // Sinal para sair do sub-menu
+            menuTarefa.setHandler(5, () -> voltar[0] = true); // Altera o estado para sair do loop
 
-            voltar = menuTarefa.run();
+            menuTarefa.run();
         }
     }
 
     // --- Ações de Produção ---
 
     private void iniciarTarefa(List<Tarefa> tarefas) {
-        if (tarefas.isEmpty()) return;
+        if (tarefas.isEmpty()) {
+            System.out.println("Não há tarefas disponíveis.");
+            return;
+        }
         int idx = lerInteiro("Índice da tarefa a iniciar: ") - 1;
         if (idx >= 0 && idx < tarefas.size()) {
             producaoFacade.iniciarTarefa(tarefas.get(idx).getId());
             System.out.println(">> Tarefa em preparação...");
+        } else {
+            System.out.println("Índice inválido.");
         }
     }
 
     private void concluirTarefa(List<Tarefa> tarefas) {
-        if (tarefas.isEmpty()) return;
+        if (tarefas.isEmpty()) {
+            System.out.println("Não há tarefas para concluir.");
+            return;
+        }
         int idx = lerInteiro("Índice da tarefa concluída: ") - 1;
         if (idx >= 0 && idx < tarefas.size()) {
             producaoFacade.concluirTarefa(tarefas.get(idx).getId());
             System.out.println(">> Tarefa finalizada!");
+        } else {
+            System.out.println("Índice inválido.");
         }
     }
 
     private void reportarStock(List<Tarefa> tarefas) {
         if (tarefas.isEmpty()) return;
         int idx = lerInteiro("Tarefa afetada: ") - 1;
-        int ingId = lerInteiro("ID do Ingrediente em falta: ");
-        
         if (idx >= 0 && idx < tarefas.size()) {
+            int ingId = lerInteiro("ID do Ingrediente em falta: ");
             producaoFacade.reportarFaltaIngrediente(tarefas.get(idx).getId(), ingId, restauranteIdAtual);
             System.out.println(">> Alerta enviado à gerência. Pedido colocado em espera.");
         }
@@ -127,8 +134,6 @@ public class ProducaoUI {
         }
     }
 
-    // --- Helpers de Input ---
-
     private int lerInteiro(String msg) {
         System.out.print(msg);
         while (!scanner.hasNextInt()) {
@@ -138,10 +143,5 @@ public class ProducaoUI {
         int res = scanner.nextInt();
         scanner.nextLine();
         return res;
-    }
-
-    private String lerString(String msg) {
-        System.out.print(msg);
-        return scanner.nextLine();
     }
 }

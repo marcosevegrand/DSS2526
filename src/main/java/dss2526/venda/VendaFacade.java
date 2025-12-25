@@ -10,6 +10,7 @@ import dss2526.producao.IProducaoFacade;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VendaFacade implements IVendaFacade {
 
@@ -18,7 +19,10 @@ public class VendaFacade implements IVendaFacade {
     private final MenuDAO menuDAO;
     private final IProducaoFacade producaoFacade; 
 
-    public VendaFacade(PedidoDAO pedidoDAO, ProdutoDAO produtoDAO, MenuDAO menuDAO, IProducaoFacade producaoFacade) {
+    public VendaFacade(PedidoDAO pedidoDAO, 
+                       ProdutoDAO produtoDAO, 
+                       MenuDAO menuDAO, 
+                       IProducaoFacade producaoFacade) {
         this.pedidoDAO = pedidoDAO;
         this.produtoDAO = produtoDAO;
         this.menuDAO = menuDAO;
@@ -26,89 +30,72 @@ public class VendaFacade implements IVendaFacade {
     }
 
     @Override
-    public Pedido criarPedido(boolean paraLevar) {
-        Pedido pedido = new Pedido();
-        pedido.setParaLevar(paraLevar);
-        pedido.setEstado(EstadoPedido.INICIADO);
-        
-        // Se o teu DAO usa put, mantém put. Se mudaste para save, usa save.
-        pedidoDAO.put(pedido.getId(), pedido); 
+    public Pedido criarPedido(int restauranteId, boolean paraLevar) {
+        Pedido pedido = new Pedido(restauranteId, paraLevar);
+        pedidoDAO.save(pedido); 
         return pedido;
     }
 
     @Override
     public void adicionarItem(int idPedido, int idItem, int quantidade, String observacao) {
         Pedido pedido = obterPedidoOuErro(idPedido);
-
-        // 1. Tenta buscar como Produto
-        Produto produto = produtoDAO.get(idItem);
-        if (produto != null) {
-            LinhaPedido linha = new LinhaPedido(produto, quantidade, produto.getPreco(), observacao);
-            pedido.getLinhasPedido().add(linha);
-            pedidoDAO.put(pedido.getId(), pedido);
-            return;
-        }
-
-        // 2. Tenta buscar como Menu
-        Menu menu = menuDAO.get(idItem);
-        if (menu != null) {
-            LinhaPedido linha = new LinhaPedido(menu, quantidade, menu.getPreco(), observacao);
-            pedido.getLinhasPedido().add(linha);
-            pedidoDAO.put(pedido.getId(), pedido);
-            return;
-        }
-
-        throw new IllegalArgumentException("Item não encontrado: ID " + idItem);
-    }
-
-    @Override
-    public void removerItem(int idPedido, int idItem, int quantidade) {
-        Pedido pedido = obterPedidoOuErro(idPedido);
-        List<LinhaPedido> linhas = pedido.getLinhasPedido();
-
-        // CORREÇÃO: Usar == para tipos primitivos (int), corrigindo o erro de dereferência
-        LinhaPedido linhaEncontrada = linhas.stream()
-                .filter(l -> l.getItem().getId() == idItem)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Item não está no pedido"));
-
-        if (linhaEncontrada.getQuantidade() <= quantidade) {
-            linhas.remove(linhaEncontrada);
-        } else {
-            linhaEncontrada.setQuantidade(linhaEncontrada.getQuantidade() - quantidade);
-        }
-
-        pedidoDAO.put(pedido.getId(), pedido);
+        Item item = encontrarItemNoCatalogo(idItem);
+        
+        LinhaPedido linha = new LinhaPedido(item, quantidade, item.getPreco(), observacao);
+        pedido.getLinhasPedido().add(linha);
+        
+        pedidoDAO.update(pedido);
     }
 
     @Override
     public void confirmarPedido(int idPedido) {
         Pedido pedido = obterPedidoOuErro(idPedido);
-        pedido.setEstado(EstadoPedido.CONFIRMADO);
-        pedidoDAO.put(pedido.getId(), pedido);
+        
+        if (pedido.getLinhasPedido().isEmpty()) {
+            throw new IllegalStateException("Não é possível confirmar um pedido vazio.");
+        }
 
-        // LIGAÇÃO COM A PRODUÇÃO: Cria as tarefas na cozinha automaticamente
+        pedido.setEstado(EstadoPedido.CONFIRMADO);
+        pedidoDAO.update(pedido);
+
         if (producaoFacade != null) {
             producaoFacade.registarNovoPedido(pedido);
         }
     }
 
     @Override
-    public void cancelarPedido(int idPedido) {
+    public void removerItem(int idPedido, int idItem, int quantidade) {
         Pedido pedido = obterPedidoOuErro(idPedido);
-        pedido.setEstado(EstadoPedido.CANCELADO);
-        pedidoDAO.put(pedido.getId(), pedido);
+        
+        pedido.getLinhasPedido().removeIf(l -> {
+            if (l.getItem().getId() == idItem) {
+                if (l.getQuantidade() <= quantidade) return true;
+                l.setQuantidade(l.getQuantidade() - quantidade);
+            }
+            return false;
+        });
+
+        pedidoDAO.update(pedido);
+    }
+
+    @Override
+    public void adicionarNota(int idPedido, String nota) {
+        Pedido pedido = obterPedidoOuErro(idPedido);
+        // Supondo que a classe Pedido tem o campo notaGeral ou similar
+        // Se não tiver, podes adicionar à tua entidade Pedido
+        // pedido.setNotaGeral(nota); 
+        pedidoDAO.update(pedido);
     }
 
     @Override
     public List<Item> obterItemsDisponiveis() {
-        List<Item> items = new ArrayList<>();
-        items.addAll(produtoDAO.values());
-        items.addAll(menuDAO.values());
+        List<Item> catalogo = new ArrayList<>();
+        catalogo.addAll(produtoDAO.findAll());
+        catalogo.addAll(menuDAO.findAll());
         
-        return items.stream()
+        return catalogo.stream()
                 .filter(Item::isDisponivel)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -117,17 +104,25 @@ public class VendaFacade implements IVendaFacade {
     }
 
     @Override
-    public void adicionarNota(int idPedido, String nota) {
+    public void cancelarPedido(int idPedido) {
         Pedido pedido = obterPedidoOuErro(idPedido);
-        pedido.setNotaGeral(nota);
-        pedidoDAO.put(pedido.getId(), pedido);
+        pedido.setEstado(EstadoPedido.CANCELADO);
+        pedidoDAO.update(pedido);
     }
 
     private Pedido obterPedidoOuErro(int idPedido) {
-        Pedido p = pedidoDAO.get(idPedido);
-        if (p == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: ID " + idPedido);
-        }
+        Pedido p = pedidoDAO.findById(idPedido);
+        if (p == null) throw new IllegalArgumentException("Pedido #" + idPedido + " não existe.");
         return p;
+    }
+
+    private Item encontrarItemNoCatalogo(int idItem) {
+        Produto p = produtoDAO.findById(idItem);
+        if (p != null) return p;
+        
+        Menu m = menuDAO.findById(idItem);
+        if (m != null) return m;
+        
+        throw new IllegalArgumentException("Item #" + idItem + " não encontrado.");
     }
 }

@@ -7,11 +7,14 @@ import dss2526.domain.enumeration.Trabalho;
 import dss2526.producao.IProducaoFacade;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Implementação da Fachada de Gestão.
+ * Atua como mediador entre a UI de Gestão e as camadas de dados/produção.
+ */
 public class GestaoFacade implements IGestaoFacade {
 
     private final PedidoDAO pedidoDAO;
@@ -35,29 +38,95 @@ public class GestaoFacade implements IGestaoFacade {
         this.producaoFacade = producaoFacade;
     }
 
-    // --- ESTATÍSTICAS E RELATÓRIOS ---
+    // --- MÉTODOS DE CONFIGURAÇÃO (Sincronizados com GestaoUI) ---
 
     @Override
-    public BigDecimal calcularFaturacao(LocalDate data, Integer idRestaurante) {
+    public int registarRestaurante(String nome, String localizacao) {
+        Restaurante r = new Restaurante();
+        r.setNome(nome);
+        r.setLocalizacao(localizacao);
+        restauranteDAO.save(r); 
+        return r.getId();
+    }
+
+    @Override
+    public void adicionarEstacao(int restauranteId, Trabalho tipo) {
+        Estacao e = new Estacao(restauranteId, tipo);
+        estacaoDAO.save(e);
+    }
+
+    @Override
+    public void contratarFuncionario(String nome, String user, String pass, RoleTrabalhador papel, int resId) {
+        Funcionario f = new Funcionario(nome, user, pass, papel, resId);
+        funcionarioDAO.save(f);
+    }
+
+    // MÉTODO QUE ESTAVA EM FALTA (Resolve o erro do compilador):
+    @Override
+    public void configurarNovoRestaurante(Restaurante r, List<Estacao> estacoes, List<Funcionario> funcionarios) {
+        restauranteDAO.save(r);
+        int id = r.getId();
+        
+        if (estacoes != null) {
+            for (Estacao e : estacoes) { 
+                e.setRestauranteId(id); 
+                estacaoDAO.save(e); 
+            }
+        }
+        if (funcionarios != null) {
+            for (Funcionario f : funcionarios) { 
+                f.setRestauranteId(id); 
+                funcionarioDAO.save(f); 
+            }
+        }
+    }
+
+    // --- MÉTODOS DE COMUNICAÇÃO E STOCK ---
+
+    @Override
+    public void enviarMensagemProducao(int resId, String texto, boolean urgente) {
+        Mensagem msg = new Mensagem();
+        msg.setTexto(texto);
+        msg.setUrgente(urgente);
+        producaoFacade.difundirMensagem(msg, resId);
+    }
+
+    @Override
+    public List<String> getAlertasStock(int restauranteId) {
+        return producaoFacade.getAlertasStock(restauranteId);
+    }
+
+    @Override
+    public void atualizarStockLocal(int ingredienteId, int restauranteId, float quantidade) {
+        producaoFacade.atualizarStockLocal(ingredienteId, restauranteId, quantidade);
+    }
+
+    // --- MÉTODOS DE CONSULTA E RELATÓRIOS ---
+
+    @Override
+    public List<String> listarNomesRestaurantes() {
+        return restauranteDAO.findAll().stream()
+                .map(Restaurante::getNome)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public BigDecimal calcularFaturacao(LocalDate data, int idRestaurante) {
         return pedidoDAO.findByData(data).stream()
-                .filter(p -> idRestaurante == null || p.getRestauranteId() == idRestaurante)
+                .filter(p -> idRestaurante == 0 || p.getRestauranteId() == idRestaurante)
                 .map(p -> BigDecimal.valueOf(p.calcularPrecoTotal()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override
-    public Map<String, Integer> obterTopProdutosVendidos(Integer idRestaurante) {
+    public Map<String, Integer> obterTopProdutosVendidos(int idRestaurante) {
         Map<Integer, Integer> contagem = new HashMap<>();
-        List<Pedido> pedidos = pedidoDAO.findAll().stream()
-                .filter(p -> idRestaurante == null || p.getRestauranteId() == idRestaurante)
-                .collect(Collectors.toList());
-
-        for (Pedido p : pedidos) {
-            for (LinhaPedido lp : p.getLinhasPedido()) {
-                int id = lp.getItem().getId();
-                contagem.put(id, contagem.getOrDefault(id, 0) + lp.getQuantidade());
-            }
-        }
+        pedidoDAO.findAll().stream()
+                .filter(p -> idRestaurante == 0 || p.getRestauranteId() == idRestaurante)
+                .forEach(p -> p.getLinhasPedido().forEach(lp -> {
+                    int id = lp.getItem().getId();
+                    contagem.put(id, contagem.getOrDefault(id, 0) + lp.getQuantidade());
+                }));
 
         Map<String, Integer> resultado = new HashMap<>();
         contagem.forEach((id, qtd) -> {
@@ -68,69 +137,11 @@ public class GestaoFacade implements IGestaoFacade {
     }
 
     @Override
-    public double calcularTempoMedioEspera(LocalDate data, Integer idRestaurante) {
-        List<Pedido> concluidos = pedidoDAO.findByData(data).stream()
-                .filter(p -> idRestaurante == null || p.getRestauranteId() == idRestaurante)
+    public double calcularTempoMedioEspera(LocalDate data, int idRestaurante) {
+        return pedidoDAO.findByData(data).stream()
+                .filter(p -> idRestaurante == 0 || p.getRestauranteId() == idRestaurante)
                 .filter(p -> p.getHoraEntrega() != null)
-                .collect(Collectors.toList());
-
-        return concluidos.stream()
                 .mapToLong(Pedido::calcularTempoAtendimento)
                 .average().orElse(0.0);
-    }
-
-    @Override
-    public List<String> verificarProdutosAbaixoDoStock(Integer idRestaurante) {
-        // Delegamos à produção a verificação do stock local
-        return producaoFacade.getAlertasStock(idRestaurante);
-    }
-
-    // --- CONFIGURAÇÃO DA CADEIA (CRIAÇÃO) ---
-
-    @Override
-    public int criarRestaurante(String nome, String localizacao) {
-        Restaurante r = new Restaurante(nome, localizacao);
-        return restauranteDAO.put(r); // Retorna o ID gerado
-    }
-
-    @Override
-    public void adicionarEstacaotrabalho(int restauranteId, Trabalho tipo) {
-        Estacao e = new Estacao(tipo);
-        e.setRestauranteId(restauranteId);
-        estacaoDAO.put(e);
-    }
-
-    @Override
-    public void registarFuncionario(int restauranteId, String nome, String user, String pass, RoleTrabalhador papel) {
-        Funcionario f = new Funcionario(nome, user, pass, papel);
-        f.setRestauranteId(restauranteId);
-        funcionarioDAO.put(f);
-    }
-
-    @Override
-    public void configurarNovoRestaurante(Restaurante r, List<Estacao> estacoes, List<Funcionario> funcionarios) {
-        int id = restauranteDAO.put(r);
-        for (Estacao e : estacoes) { e.setRestauranteId(id); estacaoDAO.put(e); }
-        for (Funcionario f : funcionarios) { f.setRestauranteId(id); funcionarioDAO.put(f); }
-    }
-
-    @Override
-    public List<String> listarNomesRestaurantes() {
-        return restauranteDAO.findAll().stream()
-                .map(Restaurante::getNome)
-                .collect(Collectors.toList());
-    }
-
-    // --- COMUNICAÇÃO ---
-
-    @Override
-    public void enviarMensagemIncentivo(String texto, Integer alvoRestauranteId) {
-        Mensagem msg = new Mensagem(texto, false);
-        producaoFacade.difundirMensagem(msg, alvoRestauranteId);
-    }
-
-    @Override
-    public void reporStockIngrediente(int ingredienteId, int restauranteId, float quantidade) {
-        producaoFacade.atualizarStockLocal(ingredienteId, restauranteId, quantidade);
     }
 }
