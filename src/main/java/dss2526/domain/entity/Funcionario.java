@@ -4,16 +4,16 @@ import dss2526.domain.enumeration.RoleTrabalhador;
 import java.io.Serializable;
 
 public class Funcionario implements Serializable {
-    private Integer id;
+    private int id;
     private String nome;
     private String username;
     private String password;
     private RoleTrabalhador papel;
-    private Integer restauranteId; // ID do restaurante onde trabalha (0 ou null se for COO)
+    private int restauranteId; // ID do restaurante onde trabalha (0 ou null se for COO)
 
     public Funcionario() {}
 
-    public Funcionario(String nome, String username, String password, RoleTrabalhador papel, Integer restauranteId) {
+    public Funcionario(String nome, String username, String password, RoleTrabalhador papel, int restauranteId) {
         this.nome = nome;
         this.username = username;
         this.password = password;
@@ -22,8 +22,8 @@ public class Funcionario implements Serializable {
     }
 
     // Getters e Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
@@ -45,8 +45,14 @@ public class Funcionario implements Serializable {
         return this.papel == RoleTrabalhador.COO;
     }
 
+
     public boolean podeVerEstatisticas(Integer idAlvo) {
-        if (this.papel == RoleTrabalhador.COO) return true;
-        return this.papel == RoleTrabalhador.CHEFERESTAURANTE && this.restauranteId.equals(idAlvo);
+        if (this.papel == RoleTrabalhador.COO) {
+            return true; 
+        }
+        if (this.papel == RoleTrabalhador.CHEFERESTAURANTE && idAlvo != null) {
+            return this.restauranteId == idAlvo;
+        }
+        return false;
     }
 }

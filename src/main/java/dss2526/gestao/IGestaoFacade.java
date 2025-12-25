@@ -1,18 +1,25 @@
 package dss2526.gestao;
 
-import dss2526.domain.entity.Mensagem;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.List;
 
 public interface IGestaoFacade {
-    // Estatísticas
-    BigDecimal calcularFaturacaoDoDia(LocalDate data);
-    Map<String, Integer> obterTopProdutosVendidos();
-    BigDecimal calcularTicketMedio();
+    
+    // --- Estatísticas Integradas (Cenário 4) ---
+    
+    BigDecimal calcularFaturacao(LocalDate data, Integer idRestaurante);
+    
+    Map<String, Integer> obterTopProdutosVendidos(Integer idRestaurante);
+    
+    double calcularTempoMedioEspera(LocalDate data, Integer idRestaurante);
+    
+    List<String> verificarProdutosAbaixoDoStock(Integer idRestaurante);
+    
+    void reporStockIngrediente(int ingredienteId, int restauranteId, float quantidade);
 
-    // Comunicação com Produção
-    void enviarAvisoProducao(String texto, boolean prioritario);
-
-    void reporStockIngrediente(int ingredienteId); 
+    void enviarMensagemIncentivo(String texto, Integer alvoRestauranteId);
+        
+    List<String> listarNomesRestaurantes();
 }

@@ -6,8 +6,7 @@ import java.util.List;
 public class Stock {
     private Integer id;
     private List<LinhaStock> ingredientes;
-    private Integer restauranteId;
-    private Restaurante restaurante;
+    private int restauranteId;
 
     // Construtores
 
@@ -15,7 +14,7 @@ public class Stock {
         this.ingredientes = new ArrayList<>();
     }
 
-    public Stock(Integer restauranteId) {
+    public Stock(int restauranteId) {
         this();
         this.restauranteId = restauranteId;
     }
@@ -28,15 +27,12 @@ public class Stock {
 
     // Getters e Setters
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public List<LinhaStock> getIngredientes() { return ingredientes; }
     public void setIngredientes(List<LinhaStock> ingredientes) { this.ingredientes = ingredientes; }
 
-    public Restaurante getRestaurante() { return restaurante; }
-    public void setRestaurante(Restaurante restaurante) { this.restaurante = restaurante; }
-    
-    public Integer getRestauranteId() { return restauranteId; }
-    public void setRestauranteId(Integer restauranteId) { this.restauranteId = restauranteId; }
+    public int  getRestauranteId() { return restauranteId; }
+    public void setRestauranteId(int restauranteId) { this.restauranteId = restauranteId; }
 }
