@@ -1,74 +1,45 @@
 package dss2526.ui.view;
 
-import java.util.*;
-
 import dss2526.ui.controller.VendaController;
-import dss2526.ui.delegate.NewMenu;
-
-import dss2526.domain.entity.Pedido;
+import java.util.Scanner;
 
 public class VendaUI {
+    private final VendaController controller;
+    private final Scanner scanner;
 
-    private final VendaController venda;
-    private final Scanner sc;
-
-    // Estado da venda atual
-    private Pedido pedidoAtual;
-
-    public VendaUI(VendaController venda) {
-        this.venda = venda;
-        this.sc = new Scanner(System.in);
+    public VendaUI(VendaController controller) {
+        this.controller = controller;
+        this.scanner = new Scanner(System.in);
     }
 
-    /**
-     * Menu Principal de Vendas
-     */
     public void show() {
-        NewMenu menu = new NewMenu(
-            "Subsistema de Venda",
-            new String[] {
-            "Iniciar um novo pedido"
-        });
-        
-        menu.setHandler(1, () -> iniciarVenda());
-        
-        menu.run();
-    }
+        System.out.println("\n--- Menu Venda ---");
+        System.out.println("1. Novo Pedido");
+        System.out.println("2. Finalizar Pedido Atual");
+        System.out.println("0. Voltar");
 
-    /**
-     * Inicia o ciclo de vida de um pedido
-     */
-    private void iniciarVenda() {
-        // Passo 1: Configuração Inicial
-        System.out.println("\n>> Nova Venda");
-        String opcaoLevar = lerString("É para levar? (S/N): ");
-        boolean paraLevar = opcaoLevar.equalsIgnoreCase("S");
+        int opcao = scanner.nextInt();
+        scanner.nextLine();
 
-        try {
-            // Cria o pedido no sistema via Facade
-            // this.pedidoAtual = venda.criarPedido(paraLevar);
-            System.out.println(">> Pedido #" + pedidoAtual.getId() + " iniciado.");
-            
-            // Entra no loop de gestão do pedido
-            menuPedidoEmCurso();
-            
-        } catch (Exception e) {
-            System.out.println("Erro ao iniciar pedido: " + e.getMessage());
+        switch (opcao) {
+            case 1:
+                novoPedido();
+                break;
+            case 2:
+                controller.finalizarPedido();
+                System.out.println("Pedido finalizado.");
+                break;
+            case 0:
+                return;
+            default:
+                System.out.println("Opção inválida.");
         }
     }
 
-    private void menuPedidoEmCurso() {
-        // ... um pedido pode lhe ser adicionado/removido items (através de linhaPedido com quantidade e uma nota)
-        // cancelar ou finalizar o pedido
-    }
-
-    private Integer lerInt(String msg) {
-        System.out.print(msg);
-        return Integer.parseInt(sc.nextLine());
-    }
-
-    private String lerString(String msg) {
-        System.out.print(msg);
-        return sc.nextLine();
+    private void novoPedido() {
+        System.out.println("ID Restaurante:");
+        int id = scanner.nextInt();
+        controller.novoPedido(id);
+        System.out.println("Novo pedido iniciado.");
     }
 }

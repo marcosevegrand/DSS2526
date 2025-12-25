@@ -1,31 +1,41 @@
 package dss2526.ui.view;
 
-import dss2526.ui.controller.*;
-import dss2526.ui.delegate.NewMenu;
+import dss2526.ui.controller.GestaoController;
+import dss2526.ui.controller.ProducaoController;
+import dss2526.ui.controller.VendaController;
+
+import java.util.Scanner;
 
 public class AppUI {
-
-    private VendaUI vendaUI;
-    private ProducaoUI producaoUI;
-    private GestaoUI gestaoUI;
-
-    public AppUI(VendaController venda, ProducaoController producao, GestaoController gestao) {
-        this.vendaUI = new VendaUI(venda);
-        this.producaoUI = new ProducaoUI(producao);
-        this.gestaoUI = new GestaoUI(gestao);
-    }
-
+    
     public void run() {
-        NewMenu menu = new NewMenu(
-            "Sistema do Restaurante - DSS2526",
-            new String[] {
-            "Subsistema de Venda",
-            "Subsistema de Produção",
-            "Subsistema de Gestão",
-        });
-        menu.setHandler(1, () -> vendaUI.show());
-        menu.setHandler(2, () -> producaoUI.run());
-        menu.setHandler(3, () -> gestaoUI.run());
-        menu.run();
+        Scanner scanner = new Scanner(System.in);
+        
+        while (true) {
+            System.out.println("\n--- Sistema Restaurante ---");
+            System.out.println("1. Gestão");
+            System.out.println("2. Venda");
+            System.out.println("3. Produção");
+            System.out.println("0. Sair");
+            
+            int opcao = scanner.nextInt();
+            
+            if (opcao == 0) break;
+            
+            switch (opcao) {
+                case 1:
+                    // Instantiate controller and pass to view
+                    new GestaoUI(new GestaoController()).show();
+                    break;
+                case 2:
+                    new VendaUI(new VendaController()).show();
+                    break;
+                case 3:
+                    new ProducaoUI(new ProducaoController()).show();
+                    break;
+                default:
+                    System.out.println("Opção inválida");
+            }
+        }
     }
 }

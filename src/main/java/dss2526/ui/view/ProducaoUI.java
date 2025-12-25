@@ -1,46 +1,56 @@
 package dss2526.ui.view;
 
-import java.util.*;
-
+import dss2526.domain.entity.Pedido;
 import dss2526.ui.controller.ProducaoController;
-import dss2526.ui.delegate.NewMenu;
+
+import java.util.List;
+import java.util.Scanner;
 
 public class ProducaoUI {
+    private final ProducaoController controller;
+    private final Scanner scanner;
 
-    private ProducaoController producao;
-    private Scanner sc;
-
-    public ProducaoUI(ProducaoController producao) {
-        this.producao = producao;
-        this.sc = new Scanner(System.in);
+    public ProducaoUI(ProducaoController controller) {
+        this.controller = controller;
+        this.scanner = new Scanner(System.in);
     }
 
-    public void run() {
+    public void show() {
+        System.out.println("\n--- Menu Produção ---");
+        System.out.println("1. Ver Fila de Pedidos");
+        System.out.println("2. Concluir Tarefa"); // Simplificado
+        System.out.println("0. Voltar");
 
-        // Fazer escolher restaurante e estação de trabalho antes de mostrar o menu
+        int opcao = scanner.nextInt();
+        scanner.nextLine();
 
-        NewMenu menu = new NewMenu(
-            "Subsistema de Produção",
-            new String[] {
-            "Listar Tarefas Pendentes",
-            "Atualizar Estado de Tarefa"
-        });
-        menu.setHandler(1, () -> exemplo());
-
-        menu.run();
+        switch (opcao) {
+            case 1:
+                verFila();
+                break;
+            case 2:
+                concluirTarefa();
+                break;
+            case 0:
+                return;
+            default:
+                System.out.println("Opção inválida.");
+        }
     }
 
-    private void exemplo() {
-        System.out.println("\nExemplo de funcionalidade do subsistema de Produção.");
+    private void verFila() {
+        System.out.println("ID do Restaurante:"); // Em app real seria contexto do user
+        int restId = scanner.nextInt();
+        List<Pedido> pedidos = controller.getFilaPedidos(restId);
+        for(Pedido p : pedidos) {
+            System.out.println("Pedido #" + p.getId() + " - " + p.getEstado());
+        }
     }
 
-    private Integer lerInt(String msg) {
-        System.out.print(msg);
-        return Integer.parseInt(sc.nextLine());
-    }
-
-    private String lerString(String msg) {
-        System.out.print(msg);
-        return sc.nextLine();
+    private void concluirTarefa() {
+        System.out.println("ID Tarefa:");
+        int id = scanner.nextInt();
+        controller.concluirTarefa(id);
+        System.out.println("Tarefa concluída.");
     }
 }
