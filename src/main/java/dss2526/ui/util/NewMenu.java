@@ -1,4 +1,4 @@
-package dss2526.ui.delegate;
+package dss2526.ui.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;

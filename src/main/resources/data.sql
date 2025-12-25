@@ -1,8 +1,8 @@
 -- =================================================================================
--- SCRIPT DE POVOAMENTO (MySQL Compatible)
+-- SCRIPT DE POVOAMENTO (Adaptado aos Enums Java Restritos)
 -- =================================================================================
 
--- Disable FK checks temporarily for bulk insertion safety
+-- Desativar verificação de chaves estrangeiras temporariamente
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 1. Catalogo
@@ -12,27 +12,28 @@ INSERT INTO Catalogo (nome) VALUES ('Geral');
 INSERT INTO Restaurante (nome, localizacao, catalogo_id) VALUES ('Sabor Latino', 'Lisboa', 1);
 INSERT INTO Restaurante (nome, localizacao, catalogo_id) VALUES ('Douro Vinhateiro', 'Porto', 1);
 
--- 3. Funcionario
+-- 3. Funcionario (Usando apenas: FUNCIONARIO, GERENTE, COO, SYSADMIN)
 -- Restaurante 1 (Lisboa)
-INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (1, 'joao.silva', 'pass123', 'GESTOR');
-INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (1, 'maria.santos', 'pass123', 'ATENDIMENTO');
-INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (1, 'carlos.pereira', 'pass123', 'COZINHEIRO');
+INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (1, 'joao.silva', 'pass123', 'GERENTE');
+INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (1, 'maria.santos', 'pass123', 'FUNCIONARIO'); -- Atendimento
+INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (1, 'carlos.pereira', 'pass123', 'FUNCIONARIO'); -- Cozinha
 
 -- Restaurante 2 (Porto)
-INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (2, 'ana.costa', 'pass123', 'GESTOR');
-INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (2, 'pedro.almeida', 'pass123', 'ATENDIMENTO');
-INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (2, 'sofia.martins', 'pass123', 'COZINHEIRO');
+INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (2, 'ana.costa', 'pass123', 'GERENTE');
+INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (2, 'pedro.almeida', 'pass123', 'FUNCIONARIO');
+INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (2, 'sofia.martins', 'pass123', 'COO'); -- Exemplo de cargo superior
 
--- 4. Estacao
+-- 4. Estacao (Usando apenas: BEBIDAS, GELADOS, MONTAGEM, CAIXA, GRELHA, FRITURA)
 -- Restaurante 1
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'PREPARACAO');
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'COZEDURA');
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'EMPRATAMENTO');
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'MONTAGEM');
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'GRELHA');
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'FRITURA');
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'BEBIDAS');
 
 -- Restaurante 2
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'PREPARACAO');
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'COZEDURA');
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'EMPRATAMENTO');
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'MONTAGEM');
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'GRELHA');
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'CAIXA');
 
 -- 5. Ingrediente
 INSERT INTO Ingrediente (nome, unidade, alergenico) VALUES ('Carne de Vaca', 'kg', 'Nenhum');
@@ -52,17 +53,17 @@ INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES (1, 1);
 INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES (1, 2);
 INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES (1, 3);
 
--- 8. Passo
+-- 8. Passo (Usando apenas: BEBIDAS, GELADOS, MONTAGEM, CAIXA, GRELHA, FRITURA)
 -- Bitoque
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Grelhar Bife', 10, 'COZEDURA');
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Fritar Batata', 15, 'COZEDURA');
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Cozer Arroz', 15, 'COZEDURA');
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Estrelar Ovo', 3, 'COZEDURA');
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Empratar Bitoque', 2, 'EMPRATAMENTO');
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Grelhar Bife', 10, 'GRELHA');
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Fritar Batata', 15, 'FRITURA');
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Cozer Arroz', 15, 'GRELHA'); -- Adaptado para Grelha (fogão)
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Estrelar Ovo', 3, 'FRITURA');
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Empratar Bitoque', 2, 'MONTAGEM');
 -- Salada
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Lavar Legumes', 5, 'PREPARACAO');
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Cortar Legumes', 5, 'PREPARACAO');
-INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Temperar Salada', 1, 'PREPARACAO');
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Lavar Legumes', 5, 'MONTAGEM'); -- Adaptado
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Cortar Legumes', 5, 'MONTAGEM');
+INSERT INTO Passo (nome, duracao_minutos, trabalho) VALUES ('Temperar Salada', 1, 'MONTAGEM');
 
 -- 9. Produto_Passo
 -- Bitoque (ID 1)
@@ -112,5 +113,5 @@ INSERT INTO LinhaStock (restaurante_id, ingrediente_id, quantidade) VALUES (2, 4
 INSERT INTO LinhaStock (restaurante_id, ingrediente_id, quantidade) VALUES (2, 5, 15);
 INSERT INTO LinhaStock (restaurante_id, ingrediente_id, quantidade) VALUES (2, 6, 15);
 
--- Re-enable FK checks
+-- Re-ativar verificação de chaves estrangeiras
 SET FOREIGN_KEY_CHECKS = 1;
