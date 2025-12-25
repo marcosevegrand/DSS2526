@@ -43,4 +43,16 @@ public class Pedido {
     public void setLinhas(List<LinhaPedido> linhas) { this.linhas = linhas; }
     public void addLinha(LinhaPedido linha) { this.linhas.add(linha); }
     public void removeLinha(LinhaPedido linha) { this.linhas.remove(linha); }
+
+    @Override
+    public String toString() {
+        return "Pedido{" +
+                "id=" + id +
+                ", restauranteId=" + restauranteId +
+                ", paraLevar=" + paraLevar +
+                ", estado=" + estado +
+                ", dataHora=" + dataHora +
+                ", linhas=" + linhas +
+                '}';
+    }
 }

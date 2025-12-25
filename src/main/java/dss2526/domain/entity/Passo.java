@@ -33,4 +33,15 @@ public class Passo {
     public void setIngredienteIds(List<Integer> ingredienteIds) { this.ingredienteIds = ingredienteIds; }
     public void addIngredienteId(Integer ingredienteId) { this.ingredienteIds.add(ingredienteId); }
     public void removeIngredienteId(Integer ingredienteId) { this.ingredienteIds.remove(ingredienteId); }
+
+    @Override
+    public String toString() {
+        return "Passo{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", duracao=" + duracao +
+                ", trabalho=" + trabalho +
+                ", ingredienteIds=" + ingredienteIds +
+                '}';
+    }
 }

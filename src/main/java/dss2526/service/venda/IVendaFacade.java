@@ -1,9 +1,5 @@
 package dss2526.service.venda;
 
-import dss2526.domain.entity.Pedido;
+import dss2526.service.base.IBaseFacade;
 
-public interface IVendaFacade {
-    Pedido iniciarPedido(int restauranteId);
-    void adicionarItem(int pedidoId, int itemId, int quantidade);
-    void fecharPedido(int pedidoId);
-}
+public interface IVendaFacade extends IBaseFacade {}

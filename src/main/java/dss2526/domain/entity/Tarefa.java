@@ -37,4 +37,17 @@ public class Tarefa {
 
     public boolean isConcluido() { return concluido; }
     public void setConcluido(boolean concluido) { this.concluido = concluido; }
+
+    @Override
+    public String toString() {
+        return "Tarefa{" +
+                "id=" + id +
+                ", passoId=" + passoId +
+                ", produtoId=" + produtoId +
+                ", pedidoId=" + pedidoId +
+                ", dataCriacao=" + dataCriacao +
+                ", dataConclusao=" + dataConclusao +
+                ", concluido=" + concluido +
+                '}';
+    }
 }

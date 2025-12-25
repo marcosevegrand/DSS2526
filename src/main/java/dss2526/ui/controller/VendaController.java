@@ -1,26 +1,25 @@
 package dss2526.ui.controller;
 
-import dss2526.domain.entity.Pedido;
-import dss2526.service.venda.IVendaFacade;
-import dss2526.service.venda.VendaFacade;
+import java.util.List;
+
+import dss2526.domain.entity.Restaurante;
+import dss2526.service.venda.*;
 
 public class VendaController {
 
     private IVendaFacade vendaFacade;
-    private Pedido pedidoAtual;
 
     public VendaController() {
-        // Connect to the Singleton Facade
         this.vendaFacade = VendaFacade.getInstance();
     }
 
-    public void novoPedido(int restauranteId) {
-        this.pedidoAtual = vendaFacade.iniciarPedido(restauranteId);
-    }
+    public void novoPedido() {}
 
-    public void finalizarPedido() {
-        if (pedidoAtual != null) {
-            vendaFacade.fecharPedido(pedidoAtual.getId());
-        }
+    public List<String> listarRestaurantes() {
+        List<Restaurante> restaurantes = vendaFacade.listarRestaurantes();
+        return restaurantes.stream()
+                .map(r -> String.format("ID: %d, Nome: %s, Localização: %s",
+                        r.getId(), r.getNome(), r.getLocalizacao()))
+                .toList();
     }
 }

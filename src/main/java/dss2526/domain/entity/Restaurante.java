@@ -57,4 +57,18 @@ public class Restaurante {
     public void setStock(List<LinhaStock> stock) { this.stock = stock; }
     public void addLinhaStock(LinhaStock linhaStock) { this.stock.add(linhaStock); }
     public void removeLinhaStock(LinhaStock linhaStock) { this.stock.remove(linhaStock); }
+
+    @Override
+    public String toString() {
+        return "Restaurante{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", localizacao='" + localizacao + '\'' +
+                ", catalogoId=" + catalogoId +
+                ", estacaoIds=" + estacaoIds +
+                ", funcionarioIds=" + funcionarioIds +
+                ", pedidoIds=" + pedidoIds +
+                ", stock=" + stock +
+                '}';
+    }
 }

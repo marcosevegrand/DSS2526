@@ -23,4 +23,14 @@ public class Ingrediente {
 
     public String getAlergenico() { return alergenico; }
     public void setAlergenico(String alergenico) { this.alergenico = alergenico; }
+
+    @Override
+    public String toString() {
+        return "Ingrediente{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", unidade='" + unidade + '\'' +
+                ", alergenico='" + alergenico + '\'' +
+                '}';
+    }
 }

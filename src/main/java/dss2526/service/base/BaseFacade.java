@@ -8,8 +8,17 @@ import dss2526.domain.entity.*;
 
 public class BaseFacade implements IBaseFacade {
 
-    RestauranteDAO restauranteDAO = RestauranteDAOImpl.getInstance();
-    EstacaoDAO estacaoDAO = EstacaoDAOImpl.getInstance();
+    protected final RestauranteDAO restauranteDAO = RestauranteDAOImpl.getInstance();
+    protected final FuncionarioDAO funcionarioDAO = FuncionarioDAOImpl.getInstance();
+    protected final EstacaoDAO estacaoDAO = EstacaoDAOImpl.getInstance();
+    protected final CatalogoDAO catalogoDAO = CatalogoDAOImpl.getInstance();
+    protected final MenuDAO menuDAO = MenuDAOImpl.getInstance();
+    protected final ProdutoDAO produtoDAO = ProdutoDAOImpl.getInstance();
+    protected final IngredienteDAO ingredienteDAO = IngredienteDAOImpl.getInstance();
+    protected final PassoDAO passoDAO = PassoDAOImpl.getInstance();
+    protected final TarefaDAO tarefaDAO = TarefaDAOImpl.getInstance();
+    protected final MensagemDAO mensagemDAO = MensagemDAOImpl.getInstance();
+    protected final PedidoDAO pedidoDAO = PedidoDAOImpl.getInstance();
 
     // --- Restaurante Logic ---
     @Override
@@ -20,74 +29,197 @@ public class BaseFacade implements IBaseFacade {
     public Restaurante obterRestaurante(Integer id) {
         return restauranteDAO.findById(id);
     }
+    @Override
     public Boolean removerRestaurante(Integer id) {
         return restauranteDAO.delete(id);
     }
-    List<Restaurante> listarRestaurantes() {
+    @Override
+    public List<Restaurante> listarRestaurantes() {
         return restauranteDAO.findAll();
     }
-    List<Restaurante> listarRestaurantesComCatalogo(Integer id) {
-        return restauranteDAO.findByCatalogoId(id);
+    @Override
+    public List<Restaurante> listarRestaurantesComCatalogo(Integer id) {
+        return restauranteDAO.findAllByCatalogo(id);
     }
 
     // --- Funcionario Logic ---
-    void registarFuncionario(Funcionario f);
-    Funcionario obterFuncionario(Integer id);
-    Boolean removerFuncionario(Integer id);
-    List<Funcionario> listarFuncionarios();
-    List<Funcionario> listarFuncionariosDeRestaurante(Integer id);
+    @Override
+    public void registarFuncionario(Funcionario f) {
+        funcionarioDAO.create(f);
+    }
+    @Override
+    public Funcionario obterFuncionario(Integer id) {
+        return funcionarioDAO.findById(id);
+    }
+    @Override
+    public Boolean removerFuncionario(Integer id) {
+        return funcionarioDAO.delete(id);
+    }
+    @Override
+    public List<Funcionario> listarFuncionarios() {
+        return funcionarioDAO.findAll();
+    }
+    @Override
+    public List<Funcionario> listarFuncionariosDeRestaurante(Integer id) {
+        return funcionarioDAO.findAllByRestaurante(id);
+    }
 
     // --- Estacao Logic ---
-    void registarEstacao(Estacao e);
-    Funcionario obterEstacao(Integer id);
-    Boolean removerEstacao(Integer id);
-    List<Estacao> getEstacoes();
-    List<Estacao> listarEstacoesDeRestaurante(Integer id);
+    @Override
+    public void registarEstacao(Estacao e) {
+        estacaoDAO.create(e);
+    }
+    @Override
+    public Estacao obterEstacao(Integer id) {
+        return estacaoDAO.findById(id);
+    }
+    @Override public Boolean removerEstacao(Integer id) {
+        return estacaoDAO.delete(id);
+    }
+    @Override
+    public List<Estacao> getEstacoes() {
+        return estacaoDAO.findAll();
+    }
+    @Override
+    public List<Estacao> listarEstacoesDeRestaurante(Integer id) {
+        return estacaoDAO.findAllByRestaurante(id);
+    }
 
     // --- Catalogo Logic ---
-    void registarCatalogo(Catalogo c);
-    Catalogo obterCatalogo(Integer id);
-    Boolean removerCatalogo(Integer id);
-    List<Catalogo> listarCatalogos();
+    @Override
+    public void registarCatalogo(Catalogo c) {
+        catalogoDAO.create(c);
+    }
+    @Override
+    public Catalogo obterCatalogo(Integer id) {
+        return catalogoDAO.findById(id);
+    }
+    @Override
+    public Boolean removerCatalogo(Integer id) {
+        return catalogoDAO.delete(id);
+    }
+    @Override
+    public List<Catalogo> listarCatalogos() {
+        return catalogoDAO.findAll();
+    }
 
     // --- Menu Logic ---
-    void registarMenu(Menu m);
-    Menu obterMenu(Integer id);
-    Boolean removerMenu(Integer id);
-    List<Menu> listarMenus();
+    @Override
+    public void registarMenu(Menu m) {
+        menuDAO.create(m);
+    }
+    @Override
+    public Menu obterMenu(Integer id) {
+        return menuDAO.findById(id);
+    }
+    @Override
+    public Boolean removerMenu(Integer id) {
+        return menuDAO.delete(id);
+    }
+    @Override
+    public List<Menu> listarMenus() {
+        return menuDAO.findAll();
+    }
 
     // --- Produto Logic ---
-    void registarProduto(Produto p);
-    Produto obterProduto(Integer id);
-    Boolean removerProduto(Integer id);
-    List<Produto> listarProdutos();
+    @Override
+    public void registarProduto(Produto p) {
+        produtoDAO.create(p);
+    }
+    @Override
+    public Produto obterProduto(Integer id) {
+        return produtoDAO.findById(id);
+    }
+    @Override
+    public Boolean removerProduto(Integer id) {
+        return produtoDAO.delete(id);
+    }
+    @Override
+    public List<Produto> listarProdutos() {
+        return produtoDAO.findAll();
+    }
 
     // --- Ingrediente Logic ---
-    void registarIngrediente(Ingrediente i);
-    Ingrediente obterIngrediente(Integer id);
-    Boolean removerIngrediente(Integer id);
-    List<Ingrediente> listarIngredientes();
+    @Override
+    public void registarIngrediente(Ingrediente i) {
+        ingredienteDAO.create(i);
+    }
+    @Override
+    public Ingrediente obterIngrediente(Integer id) {
+        return ingredienteDAO.findById(id);
+    }
+    @Override
+    public Boolean removerIngrediente(Integer id) {
+        return ingredienteDAO.delete(id);
+    }
+    @Override
+    public List<Ingrediente> listarIngredientes() {
+        return ingredienteDAO.findAll();
+    }
 
     // --- Passo Logic ---
-    void registarPasso(Passo p);
-    Passo obterPasso(Integer id);
-    Boolean removerPasso(Integer id);
-    List<Passo> listarPassos();
-    List<Passo> listarPassosDeProduto(Integer id);
+    @Override
+    public void registarPasso(Passo p) {
+        passoDAO.create(p);
+    }
+    @Override
+    public Passo obterPasso(Integer id) {
+        return passoDAO.findById(id);
+    }
+    @Override
+    public Boolean removerPasso(Integer id) {
+        return passoDAO.delete(id);
+    }
+    @Override
+    public List<Passo> listarPassos() {
+        return passoDAO.findAll();
+    }
 
     // --- Mensagem Logic ---
-    void registarMensagem(Mensagem m);
-    Mensagem obterMensagem(Integer id);
-    Boolean removerMensagem(Integer id);
-    List<Mensagem> listarMensagens();
-    List<Mensagem> listarMensagensDeRestaurante(Integer id);
+    @Override
+    public void registarMensagem(Mensagem m) {
+        mensagemDAO.create(m);
+    }
+    @Override
+    public Mensagem obterMensagem(Integer id) {
+        return mensagemDAO.findById(id);
+    }
+    @Override
+    public Boolean removerMensagem(Integer id) {
+        return mensagemDAO.delete(id);
+    }
+    @Override
+    public List<Mensagem> listarMensagens() {
+        return mensagemDAO.findAll();
+    }
+    @Override
+    public List<Mensagem> listarMensagensDeRestaurante(Integer id) {
+        return mensagemDAO.findAllByRestaurante(id);
+    }
 
     // --- Tarefa Logic ---
-    void registarTarefa(Tarefa t);
-    Tarefa obterTarefa(Integer id);
-    Boolean removerTarefa(Integer id);
-    List<Tarefa> listarTarefas();
-    List<Tarefa> listarTarefasDeEstacao(Integer id);
-    List<Tarefa> listarTarefasDePedido(Integer id);
-    List<Tarefa> listarTarefasDeProduto(Integer id);
+    @Override
+    public void registarTarefa(Tarefa t) {
+        tarefaDAO.create(t);
+    }
+    @Override
+    public Tarefa obterTarefa(Integer id) {
+        return tarefaDAO.findById(id);
+    }
+    @Override
+    public Boolean removerTarefa(Integer id) {
+        return tarefaDAO.delete(id);
+    }
+    @Override
+    public List<Tarefa> listarTarefas() {
+        return tarefaDAO.findAll();
+    }
+    @Override
+    public List<Tarefa> listarTarefasDePedido(Integer id) {
+        return tarefaDAO.findAllByPedido(id);
+    }
+    @Override
+    public List<Tarefa> listarTarefasDeProduto(Integer id) {
+        return tarefaDAO.findAllByProduto(id);
+    }
 }

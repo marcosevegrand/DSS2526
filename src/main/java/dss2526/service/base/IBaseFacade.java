@@ -22,7 +22,7 @@ public interface IBaseFacade {
 
     // --- Estacao Logic ---
     void registarEstacao(Estacao e);
-    Funcionario obterEstacao(Integer id);
+    Estacao obterEstacao(Integer id);
     Boolean removerEstacao(Integer id);
     List<Estacao> getEstacoes();
     List<Estacao> listarEstacoesDeRestaurante(Integer id);
@@ -56,7 +56,6 @@ public interface IBaseFacade {
     Passo obterPasso(Integer id);
     Boolean removerPasso(Integer id);
     List<Passo> listarPassos();
-    List<Passo> listarPassosDeProduto(Integer id);
 
     // --- Mensagem Logic ---
     void registarMensagem(Mensagem m);
@@ -70,7 +69,6 @@ public interface IBaseFacade {
     Tarefa obterTarefa(Integer id);
     Boolean removerTarefa(Integer id);
     List<Tarefa> listarTarefas();
-    List<Tarefa> listarTarefasDeEstacao(Integer id);
     List<Tarefa> listarTarefasDePedido(Integer id);
     List<Tarefa> listarTarefasDeProduto(Integer id);
 }

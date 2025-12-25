@@ -21,4 +21,13 @@ public class Estacao {
 
     public Trabalho getTrabalho() { return trabalho; }
     public void setTrabalho(Trabalho trabalho) { this.trabalho = trabalho; }
+
+    @Override
+    public String toString() {
+        return "Estacao{" +
+                "id=" + id +
+                ", restauranteId=" + restauranteId +
+                ", trabalho=" + trabalho +
+                '}';
+    }
 }
