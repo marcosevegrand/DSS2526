@@ -5,44 +5,39 @@ import dss2526.data.contract.EstacaoDAO;
 import dss2526.domain.entity.Estacao;
 import dss2526.domain.enumeration.Trabalho;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class EstacaoDAOImpl implements EstacaoDAO {
+    
+    private static EstacaoDAOImpl instance;
+    private final DBConfig dbConfig = DBConfig.getInstance();
 
-    private DBConfig dbConfig = DBConfig.getInstance();
-    private static Map<Integer, Estacao> identityMap = new HashMap<>();
+    public static EstacaoDAOImpl getInstance() {
+        if (instance == null) instance = new EstacaoDAOImpl();
+        return instance;
+    }
+
+    private EstacaoDAOImpl() {}
 
     @Override
-    public Estacao save(Estacao estacao) {
-        String sql = (estacao.getId() > 0) ? 
-            "INSERT INTO Estacoes (ID, Restaurante_ID, Trabalho) VALUES (?, ?, ?)" :
-            "INSERT INTO Estacoes (Restaurante_ID, Trabalho) VALUES (?, ?)";
+    public Estacao create(Estacao obj) {
+        String sql = "INSERT INTO Estacao (RestauranteId, Trabalho) VALUES (?, ?)";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             
-        try (Connection conn = this.dbConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, obj.getRestauranteId());
+            stmt.setString(2, obj.getTrabalho().name());
+            stmt.executeUpdate();
             
-            if (estacao.getId() > 0) {
-                pstmt.setInt(1, estacao.getId());
-                pstmt.setInt(2, estacao.getRestauranteId());
-                pstmt.setString(3, estacao.getTrabalho() != null ? estacao.getTrabalho().name() : null);
-            } else {
-                pstmt.setInt(1, estacao.getRestauranteId());
-                pstmt.setString(2, estacao.getTrabalho() != null ? estacao.getTrabalho().name() : null);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) obj.setId(rs.getInt(1));
             }
-            
-            pstmt.executeUpdate();
-            
-            if (estacao.getId() == 0) {
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) estacao.setId(rs.getInt(1));
-                }
-            }
-            identityMap.put(estacao.getId(), estacao);
-            return estacao;
+            return obj;
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -51,20 +46,15 @@ public class EstacaoDAOImpl implements EstacaoDAO {
 
     @Override
     public Estacao findById(Integer id) {
-        if (identityMap.containsKey(id)) return identityMap.get(id);
-
-        String sql = "SELECT * FROM Estacoes WHERE ID = ?";
-        try (Connection conn = this.dbConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Estacao WHERE Id=?")) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     Estacao e = new Estacao();
-                    e.setId(rs.getInt("ID"));
-                    e.setRestauranteId(rs.getInt("Restaurante_ID"));
-                    String trab = rs.getString("Trabalho");
-                    if (trab != null) e.setTrabalho(Trabalho.valueOf(trab));
-                    identityMap.put(e.getId(), e);
+                    e.setId(rs.getInt("Id"));
+                    e.setRestauranteId(rs.getInt("RestauranteId"));
+                    e.setTrabalho(Trabalho.valueOf(rs.getString("Trabalho")));
                     return e;
                 }
             }
@@ -75,30 +65,14 @@ public class EstacaoDAOImpl implements EstacaoDAO {
     }
 
     @Override
-    public List<Estacao> findAll() {
-        List<Estacao> lista = new ArrayList<>();
-        String sql = "SELECT ID FROM Estacoes";
-        try (Connection conn = this.dbConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) lista.add(findById(rs.getInt("ID")));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return lista;
-    }
-
-    @Override
-    public Estacao update(Estacao estacao) {
-        String sql = "UPDATE Estacoes SET Restaurante_ID = ?, Trabalho = ? WHERE ID = ?";
-        try (Connection conn = this.dbConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, estacao.getRestauranteId());
-            pstmt.setString(2, estacao.getTrabalho() != null ? estacao.getTrabalho().name() : null);
-            pstmt.setInt(3, estacao.getId());
-            pstmt.executeUpdate();
-            identityMap.put(estacao.getId(), estacao);
-            return estacao;
+    public Estacao update(Estacao obj) {
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("UPDATE Estacao SET RestauranteId=?, Trabalho=? WHERE Id=?")) {
+            stmt.setInt(1, obj.getRestauranteId());
+            stmt.setString(2, obj.getTrabalho().name());
+            stmt.setInt(3, obj.getId());
+            stmt.executeUpdate();
+            return obj;
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -107,17 +81,53 @@ public class EstacaoDAOImpl implements EstacaoDAO {
 
     @Override
     public boolean delete(Integer id) {
-        String sql = "DELETE FROM Estacoes WHERE ID = ?";
-        try (Connection conn = this.dbConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            if (pstmt.executeUpdate() > 0) {
-                identityMap.remove(id);
-                return true;
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM Estacao WHERE Id=?")) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public List<Estacao> findAll() {
+        List<Estacao> list = new ArrayList<>();
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Estacao");
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Estacao e = new Estacao();
+                e.setId(rs.getInt("Id"));
+                e.setRestauranteId(rs.getInt("RestauranteId"));
+                e.setTrabalho(Trabalho.valueOf(rs.getString("Trabalho")));
+                list.add(e);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
+        return list;
+    }
+
+    @Override
+    public List<Estacao> findByRestaurante(int restauranteId) {
+        List<Estacao> list = new ArrayList<>();
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Estacao WHERE RestauranteId=?")) {
+            stmt.setInt(1, restauranteId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Estacao e = new Estacao();
+                    e.setId(rs.getInt("Id"));
+                    e.setRestauranteId(rs.getInt("RestauranteId"));
+                    e.setTrabalho(Trabalho.valueOf(rs.getString("Trabalho")));
+                    list.add(e);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }
