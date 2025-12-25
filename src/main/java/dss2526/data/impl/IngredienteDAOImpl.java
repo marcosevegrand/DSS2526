@@ -4,57 +4,79 @@ import dss2526.data.DBConfig;
 import dss2526.data.contract.IngredienteDAO;
 import dss2526.domain.entity.Ingrediente;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public class IngredienteDAOImpl implements IngredienteDAO {
-
     private static IngredienteDAOImpl instance;
-    private final DBConfig dbConfig = DBConfig.getInstance();
+    private DBConfig dbConfig;
 
-    public static IngredienteDAOImpl getInstance() {
+    // Identity Map for Ingrediente
+    private Map<Integer, Ingrediente> ingredienteMap = new HashMap<>();
+
+    private IngredienteDAOImpl() {
+        this.dbConfig = DBConfig.getInstance();
+    }
+
+    public static synchronized IngredienteDAOImpl getInstance() {
         if (instance == null) instance = new IngredienteDAOImpl();
         return instance;
     }
 
-    private IngredienteDAOImpl() {}
-
     @Override
-    public Ingrediente create(Ingrediente ing) {
-        String sql = "INSERT INTO Ingrediente (Nome, Unidade, Alergenico) VALUES (?, ?, ?)";
+    public Ingrediente create(Ingrediente entity) {
+        String sql = "INSERT INTO Ingrediente (nome, unidade, alergenico) VALUES (?, ?, ?)";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            
-            stmt.setString(1, ing.getNome());
-            stmt.setString(2, ing.getUnidade());
-            stmt.setString(3, ing.getAlergenico());
-            
-            stmt.executeUpdate();
-            
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, entity.getNome());
+            ps.setString(2, entity.getUnidade());
+            ps.setString(3, entity.getAlergenico());
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
-                    ing.setId(rs.getInt(1));
+                    entity.setId(rs.getInt(1));
+                    ingredienteMap.put(entity.getId(), entity);
                 }
             }
-            return ing;
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
         }
+        return entity;
+    }
+
+    @Override
+    public Ingrediente update(Ingrediente entity) {
+        String sql = "UPDATE Ingrediente SET nome=?, unidade=?, alergenico=? WHERE id=?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, entity.getNome());
+            ps.setString(2, entity.getUnidade());
+            ps.setString(3, entity.getAlergenico());
+            ps.setInt(4, entity.getId());
+            ps.executeUpdate();
+            ingredienteMap.put(entity.getId(), entity);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return entity;
     }
 
     @Override
     public Ingrediente findById(Integer id) {
+        if (ingredienteMap.containsKey(id)) {
+            return ingredienteMap.get(id);
+        }
+
+        String sql = "SELECT * FROM Ingrediente WHERE id = ?";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Ingrediente WHERE Id = ?")) {
-            
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return parseIngrediente(rs);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Ingrediente i = map(rs);
+                    ingredienteMap.put(i.getId(), i);
+                    return i;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -62,54 +84,50 @@ public class IngredienteDAOImpl implements IngredienteDAO {
         return null;
     }
 
-    @Override
-    public Ingrediente update(Ingrediente ing) {
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("UPDATE Ingrediente SET Nome=?, Unidade=?, Alergenico=? WHERE Id=?")) {
-            
-            stmt.setString(1, ing.getNome());
-            stmt.setString(2, ing.getUnidade());
-            stmt.setString(3, ing.getAlergenico());
-            stmt.setInt(4, ing.getId());
-            stmt.executeUpdate();
-            return ing;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Override
-    public boolean delete(Integer id) {
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("DELETE FROM Ingrediente WHERE Id=?")) {
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    private Ingrediente map(ResultSet rs) throws SQLException {
+        Ingrediente i = new Ingrediente();
+        i.setId(rs.getInt("id"));
+        i.setNome(rs.getString("nome"));
+        i.setUnidade(rs.getString("unidade"));
+        i.setAlergenico(rs.getString("alergenico"));
+        return i;
     }
 
     @Override
     public List<Ingrediente> findAll() {
         List<Ingrediente> list = new ArrayList<>();
+        String sql = "SELECT * FROM Ingrediente";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Ingrediente");
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) list.add(parseIngrediente(rs));
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                if (ingredienteMap.containsKey(id)) {
+                    list.add(ingredienteMap.get(id));
+                } else {
+                    Ingrediente i = map(rs);
+                    ingredienteMap.put(i.getId(), i);
+                    list.add(i);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
     }
 
-    private Ingrediente parseIngrediente(ResultSet rs) throws SQLException {
-        Ingrediente ing = new Ingrediente();
-        ing.setId(rs.getInt("Id"));
-        ing.setNome(rs.getString("Nome"));
-        ing.setUnidade(rs.getString("Unidade"));
-        ing.setAlergenico(rs.getString("Alergenico"));
-        return ing;
+    @Override
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM Ingrediente WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int rows = ps.executeUpdate();
+            if (rows > 0) ingredienteMap.remove(id);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

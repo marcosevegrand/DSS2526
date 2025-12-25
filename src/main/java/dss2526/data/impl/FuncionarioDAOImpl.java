@@ -5,66 +5,166 @@ import dss2526.data.contract.FuncionarioDAO;
 import dss2526.domain.entity.Funcionario;
 import dss2526.domain.enumeration.Funcao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public class FuncionarioDAOImpl implements FuncionarioDAO {
-
     private static FuncionarioDAOImpl instance;
-    private final DBConfig dbConfig = DBConfig.getInstance();
+    private DBConfig dbConfig;
 
-    public static FuncionarioDAOImpl getInstance() {
-        if (instance == null) {
-            instance = new FuncionarioDAOImpl();
-        }
+    // Identity Map for Funcionario
+    private Map<Integer, Funcionario> funcionarioMap = new HashMap<>();
+
+    private FuncionarioDAOImpl() {
+        this.dbConfig = DBConfig.getInstance();
+    }
+
+    public static synchronized FuncionarioDAOImpl getInstance() {
+        if (instance == null) instance = new FuncionarioDAOImpl();
         return instance;
     }
 
-    private FuncionarioDAOImpl() {}
-
     @Override
-    public Funcionario create(Funcionario funcionario) {
-        String sql = "INSERT INTO Funcionario (RestauranteId, Utilizador, Password, Funcao) VALUES (?, ?, ?, ?)";
+    public Funcionario create(Funcionario entity) {
+        String sql = "INSERT INTO Funcionario (restaurante_id, utilizador, password, funcao) VALUES (?, ?, ?, ?)";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            
-            if (funcionario.getRestauranteId() != null) {
-                stmt.setInt(1, funcionario.getRestauranteId());
-            } else {
-                stmt.setNull(1, java.sql.Types.INTEGER);
-            }
-            stmt.setString(2, funcionario.getUtilizador());
-            stmt.setString(3, funcionario.getPassword());
-            stmt.setString(4, funcionario.getFuncao().name());
-            
-            stmt.executeUpdate();
-            
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            if (entity.getRestauranteId() != null) ps.setInt(1, entity.getRestauranteId());
+            else ps.setNull(1, Types.INTEGER);
+            ps.setString(2, entity.getUtilizador());
+            ps.setString(3, entity.getPassword());
+            ps.setString(4, entity.getFuncao().name());
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
-                    funcionario.setId(rs.getInt(1));
+                    entity.setId(rs.getInt(1));
+                    funcionarioMap.put(entity.getId(), entity);
                 }
             }
-            return funcionario;
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
         }
+        return entity;
+    }
+
+    @Override
+    public Funcionario update(Funcionario entity) {
+        String sql = "UPDATE Funcionario SET restaurante_id=?, utilizador=?, password=?, funcao=? WHERE id=?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (entity.getRestauranteId() != null) ps.setInt(1, entity.getRestauranteId());
+            else ps.setNull(1, Types.INTEGER);
+            ps.setString(2, entity.getUtilizador());
+            ps.setString(3, entity.getPassword());
+            ps.setString(4, entity.getFuncao().name());
+            ps.setInt(5, entity.getId());
+            ps.executeUpdate();
+            funcionarioMap.put(entity.getId(), entity);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return entity;
     }
 
     @Override
     public Funcionario findById(Integer id) {
-        String sql = "SELECT * FROM Funcionario WHERE Id = ?";
+        if (funcionarioMap.containsKey(id)) {
+            return funcionarioMap.get(id);
+        }
+
+        String sql = "SELECT * FROM Funcionario WHERE id = ?";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return parseFuncionario(rs);
+                    Funcionario f = map(rs);
+                    funcionarioMap.put(f.getId(), f);
+                    return f;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Funcionario map(ResultSet rs) throws SQLException {
+        Funcionario f = new Funcionario();
+        f.setId(rs.getInt("id"));
+        int rId = rs.getInt("restaurante_id");
+        if (!rs.wasNull()) f.setRestauranteId(rId);
+        f.setUtilizador(rs.getString("utilizador"));
+        f.setPassword(rs.getString("password"));
+        f.setFuncao(Funcao.valueOf(rs.getString("funcao")));
+        return f;
+    }
+
+    @Override
+    public List<Funcionario> findAll() {
+        List<Funcionario> list = new ArrayList<>();
+        String sql = "SELECT * FROM Funcionario";
+        try (Connection conn = dbConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                if (funcionarioMap.containsKey(id)) {
+                    list.add(funcionarioMap.get(id));
+                } else {
+                    Funcionario f = map(rs);
+                    funcionarioMap.put(f.getId(), f);
+                    list.add(f);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public List<Funcionario> findAllByRestaurante(int restauranteId) {
+        List<Funcionario> list = new ArrayList<>();
+        String sql = "SELECT * FROM Funcionario WHERE restaurante_id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, restauranteId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    if (funcionarioMap.containsKey(id)) {
+                        list.add(funcionarioMap.get(id));
+                    } else {
+                        Funcionario f = map(rs);
+                        funcionarioMap.put(f.getId(), f);
+                        list.add(f);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public Funcionario findByUtilizador(String utilizador) {
+        // Warning: This doesn't use the Identity Map for lookup, 
+        // but it should populate it if found.
+        String sql = "SELECT * FROM Funcionario WHERE utilizador = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, utilizador);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int id = rs.getInt("id");
+                    if (funcionarioMap.containsKey(id)) {
+                        return funcionarioMap.get(id);
+                    }
+                    Funcionario f = map(rs);
+                    funcionarioMap.put(f.getId(), f);
+                    return f;
                 }
             }
         } catch (SQLException e) {
@@ -74,85 +174,17 @@ public class FuncionarioDAOImpl implements FuncionarioDAO {
     }
 
     @Override
-    public Funcionario update(Funcionario funcionario) {
-        String sql = "UPDATE Funcionario SET RestauranteId = ?, Utilizador = ?, Password = ?, Funcao = ? WHERE Id = ?";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            if (funcionario.getRestauranteId() != null) {
-                stmt.setInt(1, funcionario.getRestauranteId());
-            } else {
-                stmt.setNull(1, java.sql.Types.INTEGER);
-            }
-            stmt.setString(2, funcionario.getUtilizador());
-            stmt.setString(3, funcionario.getPassword());
-            stmt.setString(4, funcionario.getFuncao().name());
-            stmt.setInt(5, funcionario.getId());
-            
-            stmt.executeUpdate();
-            return funcionario;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Override
     public boolean delete(Integer id) {
-        String sql = "DELETE FROM Funcionario WHERE Id = ?";
+        String sql = "DELETE FROM Funcionario WHERE id = ?";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int rows = ps.executeUpdate();
+            if (rows > 0) funcionarioMap.remove(id);
+            return rows > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
-    }
-
-    @Override
-    public List<Funcionario> findAll() {
-        List<Funcionario> lista = new ArrayList<>();
-        String sql = "SELECT * FROM Funcionario";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
-            while (rs.next()) {
-                lista.add(parseFuncionario(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return lista;
-    }
-
-    @Override
-    public List<Funcionario> findByRestaurante(int restauranteId) {
-        List<Funcionario> lista = new ArrayList<>();
-        String sql = "SELECT * FROM Funcionario WHERE RestauranteId = ?";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, restauranteId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    lista.add(parseFuncionario(rs));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return lista;
-    }
-
-    private Funcionario parseFuncionario(ResultSet rs) throws SQLException {
-        Funcionario f = new Funcionario();
-        f.setId(rs.getInt("Id"));
-        f.setRestauranteId(rs.getObject("RestauranteId") != null ? rs.getInt("RestauranteId") : null);
-        f.setUtilizador(rs.getString("Utilizador"));
-        f.setPassword(rs.getString("Password"));
-        f.setFuncao(Funcao.valueOf(rs.getString("Funcao")));
-        return f;
     }
 }

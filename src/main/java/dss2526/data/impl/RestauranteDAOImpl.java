@@ -5,246 +5,235 @@ import dss2526.data.contract.RestauranteDAO;
 import dss2526.domain.entity.LinhaStock;
 import dss2526.domain.entity.Restaurante;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public class RestauranteDAOImpl implements RestauranteDAO {
-
     private static RestauranteDAOImpl instance;
-    private final DBConfig dbConfig = DBConfig.getInstance();
+    private DBConfig dbConfig;
 
-    public static RestauranteDAOImpl getInstance() {
-        if (instance == null) {
-            instance = new RestauranteDAOImpl();
-        }
+    // Identity Map for Restaurante
+    private Map<Integer, Restaurante> restauranteMap = new HashMap<>();
+
+    // Identity Map for LinhaStock
+    private Map<Integer, LinhaStock> linhaStockMap = new HashMap<>();
+
+    private RestauranteDAOImpl() {
+        this.dbConfig = DBConfig.getInstance();
+    }
+
+    public static synchronized RestauranteDAOImpl getInstance() {
+        if (instance == null) instance = new RestauranteDAOImpl();
         return instance;
     }
 
-    private RestauranteDAOImpl() {}
+    @Override
+    public Restaurante create(Restaurante entity) {
+        String sql = "INSERT INTO Restaurante (nome, localizacao, catalogo_id) VALUES (?, ?, ?)";
+        String sqlStock = "INSERT INTO LinhaStock (restaurante_id, ingrediente_id, quantidade) VALUES (?, ?, ?)";
+
+        try (Connection conn = dbConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, entity.getNome());
+                ps.setString(2, entity.getLocalizacao());
+                if (entity.getCatalogoId() != null) ps.setInt(3, entity.getCatalogoId());
+                else ps.setNull(3, Types.INTEGER);
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        entity.setId(rs.getInt(1));
+                        restauranteMap.put(entity.getId(), entity);
+                    }
+                }
+
+                try (PreparedStatement psS = conn.prepareStatement(sqlStock, Statement.RETURN_GENERATED_KEYS)) {
+                    for (LinhaStock ls : entity.getStock()) {
+                        psS.setInt(1, entity.getId());
+                        psS.setInt(2, ls.getIngredienteId());
+                        psS.setDouble(3, ls.getQuantidade());
+                        psS.executeUpdate();
+                        try (ResultSet rs = psS.getGeneratedKeys()) {
+                            if (rs.next()) {
+                                ls.setId(rs.getInt(1));
+                                ls.setRestauranteId(entity.getId());
+                                linhaStockMap.put(ls.getId(), ls);
+                            }
+                        }
+                    }
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return entity;
+    }
 
     @Override
-    public Restaurante create(Restaurante restaurante) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
+    public Restaurante update(Restaurante entity) {
+        String sql = "UPDATE Restaurante SET nome=?, localizacao=?, catalogo_id=? WHERE id=?";
+        try (Connection conn = dbConfig.getConnection()) {
             conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, entity.getNome());
+                ps.setString(2, entity.getLocalizacao());
+                if (entity.getCatalogoId() != null) ps.setInt(3, entity.getCatalogoId());
+                else ps.setNull(3, Types.INTEGER);
+                ps.setInt(4, entity.getId());
+                ps.executeUpdate();
 
-            String sql = "INSERT INTO Restaurante (Nome, Localizacao, CatalogoId) VALUES (?, ?, ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                stmt.setString(1, restaurante.getNome());
-                stmt.setString(2, restaurante.getLocalizacao());
-                if (restaurante.getCatalogoId() != null) {
-                    stmt.setInt(3, restaurante.getCatalogoId());
-                } else {
-                    stmt.setNull(3, java.sql.Types.INTEGER);
+                // Re-insert stock
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate("DELETE FROM LinhaStock WHERE restaurante_id=" + entity.getId());
                 }
-                stmt.executeUpdate();
-
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        restaurante.setId(rs.getInt(1));
+                String sqlStock = "INSERT INTO LinhaStock (restaurante_id, ingrediente_id, quantidade) VALUES (?, ?, ?)";
+                try (PreparedStatement psS = conn.prepareStatement(sqlStock, Statement.RETURN_GENERATED_KEYS)) {
+                    for (LinhaStock ls : entity.getStock()) {
+                        psS.setInt(1, entity.getId());
+                        psS.setInt(2, ls.getIngredienteId());
+                        psS.setDouble(3, ls.getQuantidade());
+                        psS.executeUpdate();
+                        try (ResultSet rs = psS.getGeneratedKeys()) {
+                            if (rs.next()) {
+                                ls.setId(rs.getInt(1));
+                                ls.setRestauranteId(entity.getId());
+                                linhaStockMap.put(ls.getId(), ls);
+                            }
+                        }
                     }
                 }
+                conn.commit();
+                restauranteMap.put(entity.getId(), entity);
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
-
-            // Guardar Composição: Stock (Objetos completos)
-            if (restaurante.getStock() != null && !restaurante.getStock().isEmpty()) {
-                String sqlStock = "INSERT INTO LinhaStock (RestauranteId, IngredienteId, Quantidade) VALUES (?, ?, ?)";
-                try (PreparedStatement stmtStock = conn.prepareStatement(sqlStock)) {
-                    for (LinhaStock ls : restaurante.getStock()) {
-                        stmtStock.setInt(1, restaurante.getId());
-                        stmtStock.setInt(2, ls.getIdIngrediente());
-                        stmtStock.setDouble(3, ls.getQuantidade());
-                        stmtStock.addBatch();
-                    }
-                    stmtStock.executeBatch();
-                }
-            }
-
-            conn.commit();
-            return restaurante;
         } catch (SQLException e) {
-            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             e.printStackTrace();
-            return null;
-        } finally {
-            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
+        return entity;
     }
 
     @Override
     public Restaurante findById(Integer id) {
-        Restaurante r = null;
-        try (Connection conn = dbConfig.getConnection()) {
-            // 1. Ler Restaurante
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Restaurante WHERE Id = ?")) {
-                stmt.setInt(1, id);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        r = new Restaurante();
-                        r.setId(rs.getInt("Id"));
-                        r.setNome(rs.getString("Nome"));
-                        r.setLocalizacao(rs.getString("Localizacao"));
-                        
-                        int catId = rs.getInt("CatalogoId");
-                        if (!rs.wasNull()) {
-                            r.setCatalogoId(catId);
-                        }
-                    }
-                }
-            }
+        if (restauranteMap.containsKey(id)) {
+            return restauranteMap.get(id);
+        }
 
-            if (r != null) {
-                // 2. Ler Composição: Stock (Objetos completos)
-                String sqlStock = "SELECT * FROM LinhaStock WHERE RestauranteId = ?";
-                List<LinhaStock> stock = new ArrayList<>();
-                try (PreparedStatement stmt = conn.prepareStatement(sqlStock)) {
-                    stmt.setInt(1, r.getId());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while (rs.next()) {
-                            LinhaStock ls = new LinhaStock();
-                            ls.setId(rs.getInt("Id"));
-                            ls.setIdIngrediente(rs.getInt("IngredienteId"));
-                            ls.setQuantidade(rs.getDouble("Quantidade"));
-                            stock.add(ls);
-                        }
-                    }
+        String sql = "SELECT * FROM Restaurante WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Restaurante r = new Restaurante();
+                    r.setId(rs.getInt("id"));
+                    r.setNome(rs.getString("nome"));
+                    r.setLocalizacao(rs.getString("localizacao"));
+                    int catId = rs.getInt("catalogo_id");
+                    if (!rs.wasNull()) r.setCatalogoId(catId);
+                    
+                    restauranteMap.put(r.getId(), r);
+                    
+                    r.setStock(findStock(conn, id));
+                    
+                    // Fetch referenced IDs (independent entities)
+                    r.setEstacaoIds(findChildIds(conn, "Estacao", id));
+                    r.setFuncionarioIds(findChildIds(conn, "Funcionario", id));
+                    r.setPedidoIds(findChildIds(conn, "Pedido", id));
+                    
+                    return r;
                 }
-                r.setStock(stock);
-                
-                // 3. Carregar IDs de Estações
-                List<Integer> estacaoIds = new ArrayList<>();
-                try (PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Estacao WHERE RestauranteId = ?")) {
-                    stmt.setInt(1, r.getId());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while (rs.next()) estacaoIds.add(rs.getInt("Id"));
-                    }
-                }
-                r.setEstacaoIds(estacaoIds);
-
-                // 4. Carregar IDs de Funcionários
-                List<Integer> funcionarioIds = new ArrayList<>();
-                try (PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Funcionario WHERE RestauranteId = ?")) {
-                    stmt.setInt(1, r.getId());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while (rs.next()) funcionarioIds.add(rs.getInt("Id"));
-                    }
-                }
-                r.setFuncionarioIds(funcionarioIds);
-
-                // 5. Carregar IDs de Pedidos
-                List<Integer> pedidoIds = new ArrayList<>();
-                try (PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Pedido WHERE RestauranteId = ?")) {
-                    stmt.setInt(1, r.getId());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while (rs.next()) pedidoIds.add(rs.getInt("Id"));
-                    }
-                }
-                r.setPedidoIds(pedidoIds);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return r;
+        return null;
     }
 
-    @Override
-    public Restaurante update(Restaurante restaurante) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
-            conn.setAutoCommit(false);
-
-            // 1. Atualizar dados do Restaurante
-            String sql = "UPDATE Restaurante SET Nome = ?, Localizacao = ?, CatalogoId = ? WHERE Id = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, restaurante.getNome());
-                stmt.setString(2, restaurante.getLocalizacao());
-                if (restaurante.getCatalogoId() != null) {
-                    stmt.setInt(3, restaurante.getCatalogoId());
-                } else {
-                    stmt.setNull(3, java.sql.Types.INTEGER);
-                }
-                stmt.setInt(4, restaurante.getId());
-                stmt.executeUpdate();
-            }
-
-            // 2. Atualizar Stock (Composição: Delete + Insert)
-            try (PreparedStatement stmtDel = conn.prepareStatement("DELETE FROM LinhaStock WHERE RestauranteId = ?")) {
-                stmtDel.setInt(1, restaurante.getId());
-                stmtDel.executeUpdate();
-            }
-
-            if (restaurante.getStock() != null && !restaurante.getStock().isEmpty()) {
-                String sqlStock = "INSERT INTO LinhaStock (RestauranteId, IngredienteId, Quantidade) VALUES (?, ?, ?)";
-                try (PreparedStatement stmtStock = conn.prepareStatement(sqlStock)) {
-                    for (LinhaStock ls : restaurante.getStock()) {
-                        stmtStock.setInt(1, restaurante.getId());
-                        stmtStock.setInt(2, ls.getIdIngrediente());
-                        stmtStock.setDouble(3, ls.getQuantidade());
-                        stmtStock.addBatch();
+    private List<LinhaStock> findStock(Connection conn, int restId) throws SQLException {
+        List<LinhaStock> list = new ArrayList<>();
+        String sql = "SELECT * FROM LinhaStock WHERE restaurante_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, restId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    if (linhaStockMap.containsKey(id)) {
+                        list.add(linhaStockMap.get(id));
+                    } else {
+                        LinhaStock ls = new LinhaStock();
+                        ls.setId(id);
+                        ls.setRestauranteId(rs.getInt("restaurante_id"));
+                        ls.setIngredienteId(rs.getInt("ingrediente_id"));
+                        ls.setQuantidade(rs.getDouble("quantidade"));
+                        linhaStockMap.put(id, ls);
+                        list.add(ls);
                     }
-                    stmtStock.executeBatch();
                 }
             }
-
-            conn.commit();
-            return restaurante;
-        } catch (SQLException e) {
-            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
-            return null;
-        } finally {
-            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
+        return list;
     }
 
-    @Override
-    public boolean delete(Integer id) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
-            conn.setAutoCommit(false);
-
-            // Apagar Stock
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM LinhaStock WHERE RestauranteId = ?")) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
+    private List<Integer> findChildIds(Connection conn, String table, int restId) throws SQLException {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT id FROM " + table + " WHERE restaurante_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, restId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(rs.getInt("id"));
             }
-
-            int result;
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Restaurante WHERE Id = ?")) {
-                stmt.setInt(1, id);
-                result = stmt.executeUpdate();
-            }
-
-            conn.commit();
-            return result > 0;
-        } catch (SQLException e) {
-            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
-            return false;
-        } finally {
-            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
+        return list;
     }
 
     @Override
     public List<Restaurante> findAll() {
         List<Restaurante> list = new ArrayList<>();
+        String sql = "SELECT id FROM Restaurante";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Restaurante");
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                list.add(findById(rs.getInt("Id")));
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) list.add(findById(rs.getInt("id")));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public List<Restaurante> findAllByCatalogo(int catalogoId) {
+        List<Restaurante> list = new ArrayList<>();
+        String sql = "SELECT id FROM Restaurante WHERE catalogo_id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, catalogoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(findById(rs.getInt("id")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
+    }
+
+    @Override
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM Restaurante WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int rows = ps.executeUpdate();
+            if (rows > 0) restauranteMap.remove(id);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

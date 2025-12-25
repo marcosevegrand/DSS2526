@@ -3,248 +3,234 @@ package dss2526.data.impl;
 import dss2526.data.DBConfig;
 import dss2526.data.contract.ProdutoDAO;
 import dss2526.domain.entity.LinhaProduto;
-import dss2526.domain.entity.Passo;
 import dss2526.domain.entity.Produto;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public class ProdutoDAOImpl implements ProdutoDAO {
     private static ProdutoDAOImpl instance;
-    private final DBConfig dbConfig = DBConfig.getInstance();
+    private DBConfig dbConfig;
+    
+    // Identity Map for Produto
+    private Map<Integer, Produto> produtoMap = new HashMap<>();
 
-    public static ProdutoDAOImpl getInstance() {
-        if(instance == null) instance = new ProdutoDAOImpl();
+    // Identity Map for LinhaProduto
+    private Map<Integer, LinhaProduto> linhaProdutoMap = new HashMap<>();
+
+    private ProdutoDAOImpl() {
+        this.dbConfig = DBConfig.getInstance();
+    }
+
+    public static synchronized ProdutoDAOImpl getInstance() {
+        if (instance == null) instance = new ProdutoDAOImpl();
         return instance;
     }
 
-    private ProdutoDAOImpl() {}
+    @Override
+    public Produto create(Produto entity) {
+        String sql = "INSERT INTO Produto (nome, preco) VALUES (?, ?)";
+        String sqlLinha = "INSERT INTO LinhaProduto (produto_id, ingrediente_id, quantidade) VALUES (?, ?, ?)";
+        String sqlPasso = "INSERT INTO Produto_Passo (produto_id, passo_id) VALUES (?, ?)";
+
+        try (Connection conn = dbConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, entity.getNome());
+                ps.setDouble(2, entity.getPreco());
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        entity.setId(rs.getInt(1));
+                        produtoMap.put(entity.getId(), entity);
+                    }
+                }
+
+                try (PreparedStatement psL = conn.prepareStatement(sqlLinha, Statement.RETURN_GENERATED_KEYS)) {
+                    for (LinhaProduto lp : entity.getLinhas()) {
+                        psL.setInt(1, entity.getId());
+                        psL.setInt(2, lp.getIngredienteId());
+                        psL.setDouble(3, lp.getQuantidade());
+                        psL.executeUpdate();
+                        try (ResultSet rs = psL.getGeneratedKeys()) {
+                            if (rs.next()) {
+                                lp.setId(rs.getInt(1));
+                                lp.setProdutoId(entity.getId());
+                                linhaProdutoMap.put(lp.getId(), lp);
+                            }
+                        }
+                    }
+                }
+                
+                try (PreparedStatement psP = conn.prepareStatement(sqlPasso)) {
+                    for (Integer pId : entity.getPassoIds()) {
+                        psP.setInt(1, entity.getId());
+                        psP.setInt(2, pId);
+                        psP.executeUpdate();
+                    }
+                }
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return entity;
+    }
 
     @Override
-    public Produto create(Produto p) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
+    public Produto update(Produto entity) {
+        String sql = "UPDATE Produto SET nome=?, preco=? WHERE id=?";
+        try (Connection conn = dbConfig.getConnection()) {
             conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, entity.getNome());
+                ps.setDouble(2, entity.getPreco());
+                ps.setInt(3, entity.getId());
+                ps.executeUpdate();
 
-            // 1. Insert Produto
-            String sqlProd = "INSERT INTO Produto (Nome, Preco) VALUES (?, ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(sqlProd, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                stmt.setString(1, p.getNome());
-                stmt.setDouble(2, p.getPreco());
-                stmt.executeUpdate();
+                // Re-insert lines and passo IDs
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate("DELETE FROM LinhaProduto WHERE produto_id=" + entity.getId());
+                    stmt.executeUpdate("DELETE FROM Produto_Passo WHERE produto_id=" + entity.getId());
+                }
                 
-                try(ResultSet rs = stmt.getGeneratedKeys()){
-                    if(rs.next()) p.setId(rs.getInt(1));
-                }
-            }
-
-            // 2. Insert Ingredientes (Composition)
-            if (p.getIngredientes() != null) {
-                String sqlLinha = "INSERT INTO LinhaProduto (ProdutoId, IngredienteId, Quantidade) VALUES (?, ?, ?)";
-                try (PreparedStatement stmtLinha = conn.prepareStatement(sqlLinha)) {
-                    for (LinhaProduto linha : p.getIngredientes()) {
-                        stmtLinha.setInt(1, p.getId());
-                        stmtLinha.setInt(2, linha.getIdIngrediente());
-                        stmtLinha.setDouble(3, linha.getQuantidade());
-                        stmtLinha.addBatch();
+                String sqlLinha = "INSERT INTO LinhaProduto (produto_id, ingrediente_id, quantidade) VALUES (?, ?, ?)";
+                try (PreparedStatement psL = conn.prepareStatement(sqlLinha, Statement.RETURN_GENERATED_KEYS)) {
+                     for (LinhaProduto lp : entity.getLinhas()) {
+                        psL.setInt(1, entity.getId());
+                        psL.setInt(2, lp.getIngredienteId());
+                        psL.setDouble(3, lp.getQuantidade());
+                        psL.executeUpdate();
+                        try (ResultSet rs = psL.getGeneratedKeys()) {
+                            if (rs.next()) {
+                                lp.setId(rs.getInt(1));
+                                lp.setProdutoId(entity.getId());
+                                linhaProdutoMap.put(lp.getId(), lp);
+                            }
+                        }
                     }
-                    stmtLinha.executeBatch();
                 }
-            }
 
-            // 3. Insert Tarefas/Passos (Association/Link Table)
-            // Assuming table Produto_Passo(ProdutoId, PassoId)
-            if (p.getTarefas() != null) {
-                String sqlPasso = "INSERT INTO Produto_Passo (ProdutoId, PassoId) VALUES (?, ?)";
-                try (PreparedStatement stmtPasso = conn.prepareStatement(sqlPasso)) {
-                    for (Passo passo : p.getTarefas()) {
-                        stmtPasso.setInt(1, p.getId());
-                        stmtPasso.setInt(2, passo.getId());
-                        stmtPasso.addBatch();
+                String sqlPasso = "INSERT INTO Produto_Passo (produto_id, passo_id) VALUES (?, ?)";
+                try (PreparedStatement psP = conn.prepareStatement(sqlPasso)) {
+                    for (Integer pId : entity.getPassoIds()) {
+                        psP.setInt(1, entity.getId());
+                        psP.setInt(2, pId);
+                        psP.executeUpdate();
                     }
-                    stmtPasso.executeBatch();
                 }
+
+                conn.commit();
+                produtoMap.put(entity.getId(), entity);
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
-            
-            conn.commit();
-            return p;
         } catch (SQLException e) {
-            if(conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             e.printStackTrace();
-            return null;
-        } finally {
-            if(conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
+        return entity;
     }
 
     @Override
     public Produto findById(Integer id) {
-        Produto p = null;
-        try (Connection conn = dbConfig.getConnection()) {
-            // Read Produto
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Produto WHERE Id=?")) {
-                stmt.setInt(1, id);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        p = new Produto();
-                        p.setId(rs.getInt("Id"));
-                        p.setNome(rs.getString("Nome"));
-                        p.setPreco(rs.getDouble("Preco"));
-                    }
-                }
-            }
-            
-            if (p != null) {
-                // Read Ingredients
-                String sqlLinhas = "SELECT * FROM LinhaProduto WHERE ProdutoId=?";
-                List<LinhaProduto> ingredientes = new ArrayList<>();
-                try (PreparedStatement stmt = conn.prepareStatement(sqlLinhas)) {
-                    stmt.setInt(1, p.getId());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while(rs.next()) {
-                            LinhaProduto lp = new LinhaProduto();
-                            lp.setId(rs.getInt("Id"));
-                            lp.setIdIngrediente(rs.getInt("IngredienteId"));
-                            lp.setQuantidade(rs.getDouble("Quantidade"));
-                            ingredientes.add(lp);
-                        }
-                    }
-                }
-                p.setIngredientes(ingredientes);
+        if (produtoMap.containsKey(id)) {
+            return produtoMap.get(id);
+        }
 
-                // Read Tarefas (Passos)
-                String sqlPassos = "SELECT P.* FROM Passo P JOIN Produto_Passo PP ON P.Id = PP.PassoId WHERE PP.ProdutoId = ?";
-                List<Passo> tarefas = new ArrayList<>();
-                try(PreparedStatement stmt = conn.prepareStatement(sqlPassos)){
-                    stmt.setInt(1, p.getId());
-                    try(ResultSet rs = stmt.executeQuery()){
-                        while(rs.next()){
-                            Passo passo = PassoDAOImpl.getInstance().findById(rs.getInt("Id"));
-                            if(passo != null) tarefas.add(passo);
-                        }
-                    }
+        String sql = "SELECT * FROM Produto WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Produto p = new Produto();
+                    p.setId(rs.getInt("id"));
+                    p.setNome(rs.getString("nome"));
+                    p.setPreco(rs.getDouble("preco"));
+                    
+                    produtoMap.put(p.getId(), p);
+                    
+                    p.setLinhas(findLinhas(conn, id));
+                    p.setPassoIds(findPassoIds(conn, id));
+                    return p;
                 }
-                p.setTarefas(tarefas);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return p;
+        return null;
     }
 
-    @Override
-    public Produto update(Produto p) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
-            conn.setAutoCommit(false);
-
-            // 1. Update Produto
-            try (PreparedStatement stmt = conn.prepareStatement("UPDATE Produto SET Nome=?, Preco=? WHERE Id=?")) {
-                stmt.setString(1, p.getNome());
-                stmt.setDouble(2, p.getPreco());
-                stmt.setInt(3, p.getId());
-                stmt.executeUpdate();
-            }
-
-            // 2. Update Ingredients (Delete + Insert)
-            try (PreparedStatement stmtDel = conn.prepareStatement("DELETE FROM LinhaProduto WHERE ProdutoId=?")) {
-                stmtDel.setInt(1, p.getId());
-                stmtDel.executeUpdate();
-            }
-            if (p.getIngredientes() != null && !p.getIngredientes().isEmpty()) {
-                String sqlLinha = "INSERT INTO LinhaProduto (ProdutoId, IngredienteId, Quantidade) VALUES (?, ?, ?)";
-                try (PreparedStatement stmtLinha = conn.prepareStatement(sqlLinha)) {
-                    for (LinhaProduto linha : p.getIngredientes()) {
-                        stmtLinha.setInt(1, p.getId());
-                        stmtLinha.setInt(2, linha.getIdIngrediente());
-                        stmtLinha.setDouble(3, linha.getQuantidade());
-                        stmtLinha.addBatch();
+    private List<LinhaProduto> findLinhas(Connection conn, int prodId) throws SQLException {
+        List<LinhaProduto> list = new ArrayList<>();
+        String sql = "SELECT * FROM LinhaProduto WHERE produto_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, prodId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    if (linhaProdutoMap.containsKey(id)) {
+                        list.add(linhaProdutoMap.get(id));
+                    } else {
+                        LinhaProduto lp = new LinhaProduto();
+                        lp.setId(id);
+                        lp.setProdutoId(rs.getInt("produto_id"));
+                        lp.setIngredienteId(rs.getInt("ingrediente_id"));
+                        lp.setQuantidade(rs.getDouble("quantidade"));
+                        linhaProdutoMap.put(id, lp);
+                        list.add(lp);
                     }
-                    stmtLinha.executeBatch();
                 }
             }
-
-            // 3. Update Tarefas/Passos (Delete + Insert)
-            try (PreparedStatement stmtDel = conn.prepareStatement("DELETE FROM Produto_Passo WHERE ProdutoId=?")) {
-                stmtDel.setInt(1, p.getId());
-                stmtDel.executeUpdate();
-            }
-            if (p.getTarefas() != null && !p.getTarefas().isEmpty()) {
-                String sqlPasso = "INSERT INTO Produto_Passo (ProdutoId, PassoId) VALUES (?, ?)";
-                try (PreparedStatement stmtPasso = conn.prepareStatement(sqlPasso)) {
-                    for (Passo passo : p.getTarefas()) {
-                        stmtPasso.setInt(1, p.getId());
-                        stmtPasso.setInt(2, passo.getId());
-                        stmtPasso.addBatch();
-                    }
-                    stmtPasso.executeBatch();
-                }
-            }
-
-            conn.commit();
-            return p;
-        } catch (SQLException e) {
-            if(conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
-            return null;
-        } finally {
-            if(conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
+        return list;
     }
 
-    @Override
-    public boolean delete(Integer id) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
-            conn.setAutoCommit(false);
-
-            // Delete links
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM LinhaProduto WHERE ProdutoId=?")) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
+    private List<Integer> findPassoIds(Connection conn, int prodId) throws SQLException {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT passo_id FROM Produto_Passo WHERE produto_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, prodId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(rs.getInt("passo_id"));
             }
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Produto_Passo WHERE ProdutoId=?")) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
-            }
-            
-            int rows;
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Produto WHERE Id=?")) {
-                stmt.setInt(1, id);
-                rows = stmt.executeUpdate();
-            }
-            
-            conn.commit();
-            return rows > 0;
-        } catch (SQLException e) {
-            if(conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
-            return false;
-        } finally {
-            if(conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
+        return list;
     }
 
     @Override
     public List<Produto> findAll() {
         List<Produto> list = new ArrayList<>();
+        String sql = "SELECT id FROM Produto";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Produto");
-             ResultSet rs = stmt.executeQuery()) {
-            
-            while(rs.next()) {
-                list.add(findById(rs.getInt("Id")));
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(findById(rs.getInt("id")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
+    }
+
+    @Override
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM Produto WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int rows = ps.executeUpdate();
+            if (rows > 0) produtoMap.remove(id);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

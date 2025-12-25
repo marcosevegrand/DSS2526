@@ -3,6 +3,8 @@ package dss2526.data.contract;
 import dss2526.domain.entity.Tarefa;
 import java.util.List;
 
-public interface TarefaDAO extends GenericDAO<Tarefa,Integer>{
-    List<Tarefa> findByEstado(boolean concluida);
+public interface TarefaDAO extends GenericDAO<Tarefa, Integer> {
+    List<Tarefa> findAllByPedido(int pedidoId);
+    List<Tarefa> findAllByPasso(int passoId);
+    List<Tarefa> findAllByProduto(int produtoId);
 }

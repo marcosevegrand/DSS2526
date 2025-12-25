@@ -4,5 +4,6 @@ import dss2526.domain.entity.Pedido;
 import java.util.List;
 
 public interface PedidoDAO extends GenericDAO<Pedido, Integer> {
-    List<Pedido> findByRestaurante(int restauranteId);
+    List<Pedido> findAllByRestaurante(int restauranteId);
+    // Manages LinhaPedido internally
 }

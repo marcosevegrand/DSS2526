@@ -5,48 +5,78 @@ import dss2526.data.contract.MensagemDAO;
 import dss2526.domain.entity.Mensagem;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MensagemDAOImpl implements MensagemDAO {
     private static MensagemDAOImpl instance;
-    private final DBConfig dbConfig = DBConfig.getInstance();
+    private DBConfig dbConfig;
 
-    public static MensagemDAOImpl getInstance() {
-        if(instance == null) instance = new MensagemDAOImpl();
+    // Identity Map for Mensagem
+    private Map<Integer, Mensagem> mensagemMap = new HashMap<>();
+
+    private MensagemDAOImpl() {
+        this.dbConfig = DBConfig.getInstance();
+    }
+
+    public static synchronized MensagemDAOImpl getInstance() {
+        if (instance == null) instance = new MensagemDAOImpl();
         return instance;
     }
 
-    private MensagemDAOImpl() {}
-
     @Override
-    public Mensagem create(Mensagem obj) {
-        String sql = "INSERT INTO Mensagem (Texto, DataHora, Urgente) VALUES (?, ?, ?)";
+    public Mensagem create(Mensagem entity) {
+        String sql = "INSERT INTO Mensagem (restaurante_id, texto, data_hora) VALUES (?, ?, ?)";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            
-            stmt.setString(1, obj.getTexto());
-            stmt.setTimestamp(2, Timestamp.valueOf(obj.getDataHora()));
-            stmt.setBoolean(3, obj.isUrgente());
-            stmt.executeUpdate();
-            
-            try(ResultSet rs = stmt.getGeneratedKeys()){
-                if(rs.next()) obj.setId(rs.getInt(1));
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, entity.getRestauranteId());
+            ps.setString(2, entity.getTexto());
+            ps.setTimestamp(3, Timestamp.valueOf(entity.getDataHora()));
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    entity.setId(rs.getInt(1));
+                    mensagemMap.put(entity.getId(), entity);
+                }
             }
-            return obj;
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
         }
+        return entity;
+    }
+
+    @Override
+    public Mensagem update(Mensagem entity) {
+        String sql = "UPDATE Mensagem SET restaurante_id=?, texto=?, data_hora=? WHERE id=?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, entity.getRestauranteId());
+            ps.setString(2, entity.getTexto());
+            ps.setTimestamp(3, Timestamp.valueOf(entity.getDataHora()));
+            ps.setInt(4, entity.getId());
+            ps.executeUpdate();
+            mensagemMap.put(entity.getId(), entity);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return entity;
     }
 
     @Override
     public Mensagem findById(Integer id) {
+        if (mensagemMap.containsKey(id)) {
+            return mensagemMap.get(id);
+        }
+        
+        String sql = "SELECT * FROM Mensagem WHERE id = ?";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Mensagem WHERE Id=?")) {
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return parseMensagem(rs);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Mensagem m = map(rs);
+                    mensagemMap.put(m.getId(), m);
+                    return m;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -54,53 +84,75 @@ public class MensagemDAOImpl implements MensagemDAO {
         return null;
     }
 
-    @Override
-    public Mensagem update(Mensagem obj) {
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("UPDATE Mensagem SET Texto=?, DataHora=?, Urgente=? WHERE Id=?")) {
-            stmt.setString(1, obj.getTexto());
-            stmt.setTimestamp(2, Timestamp.valueOf(obj.getDataHora()));
-            stmt.setBoolean(3, obj.isUrgente());
-            stmt.setInt(4, obj.getId());
-            stmt.executeUpdate();
-            return obj;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Override
-    public boolean delete(Integer id) {
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("DELETE FROM Mensagem WHERE Id=?")) {
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    private Mensagem map(ResultSet rs) throws SQLException {
+        Mensagem m = new Mensagem();
+        m.setId(rs.getInt("id"));
+        m.setRestauranteId(rs.getInt("restaurante_id"));
+        m.setTexto(rs.getString("texto"));
+        m.setDataHora(rs.getTimestamp("data_hora").toLocalDateTime());
+        return m;
     }
 
     @Override
     public List<Mensagem> findAll() {
         List<Mensagem> list = new ArrayList<>();
+        String sql = "SELECT * FROM Mensagem";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Mensagem");
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) list.add(parseMensagem(rs));
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                if (mensagemMap.containsKey(id)) {
+                    list.add(mensagemMap.get(id));
+                } else {
+                    Mensagem m = map(rs);
+                    mensagemMap.put(m.getId(), m);
+                    list.add(m);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
     }
 
-    private Mensagem parseMensagem(ResultSet rs) throws SQLException {
-        Mensagem m = new Mensagem();
-        m.setId(rs.getInt("Id"));
-        m.setTexto(rs.getString("Texto"));
-        m.setDataHora(rs.getTimestamp("DataHora").toLocalDateTime());
-        m.setUrgente(rs.getBoolean("Urgente"));
-        return m;
+    @Override
+    public List<Mensagem> findAllByRestaurante(int restauranteId) {
+        List<Mensagem> list = new ArrayList<>();
+        String sql = "SELECT * FROM Mensagem WHERE restaurante_id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, restauranteId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    if (mensagemMap.containsKey(id)) {
+                        list.add(mensagemMap.get(id));
+                    } else {
+                        Mensagem m = map(rs);
+                        mensagemMap.put(m.getId(), m);
+                        list.add(m);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM Mensagem WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int rows = ps.executeUpdate();
+            if (rows > 0) mensagemMap.remove(id);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

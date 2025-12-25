@@ -4,237 +4,182 @@ import dss2526.data.DBConfig;
 import dss2526.data.contract.CatalogoDAO;
 import dss2526.domain.entity.Catalogo;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public class CatalogoDAOImpl implements CatalogoDAO {
-
     private static CatalogoDAOImpl instance;
-    private final DBConfig dbConfig = DBConfig.getInstance();
-    
-    public static CatalogoDAOImpl getInstance() {
-        if(instance == null) instance = new CatalogoDAOImpl();
+    private DBConfig dbConfig;
+
+    // Identity Map for Catalogo
+    private Map<Integer, Catalogo> catalogoMap = new HashMap<>();
+
+    private CatalogoDAOImpl() {
+        this.dbConfig = DBConfig.getInstance();
+    }
+
+    public static synchronized CatalogoDAOImpl getInstance() {
+        if (instance == null) {
+            instance = new CatalogoDAOImpl();
+        }
         return instance;
     }
-    
-    private CatalogoDAOImpl() {}
 
     @Override
-    public Catalogo create(Catalogo obj) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
+    public Catalogo create(Catalogo entity) {
+        String sql = "INSERT INTO Catalogo (nome) VALUES (?)";
+        String sqlMenu = "INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES (?, ?)";
+        String sqlProd = "INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES (?, ?)";
+
+        try (Connection conn = dbConfig.getConnection()) {
             conn.setAutoCommit(false);
-
-            // 1. Inserir Catalogo
-            String sql = "INSERT INTO Catalogo (Nome) VALUES (?)";
-            try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                stmt.setString(1, obj.getNome());
-                stmt.executeUpdate();
-                
-                try(ResultSet rs = stmt.getGeneratedKeys()){
-                    if(rs.next()) {
-                        obj.setId(rs.getInt(1));
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, entity.getNome());
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        entity.setId(rs.getInt(1));
+                        catalogoMap.put(entity.getId(), entity);
                     }
                 }
-            }
 
-            // 2. Inserir IDs dos Menus associados
-            if (obj.getMenuIds() != null && !obj.getMenuIds().isEmpty()) {
-                String sqlMenu = "INSERT INTO Catalogo_Menu (CatalogoId, MenuId) VALUES (?, ?)";
-                try (PreparedStatement stmtMenu = conn.prepareStatement(sqlMenu)) {
-                    for (Integer menuId : obj.getMenuIds()) {
-                        stmtMenu.setInt(1, obj.getId());
-                        stmtMenu.setInt(2, menuId);
-                        stmtMenu.addBatch();
-                    }
-                    stmtMenu.executeBatch();
-                }
-            }
+                insertRelations(conn, sqlMenu, entity.getId(), entity.getMenuIds());
+                insertRelations(conn, sqlProd, entity.getId(), entity.getProdutoIds());
 
-            // 3. Inserir IDs dos Produtos associados
-            if (obj.getProdutoIds() != null && !obj.getProdutoIds().isEmpty()) {
-                String sqlProd = "INSERT INTO Catalogo_Produto (CatalogoId, ProdutoId) VALUES (?, ?)";
-                try (PreparedStatement stmtProd = conn.prepareStatement(sqlProd)) {
-                    for (Integer produtoId : obj.getProdutoIds()) {
-                        stmtProd.setInt(1, obj.getId());
-                        stmtProd.setInt(2, produtoId);
-                        stmtProd.addBatch();
-                    }
-                    stmtProd.executeBatch();
-                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
-
-            conn.commit();
-            return obj;
         } catch (SQLException e) {
-            if(conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             e.printStackTrace();
-            return null;
-        } finally {
-            if(conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+        }
+        return entity;
+    }
+
+    private void insertRelations(Connection conn, String sql, int catId, List<Integer> ids) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (Integer id : ids) {
+                ps.setInt(1, catId);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    @Override
+    public Catalogo update(Catalogo entity) {
+        String sql = "UPDATE Catalogo SET nome=? WHERE id=?";
+        try (Connection conn = dbConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, entity.getNome());
+                ps.setInt(2, entity.getId());
+                ps.executeUpdate();
+
+                deleteRelations(conn, entity.getId());
+                String sqlMenu = "INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES (?, ?)";
+                String sqlProd = "INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES (?, ?)";
+                insertRelations(conn, sqlMenu, entity.getId(), entity.getMenuIds());
+                insertRelations(conn, sqlProd, entity.getId(), entity.getProdutoIds());
+
+                conn.commit();
+                // Update map reference just in case, though it should be the same object
+                catalogoMap.put(entity.getId(), entity);
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return entity;
+    }
+
+    private void deleteRelations(Connection conn, int catId) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DELETE FROM Catalogo_Menu WHERE catalogo_id=" + catId);
+            stmt.executeUpdate("DELETE FROM Catalogo_Produto WHERE catalogo_id=" + catId);
         }
     }
 
     @Override
     public Catalogo findById(Integer id) {
-        Catalogo c = null;
-        try (Connection conn = dbConfig.getConnection()) {
-            // Ler Catalogo
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Catalogo WHERE Id=?")) {
-                stmt.setInt(1, id);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        c = new Catalogo();
-                        c.setId(rs.getInt("Id"));
-                        c.setNome(rs.getString("Nome"));
-                    }
-                }
-            }
+        if (catalogoMap.containsKey(id)) {
+            return catalogoMap.get(id);
+        }
 
-            if (c != null) {
-                // Carregar IDs dos Menus (apenas inteiros)
-                String sqlMenus = "SELECT MenuId FROM Catalogo_Menu WHERE CatalogoId=?";
-                List<Integer> menuIds = new ArrayList<>();
-                try (PreparedStatement stmt = conn.prepareStatement(sqlMenus)) {
-                    stmt.setInt(1, c.getId());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while(rs.next()) {
-                            menuIds.add(rs.getInt("MenuId"));
-                        }
-                    }
+        String sql = "SELECT * FROM Catalogo WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Catalogo c = new Catalogo();
+                    c.setId(rs.getInt("id"));
+                    c.setNome(rs.getString("nome"));
+                    c.setMenuIds(findIds(conn, "Catalogo_Menu", "catalogo_id", "menu_id", id));
+                    c.setProdutoIds(findIds(conn, "Catalogo_Produto", "catalogo_id", "produto_id", id));
+                    
+                    catalogoMap.put(c.getId(), c);
+                    return c;
                 }
-                c.setMenuIds(menuIds);
-
-                // Carregar IDs dos Produtos (apenas inteiros)
-                String sqlProds = "SELECT ProdutoId FROM Catalogo_Produto WHERE CatalogoId=?";
-                List<Integer> produtoIds = new ArrayList<>();
-                try (PreparedStatement stmt = conn.prepareStatement(sqlProds)) {
-                    stmt.setInt(1, c.getId());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while(rs.next()) {
-                            produtoIds.add(rs.getInt("ProdutoId"));
-                        }
-                    }
-                }
-                c.setProdutoIds(produtoIds);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return c;
+        return null;
     }
 
-    @Override
-    public Catalogo update(Catalogo obj) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
-            conn.setAutoCommit(false);
-
-            // 1. Atualizar Catalogo
-            try (PreparedStatement stmt = conn.prepareStatement("UPDATE Catalogo SET Nome=? WHERE Id=?")) {
-                stmt.setString(1, obj.getNome());
-                stmt.setInt(2, obj.getId());
-                stmt.executeUpdate();
+    private List<Integer> findIds(Connection conn, String table, String fkCol, String targetCol, int id) throws SQLException {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT " + targetCol + " FROM " + table + " WHERE " + fkCol + " = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(rs.getInt(targetCol));
             }
-
-            // 2. Atualizar Menus (Delete All + Insert)
-            try (PreparedStatement stmtDel = conn.prepareStatement("DELETE FROM Catalogo_Menu WHERE CatalogoId=?")) {
-                stmtDel.setInt(1, obj.getId());
-                stmtDel.executeUpdate();
-            }
-            if (obj.getMenuIds() != null && !obj.getMenuIds().isEmpty()) {
-                String sqlMenu = "INSERT INTO Catalogo_Menu (CatalogoId, MenuId) VALUES (?, ?)";
-                try (PreparedStatement stmtMenu = conn.prepareStatement(sqlMenu)) {
-                    for (Integer menuId : obj.getMenuIds()) {
-                        stmtMenu.setInt(1, obj.getId());
-                        stmtMenu.setInt(2, menuId);
-                        stmtMenu.addBatch();
-                    }
-                    stmtMenu.executeBatch();
-                }
-            }
-
-            // 3. Atualizar Produtos (Delete All + Insert)
-            try (PreparedStatement stmtDel = conn.prepareStatement("DELETE FROM Catalogo_Produto WHERE CatalogoId=?")) {
-                stmtDel.setInt(1, obj.getId());
-                stmtDel.executeUpdate();
-            }
-            if (obj.getProdutoIds() != null && !obj.getProdutoIds().isEmpty()) {
-                String sqlProd = "INSERT INTO Catalogo_Produto (CatalogoId, ProdutoId) VALUES (?, ?)";
-                try (PreparedStatement stmtProd = conn.prepareStatement(sqlProd)) {
-                    for (Integer produtoId : obj.getProdutoIds()) {
-                        stmtProd.setInt(1, obj.getId());
-                        stmtProd.setInt(2, produtoId);
-                        stmtProd.addBatch();
-                    }
-                    stmtProd.executeBatch();
-                }
-            }
-
-            conn.commit();
-            return obj;
-        } catch (SQLException e) {
-            if(conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
-            return null;
-        } finally {
-            if(conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
-    }
-
-    @Override
-    public boolean delete(Integer id) {
-        Connection conn = null;
-        try {
-            conn = dbConfig.getConnection();
-            conn.setAutoCommit(false);
-
-            // Remover Associações
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Catalogo_Menu WHERE CatalogoId=?")) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
-            }
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Catalogo_Produto WHERE CatalogoId=?")) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
-            }
-
-            // Remover Catalogo
-            int rows;
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Catalogo WHERE Id=?")) {
-                stmt.setInt(1, id);
-                rows = stmt.executeUpdate();
-            }
-
-            conn.commit();
-            return rows > 0;
-        } catch (SQLException e) {
-            if(conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
-            return false;
-        } finally {
-            if(conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
-        }
+        return list;
     }
 
     @Override
     public List<Catalogo> findAll() {
         List<Catalogo> list = new ArrayList<>();
+        String sql = "SELECT id FROM Catalogo";
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT Id FROM Catalogo");
-             ResultSet rs = stmt.executeQuery()) {
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                list.add(findById(rs.getInt("Id")));
+                list.add(findById(rs.getInt("id")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
+    }
+
+    @Override
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM Catalogo WHERE id = ?";
+        try (Connection conn = dbConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                deleteRelations(conn, id);
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, id);
+                    ps.executeUpdate();
+                }
+                conn.commit();
+                catalogoMap.remove(id);
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

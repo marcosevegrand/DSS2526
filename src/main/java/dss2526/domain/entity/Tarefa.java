@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public class Tarefa {
     int id;
     int passoId;
+    int produtoId;
     int pedidoId;
     LocalDateTime dataCriacao;
     LocalDateTime dataConclusao;
@@ -21,6 +22,9 @@ public class Tarefa {
 
     public int getPassoId() { return passoId; }
     public void setPassoId(int passoId) { this.passoId = passoId; }
+
+    public int getProdutoId() { return produtoId; }
+    public void setProdutoId(int produtoId) { this.produtoId = produtoId; }
 
     public int getPedidoId() { return pedidoId; }
     public void setPedidoId(int pedidoId) { this.pedidoId = pedidoId; }
