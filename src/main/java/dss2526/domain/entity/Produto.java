@@ -1,10 +1,8 @@
 package dss2526.domain.entity;
 
-import dss2526.domain.contract.Item;
-
 import java.util.*;
 
-public class Produto implements Item {
+public class Produto {
     private int id;
     private String nome;
     private double preco;

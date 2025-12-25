@@ -3,5 +3,5 @@ package dss2526.data.contract;
 import dss2526.domain.entity.Funcionario;
 
 public interface FuncionarioDAO extends GenericDAO<Funcionario, Integer> {
-    Funcionario authenticate(int id, String password);
+    Funcionario findByRestaurante(int restauranteId);
 }

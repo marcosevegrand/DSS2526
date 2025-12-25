@@ -18,7 +18,7 @@ public class CatalogoDAOImpl implements CatalogoDAO {
     @Override
     public Catalogo save(Catalogo catalogo) {
         String sql = "INSERT INTO Catalogos (ID) VALUES (?)"; 
-        // Assumindo que Catalogo só tem ID na tabela base ou ID auto-generated
+        
         if (catalogo.getId() > 0) {
             try (Connection conn = this.dbConfig.getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -31,7 +31,7 @@ public class CatalogoDAOImpl implements CatalogoDAO {
                 return null;
             }
         } else {
-             sql = "INSERT INTO Catalogos DEFAULT VALUES"; // Ou colunas especificas
+             sql = "INSERT INTO Catalogos DEFAULT VALUES";
              try (Connection conn = this.dbConfig.getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 pstmt.executeUpdate();
@@ -61,7 +61,16 @@ public class CatalogoDAOImpl implements CatalogoDAO {
                 if (rs.next()) {
                     Catalogo c = new Catalogo();
                     c.setId(rs.getInt("ID"));
-                    // Carregar items seria complexo sem saber tabela de junção
+                    
+                    // A nova estrutura do Catalogo tem listas separadas.
+                    // Idealmente, deve-se usar ProdutoDAO e MenuDAO aqui para popular as listas.
+                    // Exemplo: 
+                    // ProdutoDAO produtoDAO = new ProdutoDAOImpl();
+                    // c.setProdutos(produtoDAO.findAll()); // Se o catálogo contiver todos os produtos
+                    
+                    // MenuDAO menuDAO = new MenuDAOImpl();
+                    // c.setMenus(menuDAO.findAll());
+                    
                     identityMap.put(c.getId(), c);
                     return c;
                 }
@@ -90,7 +99,8 @@ public class CatalogoDAOImpl implements CatalogoDAO {
 
     @Override
     public Catalogo update(Catalogo catalogo) {
-        // Catalogo entity has only ID and Items list. Usually no fields to update in Catalogo table itself.
+        // Catalogo entity agora tem listas separadas, mas a tabela Catalogos mantém apenas o ID.
+        // Se houver tabelas de associação, o update destas listas deve ser gerido aqui ou nos DAOs específicos.
         identityMap.put(catalogo.getId(), catalogo);
         return catalogo;
     }

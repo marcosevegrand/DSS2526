@@ -11,7 +11,12 @@ public interface GenericDAO<T, K> {
      * Persists a new entity. 
      * Handles ID auto-increment generation.
      */
-    T save(T entity);
+    T create(T entity);
+
+    /**
+     * Updates an existing entity.
+     */
+    T update(T entity);
 
     /**
      * Retrieves an entity by its ID.
@@ -22,11 +27,6 @@ public interface GenericDAO<T, K> {
      * Retrieves all entities.
      */
     List<T> findAll();
-
-    /**
-     * Updates an existing entity.
-     */
-    T update(T entity);
 
     /**
      * Deletes an entity by its ID.

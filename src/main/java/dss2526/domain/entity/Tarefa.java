@@ -1,21 +1,21 @@
 package dss2526.domain.entity;
 
-public class LinhaEstacao {
+public class Tarefa {
     int id;
-    int idTarefa;
+    int idPasso;
     int idPedido;
     boolean concluido;
 
     // Construtores
-    public LinhaEstacao() {}
+    public Tarefa() {}
 
     // Getters e Setters
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public int getIdTarefa() { return idTarefa; }
-    public void setIdTarefa(int idTarefa) { this.idTarefa = idTarefa; }
+    public int getIdPasso() { return idPasso; }
+    public void setIdPasso(int idPasso) { this.idPasso = idPasso; }
 
     public int getIdPedido() { return idPedido; }
     public void setIdPedido(int idPedido) { this.idPedido = idPedido; }

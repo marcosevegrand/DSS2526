@@ -1,12 +1,11 @@
 package dss2526.domain.entity;
 
-import dss2526.domain.contract.Item;
-
 import java.util.*;
 
 public class Catalogo {
     private int id;
-    private List<Item> items = new ArrayList<>();
+    private List<Menu> menus = new ArrayList<>();
+    private List<Produto> produtos = new ArrayList<>();
 
     // Construtores
 
@@ -14,11 +13,18 @@ public class Catalogo {
 
     // Lógica simples
 
-    public void adicionarItem(Item item) {
-        this.items.add(item);
+    public void adicionarMenu(Menu menu) {
+        this.menus.add(menu);
     }
-    public void removerItem(Item item) {
-        this.items.remove(item);
+    public void removerMenu(Menu menu) {
+        this.menus.remove(menu);
+    }
+
+    public void adicionarProduto(Produto produto) {
+        this.produtos.add(produto);
+    }
+    public void removerProduto(Produto produto) {
+        this.produtos.remove(produto);
     }
 
     // Getters e Setters
@@ -26,6 +32,9 @@ public class Catalogo {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     
-    public List<Item> getItems() { return items; }
-    public void setItems(List<Item> items) { this.items = items; }
+    public List<Menu> getMenus() { return menus; }
+    public void setMenus(List<Menu> menus) { this.menus = menus; }
+
+    public List<Produto> getProdutos() { return produtos; }
+    public void setProdutos(List<Produto> produtos) { this.produtos = produtos; }
 }
