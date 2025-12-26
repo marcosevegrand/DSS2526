@@ -2,87 +2,64 @@ package dss2526.ui.controller;
 
 import dss2526.domain.entity.*;
 import dss2526.service.producao.IProducaoFacade;
-import dss2526.data.contract.RestauranteDAO;
-import dss2526.data.contract.EstacaoDAO;
-
+import dss2526.service.producao.ProducaoFacade;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ProducaoController {
     private final IProducaoFacade facade;
-    private final RestauranteDAO restauranteDAO; // Adicionado para suporte à UI
-    private final EstacaoDAO estacaoDAO;         // Adicionado para suporte à UI
-    
     private int restauranteIdAtivo = -1;
     private int estacaoIdAtiva = -1;
+    private LocalDateTime inicioSessao;
 
-    public ProducaoController(IProducaoFacade facade, RestauranteDAO rDAO, EstacaoDAO eDAO) {
-        this.facade = facade;
-        this.restauranteDAO = rDAO;
-        this.estacaoDAO = eDAO;
+    public ProducaoController() {
+        // Como ProducaoFacade estende BaseFacade, ela herda os métodos de listagem
+        this.facade = ProducaoFacade.getInstance();
     }
 
-    // --- Métodos de Suporte à UI (Listagens iniciais) ---
-
-    /**
-     * Retorna apenas os nomes dos restaurantes para o método escolher() da UI.
-     */
-    public List<String> listarNomesRestaurantes() {
-        return restauranteDAO.findAll().stream()
-                .map(r -> r.getNome() + " (" + r.getLocalizacao() + ")")
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Retorna os nomes das estações de um restaurante específico.
-     * @param restauranteIndex o índice selecionado na UI (0, 1, 2...)
-     */
-    public List<String> listarNomesEstacoes(int restauranteIndex) {
-        Restaurante r = restauranteDAO.findAll().get(restauranteIndex);
-        return estacaoDAO.findAll().stream()
-                .filter(e -> e.getRestauranteId() == r.getId())
-                .map(e -> "Estação #" + e.getId() + " - " + e.getTrabalho())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Converte os índices da UI em IDs reais da Base de Dados e fixa o contexto.
-     */
     public void selecionarContexto(int restIdx, int estIdx) {
-        Restaurante r = restauranteDAO.findAll().get(restIdx);
-        List<Estacao> estacoesDoRest = estacaoDAO.findAll().stream()
-                .filter(e -> e.getRestauranteId() == r.getId())
-                .collect(Collectors.toList());
+        // Usa o método listarRestaurantes() herdado da BaseFacade
+        Restaurante r = ((ProducaoFacade) facade).listarRestaurantes().get(restIdx);
+        
+        // Usa o método listarEstacoesDeRestaurante(id) herdado da BaseFacade
+        List<Estacao> estacoes = ((ProducaoFacade) facade).listarEstacoesDeRestaurante(r.getId());
         
         this.restauranteIdAtivo = r.getId();
-        this.estacaoIdAtiva = estacoesDoRest.get(estIdx).getId();
+        this.estacaoIdAtiva = estacoes.get(estIdx).getId();
+        this.inicioSessao = LocalDateTime.now();
     }
 
-    // --- Métodos de Produção (Já tinhas) ---
-
     public List<Tarefa> getFilaTrabalho() {
-        validarSessao();
         return facade.consultarTarefasEstacao(restauranteIdAtivo, estacaoIdAtiva);
     }
 
-    public List<Mensagem> getMensagensGestao() {
-        validarSessao();
-        return facade.consultarMensagens(restauranteIdAtivo);
+    public List<Mensagem> getMensagensNovas() {
+        return facade.consultarMensagens(restauranteIdAtivo).stream()
+                .filter(m -> m.getDataHora().isAfter(inicioSessao))
+                .collect(Collectors.toList());
     }
 
     public void concluirTarefa(int tarefaId) {
-        validarSessao();
         facade.concluirTarefa(tarefaId);
     }
 
-    public void solicitarIngrediente(int ingredienteId) {
-        validarSessao();
-        facade.registarAlertaStock(restauranteIdAtivo, ingredienteId);
+    public void solicitarIngrediente(int ingId) {
+        facade.registarAlertaStock(restauranteIdAtivo, ingId);
     }
 
-    private void validarSessao() {
-        if (restauranteIdAtivo == -1 || estacaoIdAtiva == -1) {
-            throw new IllegalStateException("Contexto de produção não selecionado.");
-        }
+    // --- Métodos de Apoio à UI usando a herança da BaseFacade ---
+
+    public List<String> listarRestaurantes() {
+        return ((ProducaoFacade) facade).listarRestaurantes().stream()
+                .map(Restaurante::getNome)
+                .collect(Collectors.toList());
+    }
+
+    public List<String> listarEstacoes(int restIdx) {
+        Restaurante r = ((ProducaoFacade) facade).listarRestaurantes().get(restIdx);
+        return ((ProducaoFacade) facade).listarEstacoesDeRestaurante(r.getId()).stream()
+                .map(e -> "Estação #" + e.getId() + " [" + e.getTrabalho() + "]")
+                .collect(Collectors.toList());
     }
 }

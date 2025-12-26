@@ -5,16 +5,10 @@ import dss2526.domain.entity.Tarefa;
 import java.util.List;
 
 public interface IProducaoFacade {
-
     List<Tarefa> consultarTarefasEstacao(int restauranteId, int estacaoId);
-
-    List<Mensagem> consultarMensagens(int restauranteId);
-
     void concluirTarefa(int tarefaId);
-
-    void registarAlertaStock(int restauranteId, int ingredienteId);
-
-    void difundirMensagem(int restauranteId, String texto, boolean urgente);
-
-    void atualizarStockLocal(int ingredienteId, int restauranteId, float quantidade);
+    List<Mensagem> consultarMensagens(int restauranteId);
+    void difundirMensagem(int rId, String txt, boolean urg);
+    void atualizarStockLocal(int iId, int rId, float qtd);
+    void registarAlertaStock(int rId, int iId);
 }

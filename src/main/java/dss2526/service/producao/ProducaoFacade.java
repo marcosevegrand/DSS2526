@@ -25,19 +25,15 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         Estacao estacao = estacaoDAO.findById(estacaoId);
         if (estacao == null) return new ArrayList<>();
 
-        // 1. Gera tarefas para pedidos que acabaram de ser confirmados
         gerarTarefasParaPedidosNovos(restauranteId);
 
-        // 2. Filtra tarefas pendentes cujo Passo corresponde ao Trabalho da Estação
         return tarefaDAO.findAll().stream()
                 .filter(t -> !t.isConcluido())
                 .filter(t -> {
-                    // Verifica se o pedido pertence a este restaurante
                     Pedido p = pedidoDAO.findById(t.getPedidoId());
                     return p != null && p.getRestauranteId() == restauranteId;
                 })
                 .filter(t -> {
-                    // Verifica se o trabalho do passo coincide com o da estação
                     Passo passo = passoDAO.findById(t.getPassoId());
                     return passo != null && passo.getTrabalho() == estacao.getTrabalho();
                 })
@@ -56,7 +52,6 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
                 Produto prod = produtoDAO.findById(lp.getItemId());
                 if (prod != null) {
                     for (Integer passoId : prod.getPassoIds()) {
-                        // Evita duplicados (idempotência)
                         if (!tarefaExistente(p.getId(), prod.getId(), passoId)) {
                             Tarefa t = new Tarefa();
                             t.setPedidoId(p.getId());
@@ -90,12 +85,13 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
             t.setDataConclusao(LocalDateTime.now());
             tarefaDAO.update(t);
 
-            // Se todas as tarefas do pedido estiverem prontas, o pedido fica PRONTO
             List<Tarefa> total = tarefaDAO.findAllByPedido(t.getPedidoId());
             if (total.stream().allMatch(Tarefa::isConcluido)) {
                 Pedido p = pedidoDAO.findById(t.getPedidoId());
-                p.setEstado(EstadoPedido.PRONTO);
-                pedidoDAO.update(p);
+                if (p != null) {
+                    p.setEstado(EstadoPedido.PRONTO);
+                    pedidoDAO.update(p);
+                }
             }
         }
     }
@@ -113,19 +109,16 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         m.setRestauranteId(rId);
         m.setTexto((urg ? "[URGENTE] " : "") + txt);
         m.setDataHora(LocalDateTime.now());
-        mensagemDAO.create(m); // Guarda para que a produção a veja na próxima consulta
+        mensagemDAO.create(m);
     }
 
     @Override 
     public void atualizarStockLocal(int iId, int rId, float qtd) {
-        // Aqui usarias um InventarioDAO ou IngredienteDAO 
-        // para atualizar a tabela que cruza Restaurante e Ingrediente
-        System.out.println("Stock do ingrediente " + iId + " no restaurante " + rId + " atualizado para " + qtd);
+        System.out.println("Stock atualizado: Ingrediente " + iId + " -> " + qtd);
     }
 
     @Override 
     public void registarAlertaStock(int rId, int iId) {
-        // Pode criar uma mensagem especial ou inserir numa tabela de alertas
         String alerta = "ALERTA: Falta de ingrediente ID " + iId;
         difundirMensagem(rId, alerta, true);
     }

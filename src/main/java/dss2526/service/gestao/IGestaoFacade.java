@@ -5,27 +5,23 @@ import dss2526.domain.enumeration.Trabalho;
 import java.util.List;
 
 public interface IGestaoFacade {
-    // Autenticação
-    Funcionario login(String utilizador, String password);
+    Funcionario login(String u, String p);
     void logout();
     
-    // Gestão de Restaurantes (Exclusivo COO)
+    // COO apenas
     void criarRestaurante(Funcionario responsavel, Restaurante r);
-    void removerRestaurante(Funcionario responsavel, int restauranteId);
-    List<Restaurante> listarTodosRestaurantes(Funcionario responsavel);
+    void removerRestaurante(Funcionario responsavel, int id);
+    List<Restaurante> listarTodosRestaurantes(Funcionario res);
 
-    // Gestão de Unidade (Gerente no seu, COO em qualquer um)
-    List<Funcionario> listarFuncionarios(Funcionario responsavel, int restauranteId);
-    void contratarFuncionario(Funcionario responsavel, Funcionario novo);
-    void demitirFuncionario(Funcionario responsavel, int funcionarioId);
+    // Gerente e COO
+    List<Funcionario> listarFuncionarios(Funcionario res, int rId);
+    void contratarFuncionario(Funcionario res, Funcionario novo);
+    void demitirFuncionario(Funcionario res, int fId);
+    void adicionarEstacao(Funcionario res, int rId, Trabalho t);
+    void removerEstacao(Funcionario res, int eId);
     
-    void adicionarEstacao(Funcionario responsavel, int restauranteId, Trabalho tipo);
-    void removerEstacao(Funcionario responsavel, int estacaoId);
-
-    // Stock e Mensagens
-    void atualizarStock(Funcionario responsavel, int restauranteId, int ingredienteId, float quantidade);
-    void enviarAvisoCozinha(Funcionario responsavel, int restauranteId, String texto, boolean urgente);
-
-    // Estatísticas
-    double consultarFaturacao(Funcionario responsavel, int restauranteId);
+    // Comunicação e Estatísticas (via BD)
+    void atualizarStock(Funcionario res, int rId, int iId, float qtd);
+    double consultarFaturacao(Funcionario res, int rId);
+    void enviarAvisoCozinha(Funcionario res, int rId, String txt, boolean urg);
 }
