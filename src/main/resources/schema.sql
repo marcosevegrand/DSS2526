@@ -199,9 +199,10 @@ CREATE TABLE Tarefa (
     passo_id INTEGER,
     produto_id INTEGER,
     pedido_id INTEGER,
+    estado VARCHAR(50) NOT NULL DEFAULT 'PENDENTE',
     data_criacao TIMESTAMP NULL DEFAULT NULL,
+    data_inicio TIMESTAMP NULL DEFAULT NULL,
     data_conclusao TIMESTAMP NULL DEFAULT NULL,
-    concluido BOOLEAN DEFAULT 0,
     FOREIGN KEY (passo_id) REFERENCES Passo(id),
     FOREIGN KEY (produto_id) REFERENCES Produto(id),
     FOREIGN KEY (pedido_id) REFERENCES Pedido(id)

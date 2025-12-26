@@ -23,14 +23,4 @@ public class LinhaMenu {
 
     public int getQuantidade() { return quantidade; }
     public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
-
-    @Override
-    public String toString() {
-        return "LinhaMenu{" +
-                "id=" + id +
-                ", menuId=" + menuId +
-                ", produtoId=" + produtoId +
-                ", quantidade=" + quantidade +
-                '}';
-    }
 }

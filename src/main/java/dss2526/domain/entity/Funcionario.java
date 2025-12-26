@@ -26,14 +26,4 @@ public class Funcionario {
 
     public Funcao getFuncao() { return funcao; }
     public void setFuncao(Funcao funcao) { this.funcao = funcao; }
-
-    @Override
-    public String toString() {
-        return "Funcionario{" +
-                "id=" + id +
-                ", restauranteId=" + restauranteId +
-                ", utilizador='" + utilizador + '\'' +
-                ", funcao=" + funcao +
-                '}';
-    }
 }

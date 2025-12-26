@@ -3,6 +3,7 @@ package dss2526.data.impl;
 import dss2526.data.DBConfig;
 import dss2526.data.contract.TarefaDAO;
 import dss2526.domain.entity.Tarefa;
+import dss2526.domain.enumeration.EstadoTarefa;
 
 import java.sql.*;
 import java.util.*;
@@ -25,18 +26,28 @@ public class TarefaDAOImpl implements TarefaDAO {
 
     @Override
     public Tarefa create(Tarefa entity) {
-        String sql = "INSERT INTO Tarefa (passo_id, produto_id, pedido_id, data_criacao, data_conclusao, concluido) VALUES (?, ?, ?, ?, ?, ?)";
+        // Atualizado para incluir 'estado' e remover 'concluido'
+        String sql = "INSERT INTO Tarefa (passo_id, produto_id, pedido_id, data_criacao, data_inicio, data_conclusao, estado) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, entity.getPassoId());
             ps.setInt(2, entity.getProdutoId());
             ps.setInt(3, entity.getPedidoId());
             ps.setTimestamp(4, Timestamp.valueOf(entity.getDataCriacao()));
-            if (entity.getDataConclusao() != null)
-                ps.setTimestamp(5, Timestamp.valueOf(entity.getDataConclusao()));
+            
+            if (entity.getDataInicio() != null)
+                ps.setTimestamp(5, Timestamp.valueOf(entity.getDataInicio()));
             else
                 ps.setNull(5, Types.TIMESTAMP);
-            ps.setBoolean(6, entity.isConcluido());
+                
+            if (entity.getDataConclusao() != null)
+                ps.setTimestamp(6, Timestamp.valueOf(entity.getDataConclusao()));
+            else
+                ps.setNull(6, Types.TIMESTAMP);
+            
+            // Guarda o Enum como String na BD
+            ps.setString(7, entity.getEstado().name());
+            
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -52,19 +63,30 @@ public class TarefaDAOImpl implements TarefaDAO {
 
     @Override
     public Tarefa update(Tarefa entity) {
-        String sql = "UPDATE Tarefa SET passo_id=?, produto_id=?, pedido_id=?, data_criacao=?, data_conclusao=?, concluido=? WHERE id=?";
+        // Atualizado para incluir 'estado', 'data_inicio' e remover 'concluido'
+        String sql = "UPDATE Tarefa SET passo_id=?, produto_id=?, pedido_id=?, data_criacao=?, data_inicio=?, data_conclusao=?, estado=? WHERE id=?";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, entity.getPassoId());
             ps.setInt(2, entity.getProdutoId());
             ps.setInt(3, entity.getPedidoId());
             ps.setTimestamp(4, Timestamp.valueOf(entity.getDataCriacao()));
-            if (entity.getDataConclusao() != null)
-                ps.setTimestamp(5, Timestamp.valueOf(entity.getDataConclusao()));
+            
+            if (entity.getDataInicio() != null)
+                ps.setTimestamp(5, Timestamp.valueOf(entity.getDataInicio()));
             else
                 ps.setNull(5, Types.TIMESTAMP);
-            ps.setBoolean(6, entity.isConcluido());
-            ps.setInt(7, entity.getId());
+                
+            if (entity.getDataConclusao() != null)
+                ps.setTimestamp(6, Timestamp.valueOf(entity.getDataConclusao()));
+            else
+                ps.setNull(6, Types.TIMESTAMP);
+                
+            // Guarda o Enum como String
+            ps.setString(7, entity.getEstado().name());
+            
+            ps.setInt(8, entity.getId());
+            
             ps.executeUpdate();
             tarefaMap.put(entity.getId(), entity);
         } catch (SQLException e) {
@@ -103,9 +125,26 @@ public class TarefaDAOImpl implements TarefaDAO {
         t.setProdutoId(rs.getInt("produto_id"));
         t.setPedidoId(rs.getInt("pedido_id"));
         t.setDataCriacao(rs.getTimestamp("data_criacao").toLocalDateTime());
+        
+        if (rs.getTimestamp("data_inicio") != null)
+            t.setDataInicio(rs.getTimestamp("data_inicio").toLocalDateTime());
+            
         if (rs.getTimestamp("data_conclusao") != null)
             t.setDataConclusao(rs.getTimestamp("data_conclusao").toLocalDateTime());
-        t.setConcluido(rs.getBoolean("concluido"));
+            
+        // Mapeia a String da BD de volta para o Enum
+        String estadoStr = rs.getString("estado");
+        if (estadoStr != null) {
+            try {
+                t.setEstado(EstadoTarefa.valueOf(estadoStr));
+            } catch (IllegalArgumentException e) {
+                // Fallback seguro caso haja valores inválidos na BD antiga
+                t.setEstado(EstadoTarefa.PENDENTE);
+            }
+        } else {
+            t.setEstado(EstadoTarefa.PENDENTE);
+        }
+        
         return t;
     }
 

@@ -28,14 +28,4 @@ public class LinhaStock {
     
     public int getQuantidade() { return quantidade; }
     public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
-
-    @Override
-    public String toString() {
-        return "LinhaStock{" +
-                "id=" + id +
-                ", restauranteId=" + restauranteId +
-                ", ingredienteId=" + ingredienteId +
-                ", quantidade=" + quantidade +
-                '}';
-    }
 }

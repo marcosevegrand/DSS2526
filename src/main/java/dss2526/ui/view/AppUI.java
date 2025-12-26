@@ -1,8 +1,6 @@
 package dss2526.ui.view;
 
 import dss2526.ui.controller.GestaoController;
-import dss2526.ui.controller.ProducaoController;
-import dss2526.ui.controller.VendaController;
 import dss2526.ui.util.NewMenu;
 
 public class AppUI {
@@ -18,10 +16,10 @@ public class AppUI {
             new GestaoUI(new GestaoController()).show();
         });
         mainMenu.setHandler(2, () -> {
-            new VendaUI(new VendaController()).show();
+            new VendaUI().run();
         });
         mainMenu.setHandler(3, () -> {
-            new ProducaoUI(new ProducaoController()).show();
+            new ProducaoUI().run();
         });
 
         mainMenu.run();

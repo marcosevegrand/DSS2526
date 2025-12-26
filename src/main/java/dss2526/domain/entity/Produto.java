@@ -33,13 +33,4 @@ public class Produto {
     public void setLinhas(List<LinhaProduto> linhas) { this.linhas = linhas; }
     public void addLinha(LinhaProduto linha) { this.linhas.add(linha); }
     public void removeLinha(LinhaProduto linha) { this.linhas.remove(linha); }
-
-    @Override
-    public String toString() {
-        return "Produto{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", preco=" + preco +
-                '}';
-    }
 }

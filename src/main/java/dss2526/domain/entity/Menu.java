@@ -27,13 +27,4 @@ public class Menu {
     public void setLinhas(List<LinhaMenu> linhas) { this.linhas = linhas; }
     public void addLinha(LinhaMenu linha) { this.linhas.add(linha); }
     public void removeLinha(LinhaMenu linha) { this.linhas.remove(linha); }
-
-    @Override
-    public String toString() {
-        return "Menu{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", preco=" + preco +
-                '}';
-    }
 }

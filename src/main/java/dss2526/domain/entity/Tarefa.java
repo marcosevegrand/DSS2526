@@ -2,14 +2,17 @@ package dss2526.domain.entity;
 
 import java.time.LocalDateTime;
 
+import dss2526.domain.enumeration.EstadoTarefa;
+
 public class Tarefa {
     int id;
     int passoId;
     int produtoId;
     int pedidoId;
+    EstadoTarefa estado;
     LocalDateTime dataCriacao;
+    LocalDateTime dataInicio;
     LocalDateTime dataConclusao;
-    boolean concluido;
 
     // Construtores
     
@@ -29,25 +32,15 @@ public class Tarefa {
     public int getPedidoId() { return pedidoId; }
     public void setPedidoId(int pedidoId) { this.pedidoId = pedidoId; }
 
+    public EstadoTarefa getEstado() { return estado; }
+    public void setEstado(EstadoTarefa estado) { this.estado = estado; }
+
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }
 
+    public LocalDateTime getDataInicio() { return dataInicio; }
+    public void setDataInicio(LocalDateTime dataInicio) { this.dataInicio = dataInicio; }
+
     public LocalDateTime getDataConclusao() { return dataConclusao; }
     public void setDataConclusao(LocalDateTime dataConclusao) { this.dataConclusao = dataConclusao; }
-
-    public boolean isConcluido() { return concluido; }
-    public void setConcluido(boolean concluido) { this.concluido = concluido; }
-
-    @Override
-    public String toString() {
-        return "Tarefa{" +
-                "id=" + id +
-                ", passoId=" + passoId +
-                ", produtoId=" + produtoId +
-                ", pedidoId=" + pedidoId +
-                ", dataCriacao=" + dataCriacao +
-                ", dataConclusao=" + dataConclusao +
-                ", concluido=" + concluido +
-                '}';
-    }
 }

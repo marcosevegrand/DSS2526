@@ -25,14 +25,4 @@ public class Mensagem {
 
     public LocalDateTime getDataHora() { return dataHora; }
     public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
-
-    @Override
-    public String toString() {
-        return "Mensagem{" +
-                "id=" + id +
-                ", restauranteId=" + restauranteId +
-                ", texto='" + texto + '\'' +
-                ", dataHora=" + dataHora +
-                '}';
-    }
 }

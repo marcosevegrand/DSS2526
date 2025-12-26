@@ -43,17 +43,4 @@ public class LinhaPedido {
 
     public String getObservacao() { return observacao; }
     public void setObservacao(String observacao) { this.observacao = observacao; }
-
-    @Override
-    public String toString() {
-        return "LinhaPedido{" +
-                "id=" + id +
-                ", pedidoId=" + pedidoId +
-                ", itemId=" + itemId +
-                ", tipo=" + tipo +
-                ", quantidade=" + quantidade +
-                ", precoUnitario=" + precoUnitario +
-                ", observacao='" + observacao + '\'' +
-                '}';
-    }
 }

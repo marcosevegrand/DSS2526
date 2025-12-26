@@ -1,5 +1,9 @@
--- Assumir que o schema já foi criado exatamente como no enunciado
--- e que estamos numa BD MySQL vazia.
+-- ======================================================================================
+-- POVOAMENTO DE DADOS (SEM PEDIDOS/TAREFAS)
+-- Nota: Executar o script schema.sql primeiro para criar as tabelas.
+-- ======================================================================================
+
+USE restaurante;
 
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE Tarefa;
@@ -23,48 +27,42 @@ TRUNCATE TABLE Catalogo;
 TRUNCATE TABLE Restaurante;
 SET FOREIGN_KEY_CHECKS = 1;
 
---------------------------------------------------
--- 1. Catálogo
---------------------------------------------------
+-- 1. Catálogos
 INSERT INTO Catalogo (id, nome) VALUES
-(1, 'Menu Principal FastBurger'),
-(2, 'Menu Pequeno-Almoço FastBurger');
+(1, 'Menu Geral FastBurger');
 
---------------------------------------------------
--- 2. Restaurantes (cadeia de fast food)
---------------------------------------------------
+-- 2. Restaurantes
 INSERT INTO Restaurante (id, nome, localizacao, catalogo_id) VALUES
 (1, 'FastBurger - Lisboa Centro', 'Lisboa - Baixa', 1),
 (2, 'FastBurger - Lisboa Oriente', 'Lisboa - Parque das Nações', 1),
-(3, 'FastBurger - Porto Aliados', 'Porto - Aliados', 1);
+(3, 'FastBurger - Porto Aliados', 'Porto - Aliados', 1),
+(4, 'FastBurger - Almada Seixal', 'Almada - Pragal', 1),
+(5, 'FastBurger - Braga Minho', 'Braga - Minho', 1);
 
---------------------------------------------------
--- 3. Funcionários (usar enum Funcao como texto)
---------------------------------------------------
+-- 3. Funcionários
 INSERT INTO Funcionario (id, restaurante_id, utilizador, password, funcao) VALUES
-(1, 1, 'joao.caixa',      'pass123', 'FUNCIONARIO'),
-(2, 1, 'maria.grelha',    'pass123', 'FUNCIONARIO'),
-(3, 1, 'ana.gerente',     'pass123', 'GERENTE'),
-(4, 2, 'tiago.fritura',   'pass123', 'FUNCIONARIO'),
-(5, 2, 'carlos.coo',      'pass123', 'COO'),
-(6, 3, 'rita.sysadmin',   'pass123', 'SYSADMIN');
+(1, 1, 'joao.caixa',      'pass', 'FUNCIONARIO'),
+(2, 1, 'maria.grelha',    'pass', 'FUNCIONARIO'),
+(3, 1, 'ana.gerente',     'pass', 'GERENTE'),
+(4, 2, 'tiago.fritura',   'pass', 'FUNCIONARIO'),
+(5, 2, 'carlos.coo',      'pass', 'COO'),
+(6, 3, 'rita.sysadmin',   'pass', 'SYSADMIN'),
+(7, 4, 'pedro.montagem',  'pass', 'FUNCIONARIO'),
+(8, 5, 'sara.bebidas',    'pass', 'FUNCIONARIO');
 
---------------------------------------------------
--- 4. Estações de trabalho (usar enum Trabalho como texto)
---------------------------------------------------
-INSERT INTO Estacao (id, restaurante_id, trabalho) VALUES
-(1, 1, 'CAIXA'),
-(2, 1, 'GRELHA'),
-(3, 1, 'FRITURA'),
-(4, 1, 'BEBIDAS'),
-(5, 2, 'CAIXA'),
-(6, 2, 'MONTAGEM'),
-(7, 3, 'CAIXA'),
-(8, 3, 'GELADOS');
+-- 4. Estações (6 tipos por restaurante = 30 estações)
+-- Lisboa Centro (1)
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'CAIXA'), (1, 'GRELHA'), (1, 'FRITURA'), (1, 'BEBIDAS'), (1, 'GELADOS'), (1, 'MONTAGEM');
+-- Lisboa Oriente (2)
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'CAIXA'), (2, 'GRELHA'), (2, 'FRITURA'), (2, 'BEBIDAS'), (2, 'GELADOS'), (2, 'MONTAGEM');
+-- Porto Aliados (3)
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (3, 'CAIXA'), (3, 'GRELHA'), (3, 'FRITURA'), (3, 'BEBIDAS'), (3, 'GELADOS'), (3, 'MONTAGEM');
+-- Almada (4)
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (4, 'CAIXA'), (4, 'GRELHA'), (4, 'FRITURA'), (4, 'BEBIDAS'), (4, 'GELADOS'), (4, 'MONTAGEM');
+-- Braga (5)
+INSERT INTO Estacao (restaurante_id, trabalho) VALUES (5, 'CAIXA'), (5, 'GRELHA'), (5, 'FRITURA'), (5, 'BEBIDAS'), (5, 'GELADOS'), (5, 'MONTAGEM');
 
---------------------------------------------------
--- 5. Ingredientes (alguns típicos de fast food)
---------------------------------------------------
+-- 5. Ingredientes (Expandido)
 INSERT INTO Ingrediente (id, nome, unidade, alergenico) VALUES
 (1, 'Pão de hambúrguer', 'un', 'GLUTEN'),
 (2, 'Carne de vaca',     'un', NULL),
@@ -80,11 +78,18 @@ INSERT INTO Ingrediente (id, nome, unidade, alergenico) VALUES
 (12,'Copo descartável',  'un', NULL),
 (13,'Sal',               'g', NULL),
 (14,'Frango panado',     'un', 'GLUTEN'),
-(15,'Pão de brioche',    'un', 'GLUTEN');
+(15,'Pão de brioche',    'un', 'GLUTEN'),
+(16,'Hamburguer Vegan',  'un', 'SOJA'),
+(17,'Maionese',          'g', 'OVO'),
+(18,'Ketchup',           'g', NULL),
+(19,'Mostarda',          'g', 'MOSTARDA'),
+(20,'Cebola roxa',       'fatia', NULL),
+(21,'Picles',            'un', NULL),
+(22,'Gelado Chocolate',  'g', 'LACTOSE'),
+(23,'Leite',             'L', 'LACTOSE'),
+(24,'Xarope Morango',    'ml', NULL);
 
---------------------------------------------------
--- 6. Produtos (itens individuais do menu)
---------------------------------------------------
+-- 6. Produtos (Expandido)
 INSERT INTO Produto (id, nome, preco) VALUES
 (1, 'Hambúrguer Clássico',           4.50),
 (2, 'Cheeseburger',                  4.90),
@@ -93,318 +98,99 @@ INSERT INTO Produto (id, nome, preco) VALUES
 (5, 'Batatas Fritas Grandes',        2.30),
 (6, 'Chicken Nuggets (6 unidades)',  3.90),
 (7, 'Refrigerante Cola 0.5L',        1.70),
-(8, 'Gelado de Baunilha',            1.50);
+(8, 'Gelado de Baunilha',            1.50),
+(9, 'Veggie Burger',                 5.90),
+(10,'Chicken Sandwich',              4.80),
+(11,'Milkshake Morango',             3.50),
+(12,'Sundae Chocolate',              2.00);
 
---------------------------------------------------
--- 7. Menus (combos)
---------------------------------------------------
+-- 7. Menus
 INSERT INTO Menu (id, nome, preco) VALUES
 (1, 'Menu Clássico',                   7.90),
 (2, 'Menu Bacon & Cheese',             8.90),
 (3, 'Menu Nuggets',                    7.50),
-(4, 'Menu Infantil (hambúrguer mini)', 5.50);
+(4, 'Menu Infantil',                   5.50),
+(5, 'Menu Veggie',                     8.50),
+(6, 'Menu Frango',                     7.80);
 
---------------------------------------------------
--- 8. Associação Catálogo -> Menu
---------------------------------------------------
-INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES
-(1, 1),
-(1, 2),
-(1, 3),
-(1, 4);
+-- 8. Catalogo -> Menu / Produto
+INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES (1,1), (1,2), (1,3), (1,4), (1,5), (1,6);
+INSERT INTO Catalogo_Produto (catalogo_id, produto_id) SELECT 1, id FROM Produto;
 
---------------------------------------------------
--- 9. Associação Catálogo -> Produto
---------------------------------------------------
-INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES
-(1, 1),
-(1, 2),
-(1, 3),
-(1, 4),
-(1, 5),
-(1, 6),
-(1, 7),
-(1, 8);
+-- 9. Linhas de Menu
+INSERT INTO LinhaMenu (menu_id, produto_id, quantidade) VALUES
+(1, 1, 1), (1, 5, 1), (1, 7, 1), -- Classico: Burguer + Batata G + Cola
+(2, 3, 1), (2, 5, 1), (2, 7, 1), -- Bacon: BaconBurguer + Batata G + Cola
+(3, 6, 1), (3, 4, 1), (3, 7, 1), -- Nuggets: Nuggets + Batata P + Cola
+(4, 2, 1), (4, 4, 1), (4, 8, 1), -- Infantil: Cheese + Batata P + Gelado
+(5, 9, 1), (5, 5, 1), (5, 7, 1), -- Veggie: Veggie + Batata G + Cola
+(6, 10,1), (6, 5, 1), (6, 7, 1); -- Frango: Sanduiche + Batata G + Cola
 
---------------------------------------------------
--- 10. Linhas de Menu (quais produtos compõem cada menu)
---------------------------------------------------
-INSERT INTO LinhaMenu (id, menu_id, produto_id, quantidade) VALUES
--- Menu Clássico: Hambúrguer Clássico + Batata média (grande) + bebida
-(1, 1, 1, 1),
-(2, 1, 5, 1),
-(3, 1, 7, 1),
-
--- Menu Bacon & Cheese: Bacon & Cheese + Batata grande + bebida
-(4, 2, 3, 1),
-(5, 2, 5, 1),
-(6, 2, 7, 1),
-
--- Menu Nuggets: Nuggets + Batata pequena + bebida
-(7, 3, 6, 1),
-(8, 3, 4, 1),
-(9, 3, 7, 1),
-
--- Menu Infantil: Hambúrguer Clássico + Batata pequena + gelado
-(10, 4, 1, 1),
-(11, 4, 4, 1),
-(12, 4, 8, 1);
-
---------------------------------------------------
--- 11. LinhaProduto (receitas básicas dos produtos)
---------------------------------------------------
--- Hambúrguer Clássico
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(1, 1, 1, 1.000),  -- pão
-(2, 1, 2, 1.000),  -- carne
-(3, 1, 7, 1.000),  -- alface
-(4, 1, 8, 1.000),  -- tomate
-(5, 1, 9, 20.000); -- molho
-
--- Cheeseburger
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(6, 2, 1, 1.000),
-(7, 2, 2, 1.000),
-(8, 2, 3, 1.000),
-(9, 2, 9, 20.000);
-
--- Bacon & Cheese
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(10, 3, 15, 1.000),
-(11, 3, 2, 1.000),
-(12, 3, 3, 1.000),
-(13, 3, 4, 2.000),
-(14, 3, 9, 25.000);
-
--- Batatas pequenas
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(15, 4, 5, 0.150),
-(16, 4, 6, 0.020),
-(17, 4, 13, 2.000);
-
--- Batatas grandes
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(18, 5, 5, 0.220),
-(19, 5, 6, 0.030),
-(20, 5, 13, 3.000);
-
--- Nuggets
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(21, 6, 14, 6.000),
-(22, 6, 6, 0.020),
-(23, 6, 13, 1.000);
-
--- Refrigerante
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(24, 7, 10, 0.500),
-(25, 7, 12, 1.000);
-
--- Gelado
-INSERT INTO LinhaProduto (id, produto_id, ingrediente_id, quantidade) VALUES
-(26, 8, 11, 0.120),
-(27, 8, 12, 1.000);
-
---------------------------------------------------
--- 12. Passos (workflow de preparação) + associação Produto_Passo
--- Trabalho deve usar enum Trabalho como texto
---------------------------------------------------
+-- 10. Passos (Workflow: Preparação -> Montagem -> Caixa)
+-- 1-10: Preparação, 11-15: Montagem, 16-20: Caixa
 INSERT INTO Passo (id, nome, duracao_minutos, trabalho) VALUES
-(1, 'Grelhar hambúrguer',        5, 'GRELHA'),
-(2, 'Montar hambúrguer',         2, 'MONTAGEM'),
-(3, 'Fritar batatas',            4, 'FRITURA'),
-(4, 'Fritar nuggets',            5, 'FRITURA'),
-(5, 'Servir refrigerante',       1, 'BEBIDAS'),
-(6, 'Servir gelado de baunilha', 1, 'GELADOS');
+-- Cozinha Quente
+(1, 'Grelhar Carne',        5, 'GRELHA'),
+(2, 'Grelhar Veggie',       6, 'GRELHA'),
+(3, 'Fritar Batatas',       4, 'FRITURA'),
+(4, 'Fritar Nuggets',       5, 'FRITURA'),
+(5, 'Fritar Frango',        5, 'FRITURA'),
+-- Bar / Sobremesas
+(6, 'Servir Bebida',        1, 'BEBIDAS'),
+(7, 'Preparar Milkshake',   3, 'BEBIDAS'),
+(8, 'Servir Gelado',        1, 'GELADOS'),
+-- Montagem
+(9, 'Montar Hambúrguer',    2, 'MONTAGEM'),
+(10,'Montar Sanduíche',     2, 'MONTAGEM'),
+(11,'Embalar Batatas',      1, 'MONTAGEM'),
+(12,'Embalar Nuggets',      1, 'MONTAGEM'),
+-- Entrega
+(13,'Entrega ao Cliente',   1, 'CAIXA'); 
 
--- Associações produtos -> passos
+-- 11. Produto -> Passos
+-- Hambúrgueres: Grelha -> Montagem -> Caixa
+INSERT INTO Produto_Passo (produto_id, passo_id) VALUES 
+(1, 1), (1, 9), (1, 13), -- Classico
+(2, 1), (2, 9), (2, 13), -- Cheese
+(3, 1), (3, 9), (3, 13), -- Bacon
+(9, 2), (9, 9), (9, 13), -- Veggie
+(10,5), (10,10),(10,13); -- Frango Sanduiche
+
+-- Acompanhamentos: Fritura -> Montagem -> Caixa
 INSERT INTO Produto_Passo (produto_id, passo_id) VALUES
--- Hambúrguer Clássico
-(1, 1),
-(1, 2),
+(4, 3), (4, 11), (4, 13), -- Batata P
+(5, 3), (5, 11), (5, 13), -- Batata G
+(6, 4), (6, 12), (6, 13); -- Nuggets
 
--- Cheeseburger
-(2, 1),
-(2, 2),
+-- Bebidas/Sobremesas: Preparação -> Caixa (Sem montagem)
+INSERT INTO Produto_Passo (produto_id, passo_id) VALUES
+(7, 6), (7, 13), -- Cola
+(11,7), (11,13), -- Milkshake
+(8, 8), (8, 13), -- Gelado Baunilha
+(12,8), (12,13); -- Sundae
 
--- Bacon & Cheese
-(3, 1),
-(3, 2),
-
--- Batatas
-(4, 3),
-(5, 3),
-
--- Nuggets
-(6, 4),
-
--- Refrigerante
-(7, 5),
-
--- Gelado
-(8, 6);
-
---------------------------------------------------
--- 13. Passo_Ingrediente (quais ingredientes usados em cada passo)
---------------------------------------------------
--- Grelhar hambúrguer
+-- 12. Passo -> Ingrediente (Exemplos principais)
 INSERT INTO Passo_Ingrediente (passo_id, ingrediente_id) VALUES
-(1, 2);
+(1, 2), -- Grelhar Carne: Carne
+(2, 16), -- Grelhar Veggie: Veggie Burger
+(3, 5), (3, 6), (3, 13), -- Fritar Batatas
+(4, 14), (4, 6), -- Fritar Nuggets
+(5, 14), (5, 6), -- Fritar Frango
+(6, 10), (6, 12), -- Bebida: Cola + Copo
+(7, 23), (7, 24), (7, 12), -- Milkshake: Leite + Xarope + Copo
+(8, 11), (8, 12), -- Gelado: Baunilha + Copo
+(9, 1), (9, 7), (9, 8), (9, 9), -- Montar Burguer: Pão, Alface, Tomate, Molho
+(10,15), (10,7), (10,17); -- Montar Sanduiche: Brioche, Alface, Maionese
 
--- Montar hambúrguer (pão + vegetais + queijo/bacon/molho etc.)
-INSERT INTO Passo_Ingrediente (passo_id, ingrediente_id) VALUES
-(2, 1),
-(2, 3),
-(2, 4),
-(2, 7),
-(2, 8),
-(2, 9),
-(2, 15);
+-- 13. Stock Inicial (Para os 5 restaurantes)
+-- Inserir stock básico para todos os ingredientes (1-24) em todos os restaurantes (1-5)
+INSERT INTO LinhaStock (restaurante_id, ingrediente_id, quantidade)
+SELECT r.id, i.id, 500 -- Quantidade generica inicial
+FROM Restaurante r CROSS JOIN Ingrediente i;
 
--- Fritar batatas
-INSERT INTO Passo_Ingrediente (passo_id, ingrediente_id) VALUES
-(3, 5),
-(3, 6),
-(3, 13);
-
--- Fritar nuggets
-INSERT INTO Passo_Ingrediente (passo_id, ingrediente_id) VALUES
-(4, 14),
-(4, 6),
-(4, 13);
-
--- Servir refrigerante
-INSERT INTO Passo_Ingrediente (passo_id, ingrediente_id) VALUES
-(5, 10),
-(5, 12);
-
--- Servir gelado
-INSERT INTO Passo_Ingrediente (passo_id, ingrediente_id) VALUES
-(6, 11),
-(6, 12);
-
---------------------------------------------------
--- 14. Stock por restaurante
---------------------------------------------------
-INSERT INTO LinhaStock (id, restaurante_id, ingrediente_id, quantidade) VALUES
--- Restaurante 1
-(1, 1, 1, 500),
-(2, 1, 2, 400),
-(3, 1, 3, 300),
-(4, 1, 4, 200),
-(5, 1, 5, 150.000),
-(6, 1, 6, 50.000),
-(7, 1, 7, 300),
-(8, 1, 8, 300),
-(9, 1, 9, 10.000),
-(10,1, 10, 80.000),
-(11,1, 11, 30.000),
-(12,1, 12, 1000),
-(13,1, 13, 5.000),
-(14,1, 14, 400),
-(15,1, 15, 200),
-
--- Restaurante 2
-(16, 2, 1, 300),
-(17, 2, 2, 250),
-(18, 2, 3, 200),
-(19, 2, 4, 150),
-(20, 2, 5, 120.000),
-(21, 2, 6, 40.000),
-(22, 2, 7, 200),
-(23, 2, 8, 200),
-(24, 2, 9, 8.000),
-(25, 2, 10, 60.000),
-(26, 2, 11, 25.000),
-(27, 2, 12, 800),
-(28, 2, 13, 4.000),
-(29, 2, 14, 300),
-(30, 2, 15, 150),
-
--- Restaurante 3
-(31, 3, 1, 200),
-(32, 3, 2, 200),
-(33, 3, 3, 150),
-(34, 3, 4, 100),
-(35, 3, 5, 100.000),
-(36, 3, 6, 30.000),
-(37, 3, 7, 150),
-(38, 3, 8, 150),
-(39, 3, 9, 6.000),
-(40, 3, 10, 50.000),
-(41, 3, 11, 20.000),
-(42, 3, 12, 600),
-(43, 3, 13, 3.000),
-(44, 3, 14, 250),
-(45, 3, 15, 120);
-
---------------------------------------------------
--- 15. Pedidos (usar enum EstadoPedido como texto)
---------------------------------------------------
-INSERT INTO Pedido (id, restaurante_id, para_levar, estado, data_hora) VALUES
-(1, 1, 0, 'INICIADO',      NOW() - INTERVAL 30 MINUTE),
-(2, 1, 1, 'EM_PREPARACAO', NOW() - INTERVAL 20 MINUTE),
-(3, 1, 0, 'PRONTO',        NOW() - INTERVAL 10 MINUTE),
-(4, 2, 1, 'ENTREGUE',      NOW() - INTERVAL 1 HOUR),
-(5, 3, 0, 'CANCELADO',     NOW() - INTERVAL 2 HOUR);
-
---------------------------------------------------
--- 16. Linhas de Pedido (TipoItem como texto em "tipo")
---------------------------------------------------
-INSERT INTO LinhaPedido (id, pedido_id, item_id, tipo, quantidade, preco_unitario, observacao) VALUES
--- Pedido 1: Menu Clássico no restaurante 1
-(1, 1, 1, 'MENU',    1, 7.90, 'Sem tomate'),
--- Pedido 2: Menu Bacon & Cheese para levar
-(2, 2, 2, 'MENU',    1, 8.90, 'Bacon extra'),
-(3, 2, 8, 'PRODUTO', 2, 1.50, 'Gelado extra'),
--- Pedido 3: Apenas produtos individuais
-(4, 3, 3, 'PRODUTO', 1, 5.50, 'Sem molho especial'),
-(5, 3, 5, 'PRODUTO', 1, 2.30, NULL),
-(6, 3, 7, 'PRODUTO', 1, 1.70, 'Sem gelo'),
--- Pedido 4: Menu Nuggets entregue
-(7, 4, 3, 'MENU',    2, 7.50, NULL),
--- Pedido 5: cancelado, sem linhas ou apenas 1 item
-(8, 5, 2, 'PRODUTO', 1, 4.90, 'Pedido cancelado pelo cliente');
-
---------------------------------------------------
--- 17. Mensagens internas
---------------------------------------------------
-INSERT INTO Mensagem (id, restaurante_id, texto, data_hora) VALUES
-(1, 1, 'Reforçar stock de carne de vaca e pão de hambúrguer.', NOW() - INTERVAL 3 HOUR),
-(2, 1, 'Promoção de Menu Clássico ao almoço.', NOW() - INTERVAL 1 HOUR),
-(3, 2, 'Máquina de gelados em manutenção até amanhã.', NOW() - INTERVAL 2 HOUR),
-(4, 3, 'Formação de novos colaboradores na estação de CAIXA.', NOW() - INTERVAL 4 HOUR);
-
---------------------------------------------------
--- 18. Tarefas de cozinha (workflow de preparação)
--- EstadoTarefa não está em coluna própria, mas os campos concluido/data_conclusao
--- permitem inferir o estado.
---------------------------------------------------
-INSERT INTO Tarefa (id, passo_id, produto_id, pedido_id, data_criacao, data_conclusao, concluido) VALUES
--- Pedido 1 (INICIADO): tarefas ainda pendentes
-(1, 1, 1, 1, NOW() - INTERVAL 25 MINUTE, NULL, 0), -- grelhar hambúrguer
-(2, 2, 1, 1, NOW() - INTERVAL 23 MINUTE, NULL, 0), -- montar hambúrguer
-(3, 3, 5, 1, NOW() - INTERVAL 24 MINUTE, NULL, 0), -- fritar batatas
-(4, 5, 7, 1, NOW() - INTERVAL 22 MINUTE, NULL, 0), -- servir bebida
-
--- Pedido 2 (EM_PREPARACAO): algumas concluídas, outras não
-(5, 1, 3, 2, NOW() - INTERVAL 18 MINUTE, NOW() - INTERVAL 14 MINUTE, 1),
-(6, 2, 3, 2, NOW() - INTERVAL 13 MINUTE, NULL, 0),
-(7, 3, 5, 2, NOW() - INTERVAL 15 MINUTE, NOW() - INTERVAL 10 MINUTE, 1),
-(8, 4, 6, 2, NOW() - INTERVAL 16 MINUTE, NOW() - INTERVAL 11 MINUTE, 1),
-(9, 5, 7, 2, NOW() - INTERVAL 12 MINUTE, NULL, 0),
-(10,6, 8, 2, NOW() - INTERVAL 12 MINUTE, NULL, 0),
-
--- Pedido 3 (PRONTO): tudo concluído
-(11,1, 3, 3, NOW() - INTERVAL 20 MINUTE, NOW() - INTERVAL 15 MINUTE, 1),
-(12,2, 3, 3, NOW() - INTERVAL 19 MINUTE, NOW() - INTERVAL 14 MINUTE, 1),
-(13,3, 5, 3, NOW() - INTERVAL 18 MINUTE, NOW() - INTERVAL 13 MINUTE, 1),
-(14,5, 7, 3, NOW() - INTERVAL 17 MINUTE, NOW() - INTERVAL 12 MINUTE, 1),
-
--- Pedido 4 (ENTREGUE): tudo concluído há mais tempo
-(15,4, 6, 4, NOW() - INTERVAL 70 MINUTE, NOW() - INTERVAL 65 MINUTE, 1),
-(16,3, 4, 4, NOW() - INTERVAL 69 MINUTE, NOW() - INTERVAL 64 MINUTE, 1),
-(17,5, 7, 4, NOW() - INTERVAL 68 MINUTE, NOW() - INTERVAL 63 MINUTE, 1),
-
--- Pedido 5 (CANCELADO): tarefas criadas mas abortadas (não concluídas)
-(18,1, 2, 5, NOW() - INTERVAL 115 MINUTE, NULL, 0),
-(19,2, 2, 5, NOW() - INTERVAL 114 MINUTE, NULL, 0);
+-- 14. Mensagens Iniciais
+INSERT INTO Mensagem (restaurante_id, texto) VALUES
+(1, 'Bem-vindos ao novo sistema de Produção!'),
+(1, 'Lembrar de verificar a temperatura das arcas.'),
+(2, 'Promoção Menu Veggie ativa hoje.'),
+(3, 'Stock de copos baixo, aguardar reposição.');

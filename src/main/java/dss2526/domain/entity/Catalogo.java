@@ -29,14 +29,4 @@ public class Catalogo {
     public void setProdutoIds(List<Integer> produtoIds) { this.produtoIds = produtoIds; }
     public void addProdutoId(Integer produtoId) { this.produtoIds.add(produtoId); }
     public void removeProdutoId(Integer produtoId) { this.produtoIds.remove(produtoId); }
-
-    @Override
-    public String toString() {
-        return "Catalogo{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", menuIds=" + menuIds +
-                ", produtoIds=" + produtoIds +
-                '}';
-    }
 }

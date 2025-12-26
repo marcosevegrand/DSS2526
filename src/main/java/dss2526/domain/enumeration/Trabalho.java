@@ -4,7 +4,7 @@ public enum Trabalho {
     BEBIDAS,         // prepara bebidas
     GELADOS,         // prepara gelados
     MONTAGEM,        // prepara refeições
-    CAIXA,           // pagamentos
+    CAIXA,           // atendimento
     GRELHA,          // grelha
     FRITURA,         // frituras
 }
