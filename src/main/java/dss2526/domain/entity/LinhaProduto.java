@@ -4,7 +4,7 @@ public class LinhaProduto {
     private int id;
     private int produtoId;
     private int ingredienteId;
-    private Double quantidade;
+    private int quantidade;
 
     // Construtores
 
@@ -21,8 +21,8 @@ public class LinhaProduto {
     public int getIngredienteId() { return ingredienteId; }
     public void setIngredienteId(int ingredienteId) { this.ingredienteId = ingredienteId; }
     
-    public Double getQuantidade() { return quantidade; }
-    public void setQuantidade(Double quantidade) { this.quantidade = quantidade; }
+    public int getQuantidade() { return quantidade; }
+    public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
 
     @Override
     public String toString() {

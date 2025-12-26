@@ -170,7 +170,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
                         ls.setId(id);
                         ls.setRestauranteId(rs.getInt("restaurante_id"));
                         ls.setIngredienteId(rs.getInt("ingrediente_id"));
-                        ls.setQuantidade(rs.getDouble("quantidade"));
+                        ls.setQuantidade(rs.getInt("quantidade"));
                         linhaStockMap.put(id, ls);
                         list.add(ls);
                     }

@@ -4,13 +4,13 @@ public class LinhaStock {
     private int id;
     private int restauranteId;
     private int ingredienteId;
-    private double quantidade;
+    private int quantidade;
 
     // Construtores
 
     public LinhaStock() {}
 
-    public LinhaStock(int ingredienteId, double quantidade) {
+    public LinhaStock(int ingredienteId, int quantidade) {
         this.ingredienteId = ingredienteId;
         this.quantidade = quantidade;
     }
@@ -26,8 +26,8 @@ public class LinhaStock {
     public int getIngredienteId() { return ingredienteId; }
     public void setIngredienteId(int ingredienteId) { this.ingredienteId = ingredienteId; }
     
-    public double getQuantidade() { return quantidade; }
-    public void setQuantidade(double quantidade) { this.quantidade = quantidade; }
+    public int getQuantidade() { return quantidade; }
+    public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
 
     @Override
     public String toString() {

@@ -270,7 +270,7 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
         
         return restaurante.getStock().stream()
                 .filter(linha -> linha.getIngredienteId() == ingredienteId)
-                .findFirst()
+                .findFirst()d
                 .orElse(null);
     }
 

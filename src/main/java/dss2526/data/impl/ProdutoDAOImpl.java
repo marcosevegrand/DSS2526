@@ -181,7 +181,7 @@ public class ProdutoDAOImpl implements ProdutoDAO {
                         lp.setId(id);
                         lp.setProdutoId(rs.getInt("produto_id"));
                         lp.setIngredienteId(rs.getInt("ingrediente_id"));
-                        lp.setQuantidade(rs.getDouble("quantidade"));
+                        lp.setQuantidade(rs.getInt("quantidade"));
                         linhaProdutoMap.put(id, lp);
                         list.add(lp);
                     }

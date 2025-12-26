@@ -1,4 +1,6 @@
 -- Restaurante Management System Schema (MySQL Compatible)
+CREATE DATABASE IF NOT EXISTS RESTAURANTE;
+USE RESTAURANTE;
 
 -- Disable foreign key checks to allow dropping tables in any order
 SET FOREIGN_KEY_CHECKS = 0;
@@ -153,9 +155,9 @@ CREATE TABLE Passo_Ingrediente (
 CREATE TABLE LinhaPedido (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     pedido_id INTEGER NOT NULL,
-    item_id INTEGER NOT NULL, -- ID of Produto or Menu
+    item_id INTEGER NOT NULL,
     tipo VARCHAR(50) NOT NULL, -- 'PRODUTO' or 'MENU'
-    quantidade INTEGER NOT NULL,
+    quantidade INTEGER DEFAULT 0,
     preco_unitario DECIMAL(10, 2),
     observacao TEXT,
     FOREIGN KEY (pedido_id) REFERENCES Pedido(id)
@@ -166,7 +168,7 @@ CREATE TABLE LinhaMenu (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     menu_id INTEGER NOT NULL,
     produto_id INTEGER NOT NULL,
-    quantidade INTEGER DEFAULT 1,
+    quantidade INTEGER DEFAULT 0,
     FOREIGN KEY (menu_id) REFERENCES Menu(id),
     FOREIGN KEY (produto_id) REFERENCES Produto(id)
 );
@@ -176,7 +178,7 @@ CREATE TABLE LinhaProduto (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     produto_id INTEGER NOT NULL,
     ingrediente_id INTEGER NOT NULL,
-    quantidade DECIMAL(10, 3) NOT NULL,
+    quantidade INTEGER DEFAULT 0,
     FOREIGN KEY (produto_id) REFERENCES Produto(id),
     FOREIGN KEY (ingrediente_id) REFERENCES Ingrediente(id)
 );
@@ -186,7 +188,7 @@ CREATE TABLE LinhaStock (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     restaurante_id INTEGER NOT NULL,
     ingrediente_id INTEGER NOT NULL,
-    quantidade DECIMAL(10, 3) DEFAULT 0,
+    quantidade INTEGER DEFAULT 0,
     FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id),
     FOREIGN KEY (ingrediente_id) REFERENCES Ingrediente(id)
 );

@@ -18,14 +18,6 @@ public class GestaoUI {
     public void show() {
 
         NewMenu menu = new NewMenu("--- Sistema de Gestão ---", new String[]{
-            "Gerir Restaurantes",
-            "Gerir Estações",
-            "Gerir Funcionários",
-            "Gerir Stock",
-            "Gerir Catálogos",
-            "Gerir Menus",
-            "Gerir Produtos",
-            "Gerir Ingredientes",
             "Ver Estatísticas",
         });
         

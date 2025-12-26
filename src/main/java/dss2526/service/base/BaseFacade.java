@@ -22,8 +22,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Restaurante Logic ---
     @Override
-    public void registarRestaurante(Restaurante r) {
-        restauranteDAO.create(r);
+    public Restaurante registarRestaurante(Restaurante r) {
+        return restauranteDAO.create(r);
     }
     @Override
     public Restaurante obterRestaurante(Integer id) {
@@ -44,8 +44,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Funcionario Logic ---
     @Override
-    public void registarFuncionario(Funcionario f) {
-        funcionarioDAO.create(f);
+    public Funcionario registarFuncionario(Funcionario f) {
+        return funcionarioDAO.create(f);
     }
     @Override
     public Funcionario obterFuncionario(Integer id) {
@@ -66,8 +66,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Estacao Logic ---
     @Override
-    public void registarEstacao(Estacao e) {
-        estacaoDAO.create(e);
+    public Estacao registarEstacao(Estacao e) {
+        return estacaoDAO.create(e);
     }
     @Override
     public Estacao obterEstacao(Integer id) {
@@ -87,8 +87,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Catalogo Logic ---
     @Override
-    public void registarCatalogo(Catalogo c) {
-        catalogoDAO.create(c);
+    public Catalogo registarCatalogo(Catalogo c) {
+        return catalogoDAO.create(c);
     }
     @Override
     public Catalogo obterCatalogo(Integer id) {
@@ -105,8 +105,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Menu Logic ---
     @Override
-    public void registarMenu(Menu m) {
-        menuDAO.create(m);
+    public Menu registarMenu(Menu m) {
+        return menuDAO.create(m);
     }
     @Override
     public Menu obterMenu(Integer id) {
@@ -123,8 +123,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Produto Logic ---
     @Override
-    public void registarProduto(Produto p) {
-        produtoDAO.create(p);
+    public Produto registarProduto(Produto p) {
+        return produtoDAO.create(p);
     }
     @Override
     public Produto obterProduto(Integer id) {
@@ -141,8 +141,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Ingrediente Logic ---
     @Override
-    public void registarIngrediente(Ingrediente i) {
-        ingredienteDAO.create(i);
+    public Ingrediente registarIngrediente(Ingrediente i) {
+        return ingredienteDAO.create(i);
     }
     @Override
     public Ingrediente obterIngrediente(Integer id) {
@@ -159,8 +159,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Passo Logic ---
     @Override
-    public void registarPasso(Passo p) {
-        passoDAO.create(p);
+    public Passo registarPasso(Passo p) {
+        return passoDAO.create(p);
     }
     @Override
     public Passo obterPasso(Integer id) {
@@ -177,8 +177,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Mensagem Logic ---
     @Override
-    public void registarMensagem(Mensagem m) {
-        mensagemDAO.create(m);
+    public Mensagem registarMensagem(Mensagem m) {
+        return mensagemDAO.create(m);
     }
     @Override
     public Mensagem obterMensagem(Integer id) {
@@ -199,8 +199,8 @@ public class BaseFacade implements IBaseFacade {
 
     // --- Tarefa Logic ---
     @Override
-    public void registarTarefa(Tarefa t) {
-        tarefaDAO.create(t);
+    public Tarefa registarTarefa(Tarefa t) {
+        return tarefaDAO.create(t);
     }
     @Override
     public Tarefa obterTarefa(Integer id) {
@@ -221,5 +221,27 @@ public class BaseFacade implements IBaseFacade {
     @Override
     public List<Tarefa> listarTarefasDeProduto(Integer id) {
         return tarefaDAO.findAllByProduto(id);
+    }
+    
+    // --- Pedido Logic ---
+    @Override
+    public Pedido registarPedido(Pedido p) {
+        return pedidoDAO.create(p);
+    }
+    @Override
+    public Pedido obterPedido(Integer id) {
+        return pedidoDAO.findById(id);
+    }
+    @Override
+    public Boolean removerPedido(Integer id) {
+        return pedidoDAO.delete(id);
+    }
+    @Override
+    public List<Pedido> listarPedidos() {
+        return pedidoDAO.findAll();
+    }
+    @Override
+    public List<Pedido> listarPedidosDeRestaurante(Integer id) {
+        return pedidoDAO.findAllByRestaurante(id);
     }
 }

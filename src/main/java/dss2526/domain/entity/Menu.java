@@ -23,7 +23,7 @@ public class Menu {
     public double getPreco() { return preco; }
     public void setPreco(double preco) { this.preco = preco; }
 
-    public List<LinhaMenu> getLinha() { return linhas; }
+    public List<LinhaMenu> getLinhas() { return linhas; }
     public void setLinhas(List<LinhaMenu> linhas) { this.linhas = linhas; }
     public void addLinha(LinhaMenu linha) { this.linhas.add(linha); }
     public void removeLinha(LinhaMenu linha) { this.linhas.remove(linha); }
