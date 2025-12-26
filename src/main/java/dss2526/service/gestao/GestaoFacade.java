@@ -4,22 +4,22 @@ import dss2526.data.contract.*;
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.Funcao;
 import dss2526.service.producao.IProducaoFacade;
+import dss2526.service.venda.VendaFacade;
+import dss2526.service.base.BaseFacade;
+
 import java.util.*;
 
-public class GestaoFacade implements IGestaoFacade {
-    private final FuncionarioDAO funcionarioDAO;
-    private final RestauranteDAO restauranteDAO;
-    private final PedidoDAO pedidoDAO;
-    private final EstacaoDAO estacaoDAO;
-    private final IProducaoFacade producaoFacade;
+public class GestaoFacade extends BaseFacade implements IGestaoFacade {
+    
+    private static GestaoFacade instance;
 
-    public GestaoFacade(FuncionarioDAO fDAO, RestauranteDAO rDAO, PedidoDAO pDAO, 
-                        EstacaoDAO eDAO, IProducaoFacade pFacade) {
-        this.funcionarioDAO = fDAO;
-        this.restauranteDAO = rDAO;
-        this.pedidoDAO = pDAO;
-        this.estacaoDAO = eDAO;
-        this.producaoFacade = pFacade;
+    private GestaoFacade() {}
+
+    public static synchronized GestaoFacade getInstance() {
+        if (instance == null) {
+            instance = new GestaoFacade();
+        }
+        return instance;
     }
 
     @Override

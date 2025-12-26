@@ -1,29 +1,23 @@
 package dss2526.service.producao;
 
-import dss2526.data.contract.*;
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.EstadoPedido;
-
+import dss2526.service.base.BaseFacade;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ProducaoFacade implements IProducaoFacade {
-    private final PedidoDAO pedidoDAO;
-    private final TarefaDAO tarefaDAO;
-    private final MensagemDAO mensagemDAO;
-    private final EstacaoDAO estacaoDAO;
-    private final ProdutoDAO produtoDAO;
-    private final PassoDAO passoDAO;
+public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
+    
+    private static ProducaoFacade instance;
 
-    public ProducaoFacade(PedidoDAO pDAO, TarefaDAO tDAO, MensagemDAO mDAO, 
-                          EstacaoDAO eDAO, ProdutoDAO prDAO, PassoDAO psDAO) {
-        this.pedidoDAO = pDAO;
-        this.tarefaDAO = tDAO;
-        this.mensagemDAO = mDAO;
-        this.estacaoDAO = eDAO;
-        this.produtoDAO = prDAO;
-        this.passoDAO = psDAO;
+    private ProducaoFacade() {}
+
+    public static synchronized ProducaoFacade getInstance() {
+        if (instance == null) {
+            instance = new ProducaoFacade();
+        }
+        return instance;
     }
 
     @Override

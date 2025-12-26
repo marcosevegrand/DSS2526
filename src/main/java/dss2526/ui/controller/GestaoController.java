@@ -3,6 +3,7 @@ package dss2526.ui.controller;
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.Funcao;
 import dss2526.domain.enumeration.Trabalho;
+import dss2526.service.gestao.GestaoFacade;
 import dss2526.service.gestao.IGestaoFacade;
 
 import java.util.List;
@@ -16,6 +17,10 @@ public class GestaoController {
 
     public GestaoController(IGestaoFacade facade) {
         this.facade = facade;
+    }
+
+    public GestaoController() {
+        this.facade = GestaoFacade.getInstance();
     }
 
     // --- Autenticação ---
