@@ -1,6 +1,6 @@
 -- Restaurante Management System Schema (MySQL Compatible)
-CREATE DATABASE IF NOT EXISTS RESTAURANTE;
-USE RESTAURANTE;
+CREATE DATABASE IF NOT EXISTS restaurante;
+USE restaurante;
 
 -- Disable foreign key checks to allow dropping tables in any order
 SET FOREIGN_KEY_CHECKS = 0;

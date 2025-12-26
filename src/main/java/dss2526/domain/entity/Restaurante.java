@@ -63,12 +63,7 @@ public class Restaurante {
         return "Restaurante{" +
                 "id=" + id +
                 ", nome='" + nome + '\'' +
-                ", localizacao='" + localizacao + '\'' +
-                ", catalogoId=" + catalogoId +
-                ", estacaoIds=" + estacaoIds +
-                ", funcionarioIds=" + funcionarioIds +
-                ", pedidoIds=" + pedidoIds +
-                ", stock=" + stock +
+                ", localizacao='" + localizacao +
                 '}';
     }
 }

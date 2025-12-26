@@ -40,8 +40,6 @@ public class Produto {
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", preco=" + preco +
-                ", passoIds=" + passoIds +
-                ", linhas=" + linhas +
                 '}';
     }
 }

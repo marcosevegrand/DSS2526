@@ -34,7 +34,6 @@ public class Menu {
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", preco=" + preco +
-                ", linhas=" + linhas +
                 '}';
     }
 }

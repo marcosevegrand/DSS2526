@@ -23,5 +23,7 @@ public class AppUI {
         mainMenu.setHandler(3, () -> {
             new ProducaoUI(new ProducaoController()).show();
         });
+
+        mainMenu.run();
     }
 }

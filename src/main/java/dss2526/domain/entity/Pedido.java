@@ -52,7 +52,6 @@ public class Pedido {
                 ", paraLevar=" + paraLevar +
                 ", estado=" + estado +
                 ", dataHora=" + dataHora +
-                ", linhas=" + linhas +
                 '}';
     }
 }

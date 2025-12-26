@@ -11,4 +11,6 @@ public interface IVendaFacade extends IBaseFacade {
 
     List<Produto> listarProdutosDisponiveis(Restaurante restaurante);
     List<Menu> listarMenusDisponiveis(Restaurante restaurante);
+
+    void finalizarPedido(Pedido pedido);
 }

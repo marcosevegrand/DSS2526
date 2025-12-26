@@ -30,6 +30,10 @@ public class BaseFacade implements IBaseFacade {
         return restauranteDAO.findById(id);
     }
     @Override
+    public Restaurante atualizarRestaurante(Restaurante r) {
+        return restauranteDAO.update(r);
+    }
+    @Override
     public Boolean removerRestaurante(Integer id) {
         return restauranteDAO.delete(id);
     }
@@ -50,6 +54,10 @@ public class BaseFacade implements IBaseFacade {
     @Override
     public Funcionario obterFuncionario(Integer id) {
         return funcionarioDAO.findById(id);
+    }
+    @Override
+    public Funcionario atualizarFuncionario(Funcionario f) {
+        return funcionarioDAO.update(f);
     }
     @Override
     public Boolean removerFuncionario(Integer id) {
@@ -73,6 +81,10 @@ public class BaseFacade implements IBaseFacade {
     public Estacao obterEstacao(Integer id) {
         return estacaoDAO.findById(id);
     }
+    @Override
+    public Estacao atualizarEstacao(Estacao e) {
+        return estacaoDAO.update(e);
+    }
     @Override public Boolean removerEstacao(Integer id) {
         return estacaoDAO.delete(id);
     }
@@ -95,6 +107,10 @@ public class BaseFacade implements IBaseFacade {
         return catalogoDAO.findById(id);
     }
     @Override
+    public Catalogo atualizarCatalogo(Catalogo c) {
+        return catalogoDAO.update(c);
+    }
+    @Override
     public Boolean removerCatalogo(Integer id) {
         return catalogoDAO.delete(id);
     }
@@ -111,6 +127,10 @@ public class BaseFacade implements IBaseFacade {
     @Override
     public Menu obterMenu(Integer id) {
         return menuDAO.findById(id);
+    }
+    @Override
+    public Menu atualizarMenu(Menu m) {
+        return menuDAO.update(m);
     }
     @Override
     public Boolean removerMenu(Integer id) {
@@ -131,6 +151,10 @@ public class BaseFacade implements IBaseFacade {
         return produtoDAO.findById(id);
     }
     @Override
+    public Produto atualizarProduto(Produto p) {
+        return produtoDAO.update(p);
+    }
+    @Override
     public Boolean removerProduto(Integer id) {
         return produtoDAO.delete(id);
     }
@@ -147,6 +171,10 @@ public class BaseFacade implements IBaseFacade {
     @Override
     public Ingrediente obterIngrediente(Integer id) {
         return ingredienteDAO.findById(id);
+    }
+    @Override
+    public Ingrediente atualizarIngrediente(Ingrediente i) {
+        return ingredienteDAO.update(i);
     }
     @Override
     public Boolean removerIngrediente(Integer id) {
@@ -167,6 +195,10 @@ public class BaseFacade implements IBaseFacade {
         return passoDAO.findById(id);
     }
     @Override
+    public Passo atualizarPasso(Passo p) {
+        return passoDAO.update(p);
+    }
+    @Override
     public Boolean removerPasso(Integer id) {
         return passoDAO.delete(id);
     }
@@ -183,6 +215,10 @@ public class BaseFacade implements IBaseFacade {
     @Override
     public Mensagem obterMensagem(Integer id) {
         return mensagemDAO.findById(id);
+    }
+    @Override
+    public Mensagem atualizarMensagem(Mensagem m) {
+        return mensagemDAO.update(m);
     }
     @Override
     public Boolean removerMensagem(Integer id) {
@@ -207,6 +243,10 @@ public class BaseFacade implements IBaseFacade {
         return tarefaDAO.findById(id);
     }
     @Override
+    public Tarefa atualizarTarefa(Tarefa t) {
+        return tarefaDAO.update(t);
+    }
+    @Override
     public Boolean removerTarefa(Integer id) {
         return tarefaDAO.delete(id);
     }
@@ -222,7 +262,7 @@ public class BaseFacade implements IBaseFacade {
     public List<Tarefa> listarTarefasDeProduto(Integer id) {
         return tarefaDAO.findAllByProduto(id);
     }
-    
+
     // --- Pedido Logic ---
     @Override
     public Pedido registarPedido(Pedido p) {
@@ -231,6 +271,10 @@ public class BaseFacade implements IBaseFacade {
     @Override
     public Pedido obterPedido(Integer id) {
         return pedidoDAO.findById(id);
+    }
+    @Override
+    public Pedido atualizarPedido(Pedido p) {
+        return pedidoDAO.update(p);
     }
     @Override
     public Boolean removerPedido(Integer id) {

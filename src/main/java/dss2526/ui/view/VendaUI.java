@@ -47,7 +47,7 @@ public class VendaUI {
             if (itemIndex != null) {
                 Integer quantidade = lerInt("Quantidade: ");
                 String nota = lerString("Nota (opcional): ");
-                controller.adicionarItemAoPedido(itemIndex, quantidade);
+                controller.adicionarItemAoPedido(restauranteIndex, itemIndex, quantidade);
             }
         });
 
@@ -55,7 +55,7 @@ public class VendaUI {
             List<String> itensPedido = controller.listarItensDoPedido();
             Integer itemIndex = escolher("Item a remover", itensPedido);
             if (itemIndex != null) {
-                controller.removerItemDoPedido(itemIndex);
+                controller.removerItemDoPedido(restauranteIndex, itemIndex);
             }
         });
 
@@ -70,10 +70,11 @@ public class VendaUI {
             return true;
         });
 
+        menu.run();
     }
 
     private Integer escolher(String titulo, List<String> opcoes) {
-        System.out.printf("\n--- Escolher %s ---", titulo);
+        System.out.printf("\n--- Escolher %s ---\n", titulo);
         for (int i = 0; i < opcoes.size(); i++) {
             System.out.printf("%d. %s%n", i + 1, opcoes.get(i));
         }

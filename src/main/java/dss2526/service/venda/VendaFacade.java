@@ -71,4 +71,11 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
                         .allMatch(produto -> verificarIngredientesDisponiveis(produto, restaurante)))
                 .toList();
     }
+
+    @Override
+    public void finalizarPedido(Pedido pedido) {
+        pedido.setEstado(EstadoPedido.CONFIRMADO);
+        pedido.setDataHora(LocalDateTime.now());
+        atualizarPedido(pedido);
+    }
 }
