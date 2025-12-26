@@ -32,6 +32,10 @@ public class VendaController {
         ).collect(Collectors.toList());
     }
 
+    public List<String> listarItensDoPedido() {
+        // ...
+    }
+
     public List<String> listarRestaurantes() {
         List<Restaurante> restaurantes = vendaFacade.listarRestaurantes();
         return restaurantes.stream()

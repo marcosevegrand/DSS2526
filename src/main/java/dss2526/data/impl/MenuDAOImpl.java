@@ -46,7 +46,7 @@ public class MenuDAOImpl implements MenuDAO {
                 }
 
                 try (PreparedStatement psL = conn.prepareStatement(sqlLinha, Statement.RETURN_GENERATED_KEYS)) {
-                    for (LinhaMenu lm : entity.getLinha()) {
+                    for (LinhaMenu lm : entity.getLinhas()) {
                         psL.setInt(1, entity.getId());
                         psL.setInt(2, lm.getProdutoId());
                         psL.setInt(3, lm.getQuantidade());
@@ -87,12 +87,11 @@ public class MenuDAOImpl implements MenuDAO {
                     psDel.setInt(1, entity.getId());
                     psDel.executeUpdate();
                 }
+
                 // Clear lines from Identity Map for this menu context 
-                // (Optimisation: real removal from map would require iterating map or tracking IDs)
-                
                 String sqlLinha = "INSERT INTO LinhaMenu (menu_id, produto_id, quantidade) VALUES (?, ?, ?)";
                 try (PreparedStatement psL = conn.prepareStatement(sqlLinha, Statement.RETURN_GENERATED_KEYS)) {
-                    for (LinhaMenu lm : entity.getLinha()) {
+                    for (LinhaMenu lm : entity.getLinhas()) {
                         psL.setInt(1, entity.getId());
                         psL.setInt(2, lm.getProdutoId());
                         psL.setInt(3, lm.getQuantidade());
