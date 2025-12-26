@@ -19,21 +19,21 @@ public class ProducaoUI {
     }
 
     public void show() {
-        // No início, o funcionário escolhe onde está a trabalhar
-        List<String> restaurantes = controller.listarNomesRestaurantes();
+        // Corrigido: Nomes dos métodos de listagem no controller
+        List<String> restaurantes = controller.listarRestaurantes();
         Integer restIdx = escolher("Restaurante", restaurantes);
         if (restIdx == null) return;
 
-        List<String> estacoes = controller.listarNomesEstacoes(restIdx);
+        List<String> estacoes = controller.listarEstacoes(restIdx);
         Integer estIdx = escolher("Estação de Trabalho", estacoes);
         if (estIdx == null) return;
 
-        // Inicia a sessão no controller
+        // Inicia a sessão no controller (Contexto fixado com timestamp)
         controller.selecionarContexto(restIdx, estIdx);
 
         NewMenu menu = new NewMenu("--- Terminal de Produção ---", new String[]{
             "Consultar Fila de Trabalho",
-            "Ver Mensagens da Gestão",
+            "Ver Mensagens da Gestão (Novas)",
             "Sinalizar Falta de Ingrediente"
         });
 
@@ -52,7 +52,6 @@ public class ProducaoUI {
             return;
         }
 
-        // Transforma a lista de objetos Tarefa numa lista de Strings para o método escolher
         List<String> descricoes = tarefas.stream()
             .map(t -> String.format("[Pedido #%d] Item ID: %d - Criada em: %s", 
                      t.getPedidoId(), t.getProdutoId(), t.getDataCriacao().toLocalTime()))
@@ -63,15 +62,16 @@ public class ProducaoUI {
         if (tIdx != null) {
             int idReal = tarefas.get(tIdx).getId();
             controller.concluirTarefa(idReal);
-            System.out.println("Tarefa concluída com sucesso!");
+            System.out.println("Tarefa concluída! Estado do pedido atualizado se necessário.");
         }
     }
 
     private void mostrarMensagens() {
-        List<Mensagem> mensagens = controller.getMensagensGestao();
-        System.out.println("\n--- Mensagens Recentes ---");
+        // Corrigido: Usa getMensagensNovas() para respeitar o filtro de início de sessão
+        List<Mensagem> mensagens = controller.getMensagensNovas();
+        System.out.println("\n--- Mensagens Recentes da Gestão ---");
         if (mensagens.isEmpty()) {
-            System.out.println("Nenhuma mensagem recebida.");
+            System.out.println("Nenhuma mensagem nova desde o início da sessão.");
         } else {
             mensagens.forEach(m -> System.out.printf("[%s] %s%n", 
                 m.getDataHora().toLocalTime(), m.getTexto()));
@@ -79,13 +79,14 @@ public class ProducaoUI {
     }
 
     private void solicitarIngrediente() {
-        // Aqui o funcionário indica o ID do ingrediente que acabou
         int ingId = lerInt("Introduza o ID do ingrediente em falta: ");
-        controller.solicitarIngrediente(ingId);
-        System.out.println("Alerta de stock enviado para a gestão.");
+        if (ingId != -1) {
+            controller.solicitarIngrediente(ingId);
+            System.out.println("Alerta enviado! O Gestor receberá a notificação.");
+        }
     }
 
-    // --- Métodos Auxiliares (Seguindo o estilo da VendaUI) ---
+    // --- Métodos Auxiliares ---
 
     private Integer escolher(String titulo, List<String> opcoes) {
         System.out.printf("\n--- Escolher %s ---\n", titulo);
@@ -93,7 +94,7 @@ public class ProducaoUI {
             System.out.printf("%d. %s%n", i + 1, opcoes.get(i));
         }
         int escolha = lerInt(String.format("Escolha um %s (0 para cancelar): ", titulo));
-        if (escolha == 0) return null;
+        if (escolha <= 0 || escolha > opcoes.size()) return null;
         return escolha - 1;
     }
 
@@ -102,6 +103,7 @@ public class ProducaoUI {
         try {
             return Integer.parseInt(scanner.nextLine());
         } catch (NumberFormatException e) {
+            System.out.println("Erro: Introduza um número válido.");
             return -1;
         }
     }

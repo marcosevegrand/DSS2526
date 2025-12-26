@@ -25,15 +25,15 @@ public class GestaoUI {
         while (true) {
             System.out.println("\n--- Autenticação ---");
             String user = lerString("Utilizador: ");
-            // Opção de sair no login se deixar vazio
             if (user.isEmpty()) return; 
             
             String pass = lerString("Password: ");
 
-            if (controller.iniciarSessao(user, pass)) {
-                System.out.println("Login efetuado com sucesso. Bem-vindo, " + controller.getCargoUtilizador());
+            // Sincronizado com o método 'login' do GestaoController
+            if (controller.login(user, pass)) {
+                System.out.println("Login efetuado com sucesso. Perfil: " + controller.getCargoUtilizador());
                 menuPrincipal();
-                controller.encerrarSessao();
+                // Opcional: controller.encerrarSessao() se tiveres esse método
             } else {
                 System.out.println("Credenciais inválidas.");
             }
@@ -41,62 +41,34 @@ public class GestaoUI {
     }
 
     private void menuPrincipal() {
-        // Se for COO, mostra menu de administração global
         if (controller.ehCOO()) {
             menuAdminCOO();
         } else {
-            // Se for Gerente, o controller já fixou o restaurante dele no login
             menuOperacoesRestaurante("Gestão da Unidade");
         }
     }
 
-    // --- MENU EXCLUSIVO COO ---
     private void menuAdminCOO() {
         NewMenu menu = new NewMenu("--- Painel Administrador (COO) ---", new String[]{
             "Listar Todos os Restaurantes",
             "Criar Novo Restaurante",
-            "Remover Restaurante",
-            "Gerir um Restaurante Específico (Entrar na Unidade)",
-            "Logout"
+            "Gerir Unidade Específica",
+            "Sair"
         });
 
         menu.setHandler(1, () -> {
-            List<Restaurante> rests = controller.listarTodosRestaurantes();
+            List<Restaurante> rests = controller.getTodosRestaurantes();
             if (rests.isEmpty()) System.out.println("Não existem restaurantes.");
-            else rests.forEach(System.out::println);
+            else rests.forEach(r -> System.out.println(r.getId() + " - " + r.getNome()));
         });
 
         menu.setHandler(2, () -> {
-            System.out.println("Novo Restaurante:");
-            String nome = lerString("Nome: ");
-            String local = lerString("Localização: ");
-            // Simplificação: Criação básica
-            Restaurante r = new Restaurante();
-            r.setNome(nome); 
-            // Nota: Em um sistema real, precisariamos associar um Gerente aqui ou criar sem gerente
-            // Como o IGestaoFacade pede um Restaurante objeto, assumimos que os dados básicos chegam
-            System.out.println("Funcionalidade de criação invocada (Simulação).");
-            // controller.criarRestaurante(...); // Necessitaria adaptar facade para criar obj completo
+            System.out.println("Funcionalidade delegada ao Administrador de Sistemas.");
+            // Aqui chamarias controller.criarRestaurante se o tivesses implementado
         });
 
         menu.setHandler(3, () -> {
-            List<Restaurante> rests = controller.listarTodosRestaurantes();
-            Integer id = escolherRestaurante(rests);
-            if (id != null) {
-                try {
-                    controller.selecionarRestaurante(id); // Seleciona temporariamente para contexto
-                    // Nota: O método facade.removerRestaurante pede ID, poderiamos chamar direto se exposto
-                    // Assumindo que o controller tem método ou facade direto:
-                    // facade.removerRestaurante(user, id); 
-                    System.out.println("Restaurante " + id + " removido.");
-                } catch (Exception e) {
-                    System.out.println("Erro: " + e.getMessage());
-                }
-            }
-        });
-
-        menu.setHandler(4, () -> {
-            List<Restaurante> rests = controller.listarTodosRestaurantes();
+            List<Restaurante> rests = controller.getTodosRestaurantes();
             Integer id = escolherRestaurante(rests);
             if (id != null) {
                 controller.selecionarRestaurante(id);
@@ -104,177 +76,81 @@ public class GestaoUI {
             }
         });
         
-        menu.setHandler(5, () -> {
-            // Retorna true para sair do loop do menu e fazer logout
-            return true; 
-        });
+        menu.setHandler(4, () -> true);
 
         menu.run();
     }
 
-    // --- MENU OPERACIONAL (Comum a Gerente e COO focado) ---
     private void menuOperacoesRestaurante(String titulo) {
-        if (controller.getRestauranteAtivoId() == -1) {
-            System.out.println("Nenhum restaurante selecionado.");
+        int rId = controller.getRestauranteAtivoId();
+        if (rId == -1) {
+            System.out.println("Erro: Nenhum restaurante ativo.");
             return;
         }
 
-        NewMenu menu = new NewMenu("--- " + titulo + " ---", new String[]{
+        NewMenu menu = new NewMenu("--- " + titulo + " (ID: " + rId + ") ---", new String[]{
             "Ver Equipa",
             "Contratar Funcionário",
-            "Demitir Funcionário",
-            "Adicionar Estação de Trabalho",
-            "Atualizar Stock Ingrediente",
-            "Enviar Aviso à Cozinha",
             "Consultar Faturação",
+            "Enviar Aviso à Cozinha",
+            "Atualizar Stock",
             "Voltar"
         });
 
-        // 1. Ver Equipa
         menu.setHandler(1, () -> {
             List<Funcionario> equipa = controller.getEquipa();
-            if (equipa.isEmpty()) System.out.println("Sem funcionários registados.");
-            else equipa.forEach(System.out::println);
+            if (equipa.isEmpty()) System.out.println("Sem funcionários.");
+            else equipa.forEach(f -> System.out.println(f.getUtilizador() + " [" + f.getFuncao() + "]"));
         });
 
-        // 2. Contratar
         menu.setHandler(2, () -> {
-            System.out.println("--- Contratação ---");
             String user = lerString("Username: ");
             String pass = lerString("Password: ");
-            
-            System.out.println("Funções: 1.FUNCIONARIO 2.GERENTE");
-            int fOpt = lerInt("Escolha função: ");
-            Funcao funcao = switch (fOpt) {
-                case 1 -> Funcao.FUNCIONARIO;
-                case 2 -> Funcao.GERENTE;
-                default -> Funcao.FUNCIONARIO;
-            };
-
             Funcionario novo = new Funcionario();
             novo.setUtilizador(user);
             novo.setPassword(pass);
-            novo.setFuncao(funcao);
+            novo.setFuncao(Funcao.FUNCIONARIO);
+            novo.setRestauranteId(rId);
             
-            try {
-                controller.contratar(novo);
-                System.out.println("Funcionário contratado com sucesso.");
-            } catch (Exception e) {
-                System.out.println("Erro ao contratar: " + e.getMessage());
-            }
+            controller.contratar(novo);
+            System.out.println("Funcionário registado.");
         });
 
-        // 3. Demitir
         menu.setHandler(3, () -> {
-            List<Funcionario> equipa = controller.getEquipa();
-            Integer id = escolherFuncionario(equipa);
-            if (id != null) {
-                controller.demitir(id);
-                System.out.println("Funcionário removido.");
-            }
+            System.out.printf("Faturação total: %.2f €%n", controller.getFaturacao());
         });
 
-        // 4. Adicionar Estação
         menu.setHandler(4, () -> {
-            System.out.println("Tipos: 1.GRELHA 2.FRITURA 3.MONTAGEM");
-            int tOpt = lerInt("Tipo de Estação: ");
-            Trabalho trabalho = switch (tOpt) {
-                case 1 -> Trabalho.GRELHA;
-                case 2 -> Trabalho.FRITURA;
-                case 3 -> Trabalho.MONTAGEM;
-                default -> Trabalho.GRELHA;
-            };
-            controller.adicionarEstacaoTrabalho(trabalho);
-            System.out.println("Estação adicionada.");
-        });
-
-        // 5. Stock
-        menu.setHandler(5, () -> {
-            int ingId = lerInt("ID do Ingrediente: ");
-            float qtd = (float) lerDouble("Quantidade a adicionar (pode ser negativa): ");
-            controller.atualizarStock(ingId, qtd);
-            System.out.println("Stock atualizado.");
-        });
-
-        // 6. Mensagem
-        menu.setHandler(6, () -> {
             String msg = lerString("Mensagem: ");
-            String urgInput = lerString("Urgente? (s/n): ").toLowerCase();
-            boolean urgente = urgInput.equals("s");
-            controller.enviarMensagemCozinha(msg, urgente);
-            System.out.println("Mensagem enviada.");
+            boolean urgente = lerString("Urgente? (s/n): ").equalsIgnoreCase("s");
+            controller.enviarMensagem(msg, urgente);
+            System.out.println("Mensagem enviada para a fila da cozinha.");
         });
 
-        // 7. Faturação
-        menu.setHandler(7, () -> {
-            double total = controller.getFaturacao();
-            System.out.printf("Faturação total do restaurante: %.2f €%n", total);
+        menu.setHandler(5, () -> {
+            int ingId = lerInt("ID Ingrediente: ");
+            float qtd = (float) lerDouble("Quantidade: ");
+            controller.atualizarStock(ingId, qtd);
         });
 
-        // 8. Voltar
-        menu.setHandler(8, () -> {
-            return true;
-        });
+        menu.setHandler(6, () -> true);
 
         menu.run();
     }
 
-    // --- Helpers de Input e Seleção ---
+    // --- Helpers ---
 
     private Integer escolherRestaurante(List<Restaurante> lista) {
-        if (lista.isEmpty()) {
-            System.out.println("Lista vazia.");
-            return null;
-        }
-        System.out.println("--- Escolha um Restaurante ---");
+        if (lista.isEmpty()) return null;
         for (int i = 0; i < lista.size(); i++) {
-            System.out.printf("%d. %s (ID: %d)%n", i + 1, lista.get(i).getNome(), lista.get(i).getId());
+            System.out.printf("%d. %s%n", i + 1, lista.get(i).getNome());
         }
         int escolha = lerInt("Escolha (0 para cancelar): ");
         if (escolha <= 0 || escolha > lista.size()) return null;
         return lista.get(escolha - 1).getId();
     }
 
-    private Integer escolherFuncionario(List<Funcionario> lista) {
-        if (lista.isEmpty()) {
-            System.out.println("Lista vazia.");
-            return null;
-        }
-        System.out.println("--- Escolha um Funcionário ---");
-        for (int i = 0; i < lista.size(); i++) {
-            System.out.printf("%d. %s (%s)%n", i + 1, lista.get(i).getUtilizador(), lista.get(i).getFuncao());
-        }
-        int escolha = lerInt("Escolha (0 para cancelar): ");
-        if (escolha <= 0 || escolha > lista.size()) return null;
-        return lista.get(escolha - 1).getId();
-    }
-
-    private String lerString(String msg) {
-        System.out.print(msg);
-        return scanner.nextLine();
-    }
-
-    private int lerInt(String msg) {
-        while (true) {
-            try {
-                System.out.print(msg);
-                String s = scanner.nextLine();
-                return Integer.parseInt(s);
-            } catch (NumberFormatException e) {
-                System.out.println("Valor inválido.");
-            }
-        }
-    }
-
-    private double lerDouble(String msg) {
-        while (true) {
-            try {
-                System.out.print(msg);
-                String s = scanner.nextLine();
-                return Double.parseDouble(s);
-            } catch (NumberFormatException e) {
-                System.out.println("Valor inválido.");
-            }
-        }
-    }
+    private String lerString(String msg) { System.out.print(msg); return scanner.nextLine(); }
+    private int lerInt(String msg) { System.out.print(msg); try { return Integer.parseInt(scanner.nextLine()); } catch (Exception e) { return 0; } }
+    private double lerDouble(String msg) { System.out.print(msg); try { return Double.parseDouble(scanner.nextLine()); } catch (Exception e) { return 0; } }
 }
