@@ -168,7 +168,7 @@ public class ProdutoDAOImpl implements ProdutoDAO {
 
     private List<LinhaProduto> findLinhas(Connection conn, int prodId) throws SQLException {
         List<LinhaProduto> list = new ArrayList<>();
-        String sql = "SELECT * FROM LinhaProduto WHERE produto_id = ?";
+        String sql = "SELECT * FROM LinhaProduto WHERE produto_id = ? ORDER BY id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, prodId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -206,7 +206,7 @@ public class ProdutoDAOImpl implements ProdutoDAO {
     @Override
     public List<Produto> findAll() {
         List<Produto> list = new ArrayList<>();
-        String sql = "SELECT id FROM Produto";
+        String sql = "SELECT id FROM Produto ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

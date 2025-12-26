@@ -142,7 +142,7 @@ public class PassoDAOImpl implements PassoDAO {
     @Override
     public List<Passo> findAll() {
         List<Passo> list = new ArrayList<>();
-        String sql = "SELECT id FROM Passo";
+        String sql = "SELECT id FROM Passo ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

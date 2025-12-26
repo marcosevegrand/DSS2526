@@ -146,7 +146,7 @@ public class CatalogoDAOImpl implements CatalogoDAO {
     @Override
     public List<Catalogo> findAll() {
         List<Catalogo> list = new ArrayList<>();
-        String sql = "SELECT id FROM Catalogo";
+        String sql = "SELECT id FROM Catalogo ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

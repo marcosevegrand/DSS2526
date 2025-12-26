@@ -96,7 +96,7 @@ public class MensagemDAOImpl implements MensagemDAO {
     @Override
     public List<Mensagem> findAll() {
         List<Mensagem> list = new ArrayList<>();
-        String sql = "SELECT * FROM Mensagem";
+        String sql = "SELECT * FROM Mensagem ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -119,7 +119,7 @@ public class MensagemDAOImpl implements MensagemDAO {
     @Override
     public List<Mensagem> findAllByRestaurante(int restauranteId) {
         List<Mensagem> list = new ArrayList<>();
-        String sql = "SELECT * FROM Mensagem WHERE restaurante_id = ?";
+        String sql = "SELECT * FROM Mensagem WHERE restaurante_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restauranteId);

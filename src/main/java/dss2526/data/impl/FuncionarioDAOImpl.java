@@ -103,7 +103,7 @@ public class FuncionarioDAOImpl implements FuncionarioDAO {
     @Override
     public List<Funcionario> findAll() {
         List<Funcionario> list = new ArrayList<>();
-        String sql = "SELECT * FROM Funcionario";
+        String sql = "SELECT * FROM Funcionario ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -126,7 +126,7 @@ public class FuncionarioDAOImpl implements FuncionarioDAO {
     @Override
     public List<Funcionario> findAllByRestaurante(int restauranteId) {
         List<Funcionario> list = new ArrayList<>();
-        String sql = "SELECT * FROM Funcionario WHERE restaurante_id = ?";
+        String sql = "SELECT * FROM Funcionario WHERE restaurante_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restauranteId);

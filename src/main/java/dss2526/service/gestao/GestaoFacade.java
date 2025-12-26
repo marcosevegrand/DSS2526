@@ -1,18 +1,5 @@
 package dss2526.service.gestao;
 
-import java.util.List;
-
-import dss2526.domain.entity.Catalogo;
-import dss2526.domain.entity.Estacao;
-import dss2526.domain.entity.Funcionario;
-import dss2526.domain.entity.Ingrediente;
-import dss2526.domain.entity.LinhaMenu;
-import dss2526.domain.entity.LinhaProduto;
-import dss2526.domain.entity.LinhaStock;
-import dss2526.domain.entity.Menu;
-import dss2526.domain.entity.Passo;
-import dss2526.domain.entity.Produto;
-import dss2526.domain.entity.Restaurante;
 import dss2526.service.base.BaseFacade;
 
 public class GestaoFacade extends BaseFacade implements IGestaoFacade {

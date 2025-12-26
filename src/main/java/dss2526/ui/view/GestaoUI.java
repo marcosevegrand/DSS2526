@@ -18,6 +18,7 @@ public class GestaoUI {
     public void show() {
 
         NewMenu menu = new NewMenu("--- Sistema de Gestão ---", new String[]{
+            "Gerir Restaurantes",
             "Ver Estatísticas",
         });
         
@@ -30,6 +31,7 @@ public class GestaoUI {
     private void gerirRestaurantes() {
         NewMenu menu = new NewMenu("--- Gestão de Restaurantes ---", new String[]{
             "Registar Restaurante",
+            "Remover Restaurante",
             "Listar Restaurantes",
         });
 
@@ -46,18 +48,22 @@ public class GestaoUI {
             restaurantes.forEach(System.out::println);
         });
 
+        menu.setHandler(3, () -> {
+            System.out.println("\n--- Remover Restaurante ---");
+            Integer i = escolher("Restaurante", controller.listarRestaurantes());
+            if (i != null) {
+                controller.removerRestaurante(i);
+            }
+        });
+
         menu.run();
     }
 
-    // ... Other gerirX methods would go here ...
-
-    private Integer escolherRestaurante() {
-        List<String> restaurantes = controller.listarRestaurantes();
-        System.out.println("\n--- Escolher Restaurante ---");
-        for (int i = 0; i < restaurantes.size(); i++) {
-            System.out.printf("%d. %s%n", i + 1, restaurantes.get(i));
+    private Integer escolher(String titulo, List<String> opcoes) {
+        for (int i = 0; i < opcoes.size(); i++) {
+            System.out.printf("%d. %s%n", i + 1, opcoes.get(i));
         }
-        int escolha = lerInt("Escolha um restaurante (0 para cancelar): ");
+        int escolha = lerInt(String.format("Escolha um %s (0 para cancelar): ", titulo));
         if (escolha == 0) return null;
         return escolha - 1;
     }

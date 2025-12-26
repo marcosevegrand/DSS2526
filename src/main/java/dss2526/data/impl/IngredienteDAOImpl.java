@@ -96,7 +96,7 @@ public class IngredienteDAOImpl implements IngredienteDAO {
     @Override
     public List<Ingrediente> findAll() {
         List<Ingrediente> list = new ArrayList<>();
-        String sql = "SELECT * FROM Ingrediente";
+        String sql = "SELECT * FROM Ingrediente ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

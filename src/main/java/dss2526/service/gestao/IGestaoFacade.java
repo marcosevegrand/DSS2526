@@ -1,9 +1,5 @@
 package dss2526.service.gestao;
 
-import java.util.List;
-
-import dss2526.domain.entity.LinhaProduto;
-import dss2526.domain.entity.LinhaStock;
 import dss2526.service.base.IBaseFacade;
 
 public interface IGestaoFacade extends IBaseFacade {

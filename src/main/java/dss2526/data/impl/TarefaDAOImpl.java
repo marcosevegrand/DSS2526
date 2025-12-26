@@ -112,7 +112,7 @@ public class TarefaDAOImpl implements TarefaDAO {
     @Override
     public List<Tarefa> findAll() {
         List<Tarefa> list = new ArrayList<>();
-        String sql = "SELECT * FROM Tarefa";
+        String sql = "SELECT * FROM Tarefa ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -135,7 +135,7 @@ public class TarefaDAOImpl implements TarefaDAO {
     @Override
     public List<Tarefa> findAllByPedido(int pedidoId) {
         List<Tarefa> list = new ArrayList<>();
-        String sql = "SELECT * FROM Tarefa WHERE pedido_id = ?";
+        String sql = "SELECT * FROM Tarefa WHERE pedido_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, pedidoId);
@@ -160,7 +160,7 @@ public class TarefaDAOImpl implements TarefaDAO {
     @Override
     public List<Tarefa> findAllByPasso(int passoId) {
         List<Tarefa> list = new ArrayList<>();
-        String sql = "SELECT * FROM Tarefa WHERE passo_id = ?";
+        String sql = "SELECT * FROM Tarefa WHERE passo_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, passoId);
@@ -185,7 +185,7 @@ public class TarefaDAOImpl implements TarefaDAO {
     @Override
     public List<Tarefa> findAllByProduto(int produtoId) {
         List<Tarefa> list = new ArrayList<>();
-        String sql = "SELECT * FROM Tarefa WHERE produto_id = ?";
+        String sql = "SELECT * FROM Tarefa WHERE produto_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, produtoId);

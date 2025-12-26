@@ -150,7 +150,7 @@ public class MenuDAOImpl implements MenuDAO {
 
     private List<LinhaMenu> findLinhas(Connection conn, int menuId) throws SQLException {
         List<LinhaMenu> list = new ArrayList<>();
-        String sql = "SELECT * FROM LinhaMenu WHERE menu_id = ?";
+        String sql = "SELECT * FROM LinhaMenu WHERE menu_id = ? ORDER BY id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, menuId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -176,7 +176,7 @@ public class MenuDAOImpl implements MenuDAO {
     @Override
     public List<Menu> findAll() {
         List<Menu> list = new ArrayList<>();
-        String sql = "SELECT id FROM Menu";
+        String sql = "SELECT id FROM Menu ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

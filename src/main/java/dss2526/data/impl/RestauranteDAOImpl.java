@@ -157,7 +157,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
 
     private List<LinhaStock> findStock(Connection conn, int restId) throws SQLException {
         List<LinhaStock> list = new ArrayList<>();
-        String sql = "SELECT * FROM LinhaStock WHERE restaurante_id = ?";
+        String sql = "SELECT * FROM LinhaStock WHERE restaurante_id = ? ORDER BY id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -182,7 +182,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
 
     private List<Integer> findChildIds(Connection conn, String table, int restId) throws SQLException {
         List<Integer> list = new ArrayList<>();
-        String sql = "SELECT id FROM " + table + " WHERE restaurante_id = ?";
+        String sql = "SELECT id FROM " + table + " WHERE restaurante_id = ? ORDER BY id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -195,7 +195,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
     @Override
     public List<Restaurante> findAll() {
         List<Restaurante> list = new ArrayList<>();
-        String sql = "SELECT id FROM Restaurante";
+        String sql = "SELECT id FROM Restaurante ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -209,7 +209,7 @@ public class RestauranteDAOImpl implements RestauranteDAO {
     @Override
     public List<Restaurante> findAllByCatalogo(int catalogoId) {
         List<Restaurante> list = new ArrayList<>();
-        String sql = "SELECT id FROM Restaurante WHERE catalogo_id = ?";
+        String sql = "SELECT id FROM Restaurante WHERE catalogo_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, catalogoId);

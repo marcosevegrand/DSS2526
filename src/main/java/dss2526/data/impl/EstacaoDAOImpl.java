@@ -94,7 +94,7 @@ public class EstacaoDAOImpl implements EstacaoDAO {
     @Override
     public List<Estacao> findAll() {
         List<Estacao> list = new ArrayList<>();
-        String sql = "SELECT * FROM Estacao";
+        String sql = "SELECT * FROM Estacao ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -117,7 +117,7 @@ public class EstacaoDAOImpl implements EstacaoDAO {
     @Override
     public List<Estacao> findAllByRestaurante(int restauranteId) {
         List<Estacao> list = new ArrayList<>();
-        String sql = "SELECT * FROM Estacao WHERE restaurante_id = ?";
+        String sql = "SELECT * FROM Estacao WHERE restaurante_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restauranteId);

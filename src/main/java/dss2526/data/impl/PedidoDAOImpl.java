@@ -161,7 +161,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 
     private List<LinhaPedido> findLinhas(Connection conn, int pedidoId) throws SQLException {
         List<LinhaPedido> list = new ArrayList<>();
-        String sql = "SELECT * FROM LinhaPedido WHERE pedido_id = ?";
+        String sql = "SELECT * FROM LinhaPedido WHERE pedido_id = ? ORDER BY id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, pedidoId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -190,7 +190,7 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public List<Pedido> findAll() {
         List<Pedido> list = new ArrayList<>();
-        String sql = "SELECT * FROM Pedido";
+        String sql = "SELECT * FROM Pedido ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -211,7 +211,7 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public List<Pedido> findAllByRestaurante(int restauranteId) {
         List<Pedido> list = new ArrayList<>();
-        String sql = "SELECT * FROM Pedido WHERE restaurante_id = ?";
+        String sql = "SELECT * FROM Pedido WHERE restaurante_id = ? ORDER BY id";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restauranteId);

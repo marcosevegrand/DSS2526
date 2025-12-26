@@ -1,9 +1,7 @@
 package dss2526.ui.controller;
 
 import dss2526.domain.entity.*;
-import dss2526.domain.enumeration.*;
-import dss2526.service.gestao.GestaoFacade;
-import dss2526.service.gestao.IGestaoFacade;
+import dss2526.service.gestao.*;
 import java.util.List;
 
 public class GestaoController {
@@ -24,10 +22,18 @@ public class GestaoController {
     public List<String> listarRestaurantes() {
         List<Restaurante> restaurantes = gestaoFacade.listarRestaurantes();
         return restaurantes.stream()
-                .map(r -> String.format("ID: %d, Nome: %s, Localização: %s",
-                        r.getId(), r.getNome(), r.getLocalizacao()))
+                .map(r -> String.format("Nome: %s, Localização: %s",
+                     r.getNome(), r.getLocalizacao()))
                 .toList();
     }
 
-    // ... Other methods would go here ...
+    public void removerRestaurante(Integer index) {
+        List<Restaurante> restaurantes = gestaoFacade.listarRestaurantes();
+        if (index >= 0 && index < restaurantes.size()) {
+            Restaurante r = restaurantes.get(index);
+            gestaoFacade.removerRestaurante(r.getId());
+        }
+    }
+
+
 }
