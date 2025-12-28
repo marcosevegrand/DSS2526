@@ -4,7 +4,6 @@ import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.Funcao;
 import dss2526.domain.enumeration.Trabalho;
 import dss2526.service.gestao.GestaoFacade;
-import dss2526.service.gestao.IGestaoFacade;
 
 import java.time.Duration;
 import java.util.List;
@@ -13,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class GestaoController {
     
-    private final IGestaoFacade facade;
+    private final GestaoFacade facade;
     
     // Estado da Sessão
     private Funcionario utilizadorLogado;
@@ -122,7 +121,7 @@ public class GestaoController {
         for (int i = 0; i < ingredientesIds.size(); i++) {
             LinhaProduto lp = new LinhaProduto();
             lp.setIngredienteId(ingredientesIds.get(i));
-            lp.setQuantidade(quantidades.get(i)); // Assumindo indices alinhados pela UI
+            lp.setQuantidade(quantidades.get(i));
             p.addLinha(lp);
         }
         
@@ -136,7 +135,7 @@ public class GestaoController {
         for (Integer pId : produtosIds) {
             LinhaMenu lm = new LinhaMenu();
             lm.setProdutoId(pId);
-            lm.setQuantidade(1); // Simplificação: 1 unidade de cada produto selecionado
+            lm.setQuantidade(1);
             m.addLinha(lm);
         }
         facade.criarMenu(utilizadorLogado, m);
@@ -190,17 +189,43 @@ public class GestaoController {
         facade.alterarCatalogoRestaurante(utilizadorLogado, restauranteAtivoId, catalogoId);
     }
 
-    // --- Estatísticas ---
+    // --- Estatísticas (Atualizado) ---
 
     public String getRelatorioFinanceiro() {
         double total = facade.consultarFaturacaoTotal(utilizadorLogado, restauranteAtivoId);
         return String.format("💰 Faturação Total Acumulada: %.2f €", total);
     }
 
+    public List<String> getRelatorioVolumePedidos() {
+        Map<String, Long> stats = facade.consultarVolumePedidos(utilizadorLogado, restauranteAtivoId);
+        return stats.entrySet().stream()
+                .map(e -> String.format("📦 %s: %d", e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    public String getTempoMedioEspera() {
+        double media = facade.consultarTempoMedioEspera(utilizadorLogado, restauranteAtivoId);
+        return String.format("⏱️ Tempo Médio de Espera: %.1f minutos", media);
+    }
+
+    public List<String> getAlertasStock(int limite) {
+        Map<String, Double> stock = facade.consultarNecessidadesStock(utilizadorLogado, restauranteAtivoId, limite);
+        return stock.entrySet().stream()
+                .map(e -> String.format("⚠️ STOCK BAIXO: %s (Qtd: %.1f)", e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+    }
+    
+    public List<String> getCargaEstacoes() {
+        Map<String, Long> carga = facade.consultarCargaEstacoes(utilizadorLogado, restauranteAtivoId);
+        return carga.entrySet().stream()
+                .map(e -> String.format("🔥 %s: %d tarefas realizadas", e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+    }
+
     public List<String> getTopProdutos() {
         Map<String, Integer> top = facade.consultarProdutosMaisVendidos(utilizadorLogado, restauranteAtivoId);
         return top.entrySet().stream()
-                .map(e -> String.format("📦 %s: %d vendidos", e.getKey(), e.getValue()))
+                .map(e -> String.format("🏆 %s: %d vendidos", e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
     }
 }

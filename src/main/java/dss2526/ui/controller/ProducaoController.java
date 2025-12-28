@@ -53,7 +53,6 @@ public class ProducaoController {
         if (restauranteAtual == null) return;
         List<Estacao> estacoes = facade.listarEstacoesDeRestaurante(restauranteAtual.getId());
         this.estacaoAtual = estacoes.get(index);
-        // Removido 'inicioSessao' para não ocultar mensagens anteriores
     }
 
     // --- Tarefas Pendentes ---
@@ -131,7 +130,7 @@ public class ProducaoController {
         List<String> output = new ArrayList<>();
         for (Pedido p : cachePedidosGlobal) {
             output.add(String.format("Pedido #%d | %s | Data: %s", 
-                p.getId(), p.getEstado(), p.getDataHora().toLocalTime().toString().substring(0,5)));
+                p.getId(), p.getEstado(), p.getDataCriacao().toLocalTime().toString().substring(0,5)));
         }
         return output;
     }

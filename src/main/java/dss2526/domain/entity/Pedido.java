@@ -9,7 +9,8 @@ public class Pedido {
     private int restauranteId;
     private boolean paraLevar; 
     private EstadoPedido estado;
-    private LocalDateTime dataHora;
+    private LocalDateTime dataCriacao;
+    private LocalDateTime dataConclusao;
     private List<LinhaPedido> linhas = new ArrayList<>();
 
     // Construtores
@@ -36,8 +37,11 @@ public class Pedido {
     public EstadoPedido getEstado() { return estado; }
     public void setEstado(EstadoPedido estado) { this.estado = estado; }
 
-    public LocalDateTime getDataHora() { return dataHora; }
-    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+    public LocalDateTime getDataCriacao() { return dataCriacao; }
+    public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }
+
+    public LocalDateTime getDataConclusao() { return dataConclusao; }
+    public void setDataConclusao(LocalDateTime dataConclusao) { this.dataConclusao = dataConclusao; }
 
     public List<LinhaPedido> getLinhas() { return linhas; }
     public void setLinhas(List<LinhaPedido> linhas) { this.linhas = linhas; }

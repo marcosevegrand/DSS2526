@@ -1,9 +1,7 @@
 package dss2526.service.producao;
 
 import dss2526.domain.entity.*;
-import dss2526.domain.enumeration.EstadoPedido;
-import dss2526.domain.enumeration.EstadoTarefa;
-import dss2526.domain.enumeration.Trabalho;
+import dss2526.domain.enumeration.*;
 import dss2526.service.base.BaseFacade;
 
 import java.time.LocalDateTime;
@@ -12,86 +10,53 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
-    
     private static ProducaoFacade instance;
-
     private ProducaoFacade() {}
-
     public static synchronized ProducaoFacade getInstance() {
-        if (instance == null) {
-            instance = new ProducaoFacade();
-        }
+        if (instance == null) instance = new ProducaoFacade();
         return instance;
     }
 
     @Override
     public List<Tarefa> consultarTarefasOtimizadas(int restauranteId, int estacaoId) {
-        // 1. Garante que novos pedidos têm tarefas geradas
         gerarTarefasParaPedidosNovos(restauranteId);
-        
         Estacao estacao = estacaoDAO.findById(estacaoId);
         if (estacao == null) return new ArrayList<>();
         Trabalho trabalhoEstacao = estacao.getTrabalho();
 
-        // 2. Obtém pedidos ativos (exclui os já entregues ou prontos, focando no fluxo de cozinha)
-        // Nota: A caixa pode ver pedidos PRONTO para os entregar.
         List<Pedido> pedidosAtivos = pedidoDAO.findAllByRestaurante(restauranteId).stream()
-                .filter(p -> p.getEstado() != EstadoPedido.ENTREGUE) 
+                .filter(p -> p.getEstado() != EstadoPedido.ENTREGUE)
                 .collect(Collectors.toList());
 
         List<Tarefa> tarefasParaMostrar = new ArrayList<>();
-        
-        // 3. Algoritmo de Sincronização Temporal
         for (Pedido p : pedidosAtivos) {
             List<Tarefa> tarefasDoPedido = tarefaDAO.findAllByPedido(p.getId());
-            
             List<Tarefa> tarefasPendentes = tarefasDoPedido.stream()
-                    .filter(t -> t.getEstado() == EstadoTarefa.PENDENTE)
-                    .collect(Collectors.toList());
-            
-            // Consideramos "iniciadas" quaisquer tarefas que já não estejam pendentes
+                    .filter(t -> t.getEstado() == EstadoTarefa.PENDENTE).collect(Collectors.toList());
             List<Tarefa> tarefasIniciadas = tarefasDoPedido.stream()
-                    .filter(t -> t.getEstado() != EstadoTarefa.PENDENTE && t.getDataInicio() != null)
-                    .collect(Collectors.toList());
+                    .filter(t -> t.getEstado() != EstadoTarefa.PENDENTE && t.getDataInicio() != null).collect(Collectors.toList());
             
-            long maxDuracaoSegundos = calcularMaiorDuracao(tarefasDoPedido);
+            long maxDuracaoSegundos = tarefasDoPedido.stream()
+                    .mapToLong(this::obterDuracaoTarefa).max().orElse(0);
 
             if (tarefasIniciadas.isEmpty()) {
-                // CENÁRIO A: Nada começou (Caminho Crítico)
-                // Mostra apenas as tarefas mais longas
                 for (Tarefa t : tarefasPendentes) {
-                    if (verificarTrabalhoTarefa(t, trabalhoEstacao)) {
-                        long duracaoTarefa = obterDuracaoTarefa(t);
-                        // Tolerância de 10% ou exato? Vamos assumir >= max
-                        if (duracaoTarefa >= maxDuracaoSegundos) {
-                            tarefasParaMostrar.add(t);
-                        }
+                    if (verificarTrabalhoTarefa(t, trabalhoEstacao) && obterDuracaoTarefa(t) >= maxDuracaoSegundos) {
+                        tarefasParaMostrar.add(t);
                     }
                 }
             } else {
-                // CENÁRIO B: Já há tarefas a decorrer (Just-in-Time)
-                LocalDateTime t0 = tarefasIniciadas.stream()
-                        .map(Tarefa::getDataInicio)
-                        .min(LocalDateTime::compareTo)
-                        .orElse(LocalDateTime.now());
-                
+                LocalDateTime t0 = tarefasIniciadas.stream().map(Tarefa::getDataInicio).min(LocalDateTime::compareTo).orElse(LocalDateTime.now());
                 long segundosDecorridos = ChronoUnit.SECONDS.between(t0, LocalDateTime.now());
-                
                 for (Tarefa t : tarefasPendentes) {
                     if (verificarTrabalhoTarefa(t, trabalhoEstacao)) {
-                        long duracaoTarefa = obterDuracaoTarefa(t);
-                        long folgaNecessaria = maxDuracaoSegundos - duracaoTarefa;
-                        
-                        // Se já passou tempo suficiente para começar esta tarefa curta
-                        if (segundosDecorridos >= folgaNecessaria) {
+                        if (segundosDecorridos >= (maxDuracaoSegundos - obterDuracaoTarefa(t))) {
                             tarefasParaMostrar.add(t);
                         }
                     }
                 }
             }
         }
-        
-        // Ordena por antiguidade do pedido
         tarefasParaMostrar.sort(Comparator.comparingInt(Tarefa::getPedidoId));
         return tarefasParaMostrar;
     }
@@ -112,10 +77,9 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         if (t != null) {
             t.setEstado(EstadoTarefa.CONCLUIDA);
             t.setDataConclusao(LocalDateTime.now());
-            if (t.getDataInicio() == null) t.setDataInicio(LocalDateTime.now()); // Fallback
+            if (t.getDataInicio() == null) t.setDataInicio(LocalDateTime.now());
             tarefaDAO.update(t);
 
-            // Regra Especial: Se for tarefa de CAIXA, o pedido é entregue
             Passo p = passoDAO.findById(t.getPassoId());
             if (p != null && p.getTrabalho() == Trabalho.CAIXA) {
                 finalizarPedidoComoEntregue(t.getPedidoId());
@@ -129,18 +93,18 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         Pedido p = pedidoDAO.findById(pedidoId);
         if (p != null) {
             p.setEstado(EstadoPedido.ENTREGUE);
+            // CORREÇÃO CRÍTICA: Atualizar timestamp final para estatísticas
+            p.setDataConclusao(LocalDateTime.now());
             pedidoDAO.update(p);
         }
     }
 
     private void verificarConclusaoPedido(int pedidoId) {
         List<Tarefa> total = tarefaDAO.findAllByPedido(pedidoId);
-        boolean tudoConcluido = total.stream().allMatch(t -> t.getEstado() == EstadoTarefa.CONCLUIDA);
-        
-        if (tudoConcluido && !total.isEmpty()) {
+        if (!total.isEmpty() && total.stream().allMatch(t -> t.getEstado() == EstadoTarefa.CONCLUIDA)) {
             Pedido p = pedidoDAO.findById(pedidoId);
-            // Só avança para PRONTO se ainda não estiver ENTREGUE
             if (p != null && p.getEstado() != EstadoPedido.ENTREGUE) {
+                // CORREÇÃO: Usar o estado PRONTO definido no Enum
                 p.setEstado(EstadoPedido.PRONTO);
                 pedidoDAO.update(p);
             }
@@ -153,17 +117,10 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         if (t != null) {
             t.setEstado(EstadoTarefa.ATRASADA);
             tarefaDAO.update(t);
-            
-            Ingrediente ing = ingredienteDAO.findById(ingredienteId);
-            String nomeIng = (ing != null) ? ing.getNome() : "ID " + ingredienteId;
-            
             Pedido p = pedidoDAO.findById(t.getPedidoId());
-            int restauranteId = (p != null) ? p.getRestauranteId() : -1;
-            
-            if (restauranteId != -1) {
-                String msg = String.format("Tarefa #%d PARADA (Pedido #%d) - Falta %s", 
-                        t.getId(), t.getPedidoId(), nomeIng);
-                difundirMensagem(restauranteId, msg, true);
+            if (p != null) {
+                Ingrediente ing = ingredienteDAO.findById(ingredienteId);
+                difundirMensagem(p.getRestauranteId(), "Tarefa #" + t.getId() + " PARADA - Falta " + (ing != null ? ing.getNome() : "Ingrediente"), true);
             }
         }
     }
@@ -173,11 +130,7 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         Tarefa t = tarefaDAO.findById(tarefaId);
         if (t == null) return List.of();
         Passo p = passoDAO.findById(t.getPassoId());
-        if (p == null) return List.of();
-        return p.getIngredienteIds().stream()
-                .map(ingredienteDAO::findById)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return p == null ? List.of() : p.getIngredienteIds().stream().map(ingredienteDAO::findById).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Override
@@ -189,40 +142,29 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<Tarefa> consultarTarefasDoPedido(int pedidoId) {
-        return tarefaDAO.findAllByPedido(pedidoId);
-    }
+    @Override public List<Tarefa> consultarTarefasDoPedido(int pedidoId) { return tarefaDAO.findAllByPedido(pedidoId); }
+    @Override public List<Mensagem> consultarMensagens(int restauranteId) { return mensagemDAO.findAllByRestaurante(restauranteId).stream().sorted(Comparator.comparing(Mensagem::getDataHora).reversed()).collect(Collectors.toList()); }
+    @Override public void difundirMensagem(int rId, String txt, boolean urg) { Mensagem m = new Mensagem(); m.setRestauranteId(rId); m.setTexto(txt); m.setDataHora(LocalDateTime.now()); mensagemDAO.create(m); }
 
-    // --- Helpers de Lógica Interna ---
-
+    // Helpers
     private void gerarTarefasParaPedidosNovos(int restauranteId) {
         List<Pedido> confirmados = pedidoDAO.findAllByRestaurante(restauranteId).stream()
-                .filter(p -> p.getEstado() == EstadoPedido.CONFIRMADO)
-                .collect(Collectors.toList());
-
+                .filter(p -> p.getEstado() == EstadoPedido.CONFIRMADO).collect(Collectors.toList());
         for (Pedido p : confirmados) {
-            boolean criouAlguma = false;
+            boolean criou = false;
             for (LinhaPedido lp : p.getLinhas()) {
-                Produto prod = produtoDAO.findById(lp.getItemId());
-                if (prod != null) {
-                    criouAlguma |= criarTarefasProduto(p.getId(), prod, lp.getQuantidade());
+                if (lp.getTipo() == TipoItem.PRODUTO) {
+                    Produto prod = produtoDAO.findById(lp.getItemId());
+                    if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lp.getQuantidade());
                 } else {
-                    Menu menu = menuDAO.findById(lp.getItemId());
-                    if (menu != null) {
-                        for (LinhaMenu lm : menu.getLinhas()) {
-                            Produto pMenu = produtoDAO.findById(lm.getProdutoId());
-                            if (pMenu != null) {
-                                criouAlguma |= criarTarefasProduto(p.getId(), pMenu, lm.getQuantidade() * lp.getQuantidade());
-                            }
-                        }
+                    Menu m = menuDAO.findById(lp.getItemId());
+                    if (m != null) for (LinhaMenu lm : m.getLinhas()) {
+                        Produto prod = produtoDAO.findById(lm.getProdutoId());
+                        if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lm.getQuantidade() * lp.getQuantidade());
                     }
                 }
             }
-            if (criouAlguma) {
-                p.setEstado(EstadoPedido.EM_PREPARACAO);
-                pedidoDAO.update(p);
-            }
+            if (criou) { p.setEstado(EstadoPedido.EM_PREPARACAO); pedidoDAO.update(p); }
         }
     }
 
@@ -231,11 +173,8 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         for (int i = 0; i < quantidade; i++) {
             for (Integer passoId : prod.getPassoIds()) {
                 Tarefa t = new Tarefa();
-                t.setPedidoId(pedidoId);
-                t.setProdutoId(prod.getId());
-                t.setPassoId(passoId);
-                t.setDataCriacao(LocalDateTime.now());
-                t.setEstado(EstadoTarefa.PENDENTE);
+                t.setPedidoId(pedidoId); t.setProdutoId(prod.getId()); t.setPassoId(passoId);
+                t.setDataCriacao(LocalDateTime.now()); t.setEstado(EstadoTarefa.PENDENTE);
                 tarefaDAO.create(t);
                 criou = true;
             }
@@ -243,38 +182,6 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
         return criou;
     }
 
-    private long calcularMaiorDuracao(List<Tarefa> tarefas) {
-        long max = 0;
-        for (Tarefa t : tarefas) {
-            long dur = obterDuracaoTarefa(t);
-            if (dur > max) max = dur;
-        }
-        return max;
-    }
-
-    private long obterDuracaoTarefa(Tarefa t) {
-        Passo p = passoDAO.findById(t.getPassoId());
-        return (p != null && p.getDuracao() != null) ? p.getDuracao().toSeconds() : 0;
-    }
-
-    private boolean verificarTrabalhoTarefa(Tarefa t, Trabalho trabalhoEstacao) {
-        Passo p = passoDAO.findById(t.getPassoId());
-        return p != null && p.getTrabalho() == trabalhoEstacao;
-    }
-
-    @Override
-    public List<Mensagem> consultarMensagens(int restauranteId) {
-        return mensagemDAO.findAllByRestaurante(restauranteId).stream()
-                .sorted(Comparator.comparing(Mensagem::getDataHora).reversed())
-                .collect(Collectors.toList());
-    }
-
-    @Override 
-    public void difundirMensagem(int rId, String txt, boolean urg) {
-        Mensagem m = new Mensagem();
-        m.setRestauranteId(rId);
-        m.setTexto(txt); // Removido "[URGENTE]" redundante
-        m.setDataHora(LocalDateTime.now());
-        mensagemDAO.create(m);
-    }
+    private long obterDuracaoTarefa(Tarefa t) { Passo p = passoDAO.findById(t.getPassoId()); return (p != null && p.getDuracao() != null) ? p.getDuracao().toSeconds() : 0; }
+    private boolean verificarTrabalhoTarefa(Tarefa t, Trabalho trab) { Passo p = passoDAO.findById(t.getPassoId()); return p != null && p.getTrabalho() == trab; }
 }

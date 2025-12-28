@@ -7,6 +7,7 @@ import dss2526.domain.enumeration.Trabalho;
 import dss2526.domain.enumeration.TipoItem;
 import dss2526.service.base.BaseFacade;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,9 +74,6 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
     @Override
     public Produto criarProduto(Funcionario actor, Produto p) {
         if (!isCOO(actor)) throw new SecurityException("Acesso negado.");
-        // Assumindo que o DAO trata das linhas e passos se o objeto vier preenchido,
-        // ou seria necessário iterar aqui para criar LinhaProduto/Produto_Passo.
-        // Simplificação: delega para o DAO.
         return produtoDAO.create(p);
     }
 
@@ -178,7 +176,9 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
                 System.out.println("[DB] Stock atualizado: Ingrediente " + ingredienteId + " agora tem " + ls.getQuantidade());
             } else {
                 if (quantidade > 0) {
-                    LinhaStock nova = new LinhaStock(ingredienteId, quantidade);
+                    LinhaStock nova = new LinhaStock();
+                    nova.setIngredienteId(ingredienteId);
+                    nova.setQuantidade(quantidade);
                     nova.setRestauranteId(restauranteId);
                     r.addLinhaStock(nova);
                     System.out.println("[DB] Novo registo de stock criado.");
@@ -200,7 +200,7 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
         mensagemDAO.create(m);
     }
 
-    // --- Estatísticas ---
+    // --- Estatísticas Avançadas (Requisito Trabalho) ---
 
     @Override
     public double consultarFaturacaoTotal(Funcionario actor, int restauranteId) {
@@ -210,6 +210,89 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
                 .filter(p -> p.getEstado() != EstadoPedido.CANCELADO)
                 .mapToDouble(Pedido::calcularPrecoTotal)
                 .sum();
+    }
+    
+    // 1. Volume de Pedidos
+    @Override
+    public Map<String, Long> consultarVolumePedidos(Funcionario actor, int restauranteId) {
+        if (!canManageRestaurant(actor, restauranteId)) throw new SecurityException("Acesso negado.");
+        
+        List<Pedido> pedidos = pedidoDAO.findAllByRestaurante(restauranteId);
+        Map<String, Long> stats = new HashMap<>();
+        
+        stats.put("Total", (long) pedidos.size());
+        stats.put("Concluídos", pedidos.stream().filter(p -> p.getEstado() == EstadoPedido.ENTREGUE).count());
+        stats.put("Em Processamento", pedidos.stream().filter(p -> p.getEstado() != EstadoPedido.ENTREGUE && p.getEstado() != EstadoPedido.CANCELADO).count());
+        stats.put("Cancelados", pedidos.stream().filter(p -> p.getEstado() == EstadoPedido.CANCELADO).count());
+        
+        return stats;
+    }
+
+    // 2. Tempo Médio de Espera (CORRIGIDO com getDataCriacao e getDataConclusao)
+    @Override
+    public double consultarTempoMedioEspera(Funcionario actor, int restauranteId) {
+        if (!canManageRestaurant(actor, restauranteId)) throw new SecurityException("Acesso negado.");
+        
+        List<Pedido> entregues = pedidoDAO.findAllByRestaurante(restauranteId).stream()
+                .filter(p -> p.getEstado() == EstadoPedido.ENTREGUE)
+                .collect(Collectors.toList());
+
+        if (entregues.isEmpty()) return 0.0;
+
+        double totalMinutos = 0;
+        int count = 0;
+
+        for (Pedido p : entregues) {
+            if (p.getDataCriacao() != null && p.getDataConclusao() != null) {
+                Duration d = Duration.between(p.getDataCriacao(), p.getDataConclusao());
+                totalMinutos += d.toMinutes();
+                count++;
+            }
+        }
+        
+        return count > 0 ? totalMinutos / count : 0.0;
+    }
+
+    // 3. Necessidades de Stock
+    @Override
+    public Map<String, Double> consultarNecessidadesStock(Funcionario actor, int restauranteId, int threshold) {
+        if (!canManageRestaurant(actor, restauranteId)) throw new SecurityException("Acesso negado.");
+        
+        Restaurante r = restauranteDAO.findById(restauranteId);
+        Map<String, Double> stockBaixo = new HashMap<>();
+        
+        if (r != null) {
+            for (LinhaStock ls : r.getStock()) {
+                if (ls.getQuantidade() < threshold) {
+                    Ingrediente i = ingredienteDAO.findById(ls.getIngredienteId());
+                    if (i != null) {
+                        stockBaixo.put(i.getNome(), (double) ls.getQuantidade());
+                    }
+                }
+            }
+        }
+        return stockBaixo;
+    }
+
+    // 4. Funções (Estações) mais requisitadas
+    @Override
+    public Map<String, Long> consultarCargaEstacoes(Funcionario actor, int restauranteId) {
+        if (!canManageRestaurant(actor, restauranteId)) throw new SecurityException("Acesso negado.");
+
+        List<Tarefa> tarefas = tarefaDAO.findAll().stream()
+                .filter(t -> {
+                    Pedido p = pedidoDAO.findById(t.getPedidoId());
+                    return p != null && p.getRestauranteId() == restauranteId;
+                })
+                .collect(Collectors.toList());
+
+        // CORREÇÃO: Usar o passoId da Tarefa para obter o Trabalho através do Passo
+        return tarefas.stream()
+                .map(t -> {
+                    Passo p = passoDAO.findById(t.getPassoId());
+                    return p != null ? String.valueOf(p.getTrabalho()) : "DESCONHECIDO";
+                })
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
     }
 
     @Override

@@ -87,12 +87,14 @@ CREATE TABLE Menu (
 -- 8. Pedido
 CREATE TABLE Pedido (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    restaurante_id INTEGER,
-    para_levar BOOLEAN DEFAULT 0,
-    estado VARCHAR(50) NOT NULL, -- Enum name
-    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    restaurante_id INTEGER NOT NULL,
+    para_levar BOOLEAN DEFAULT FALSE,
+    estado VARCHAR(50) NOT NULL,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_conclusao TIMESTAMP NULL,
     FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id)
 );
+
 
 -- 9. Mensagem
 CREATE TABLE Mensagem (

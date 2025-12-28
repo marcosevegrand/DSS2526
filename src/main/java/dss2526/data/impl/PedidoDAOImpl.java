@@ -31,7 +31,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 
     @Override
     public Pedido create(Pedido entity) {
-        String sql = "INSERT INTO Pedido (restaurante_id, para_levar, estado, data_hora) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Pedido (restaurante_id, para_levar, estado, data_criacao) VALUES (?, ?, ?, ?)";
         String sqlLinha = "INSERT INTO LinhaPedido (pedido_id, item_id, tipo, quantidade, preco_unitario, observacao) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = dbConfig.getConnection()) {
@@ -40,7 +40,7 @@ public class PedidoDAOImpl implements PedidoDAO {
                 ps.setInt(1, entity.getRestauranteId());
                 ps.setBoolean(2, entity.isParaLevar());
                 ps.setString(3, entity.getEstado().name());
-                ps.setTimestamp(4, Timestamp.valueOf(entity.getDataHora()));
+                ps.setTimestamp(4, entity.getDataCriacao() != null ? Timestamp.valueOf(entity.getDataCriacao()) : new Timestamp(System.currentTimeMillis()));
                 ps.executeUpdate();
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
@@ -80,15 +80,16 @@ public class PedidoDAOImpl implements PedidoDAO {
 
     @Override
     public Pedido update(Pedido entity) {
-        String sql = "UPDATE Pedido SET restaurante_id=?, para_levar=?, estado=?, data_hora=? WHERE id=?";
+        String sql = "UPDATE Pedido SET restaurante_id=?, para_levar=?, estado=?, data_criacao=?, data_conclusao=? WHERE id=?";
         try (Connection conn = dbConfig.getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, entity.getRestauranteId());
                 ps.setBoolean(2, entity.isParaLevar());
                 ps.setString(3, entity.getEstado().name());
-                ps.setTimestamp(4, Timestamp.valueOf(entity.getDataHora()));
-                ps.setInt(5, entity.getId());
+                ps.setTimestamp(4, entity.getDataCriacao() != null ? Timestamp.valueOf(entity.getDataCriacao()) : new Timestamp(System.currentTimeMillis()));
+                ps.setTimestamp(5, entity.getDataConclusao() != null ? Timestamp.valueOf(entity.getDataConclusao()) : null);
+                ps.setInt(6, entity.getId());
                 ps.executeUpdate();
 
                 // Delete lines and re-insert
@@ -151,7 +152,12 @@ public class PedidoDAOImpl implements PedidoDAO {
         p.setRestauranteId(rs.getInt("restaurante_id"));
         p.setParaLevar(rs.getBoolean("para_levar"));
         p.setEstado(EstadoPedido.valueOf(rs.getString("estado")));
-        p.setDataHora(rs.getTimestamp("data_hora").toLocalDateTime());
+        
+        Timestamp tsCriacao = rs.getTimestamp("data_criacao");
+        p.setDataCriacao(tsCriacao != null ? tsCriacao.toLocalDateTime() : null);
+        
+        Timestamp tsConclusao = rs.getTimestamp("data_conclusao");
+        p.setDataConclusao(tsConclusao != null ? tsConclusao.toLocalDateTime() : null);
         
         pedidoMap.put(p.getId(), p);
         

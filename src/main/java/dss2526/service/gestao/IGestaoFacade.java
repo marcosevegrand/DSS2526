@@ -17,7 +17,7 @@ public interface IGestaoFacade extends IBaseFacade {
     Produto criarProduto(Funcionario actor, Produto p);
     Menu criarMenu(Funcionario actor, Menu m);
     Ingrediente criarIngrediente(Funcionario actor, Ingrediente i);
-    Passo criarPasso(Funcionario actor, Passo p); // NOVO
+    Passo criarPasso(Funcionario actor, Passo p);
     Catalogo criarCatalogo(Funcionario actor, String nome);
     
     // --- Gestão Local (COO ou Gerente do Restaurante) ---
@@ -25,7 +25,7 @@ public interface IGestaoFacade extends IBaseFacade {
     void demitirFuncionario(Funcionario actor, int funcionarioId);
     void adicionarEstacao(Funcionario actor, int restauranteId, Trabalho trabalho);
     void removerEstacao(Funcionario actor, int estacaoId);
-    void alterarCatalogoRestaurante(Funcionario actor, int restauranteId, int catalogoId); // NOVO
+    void alterarCatalogoRestaurante(Funcionario actor, int restauranteId, int catalogoId);
     
     // --- Gestão Operacional (COO, Gerente ou Funcionario do Restaurante) ---
     void atualizarStock(Funcionario actor, int restauranteId, int ingredienteId, int quantidade);
@@ -33,5 +33,12 @@ public interface IGestaoFacade extends IBaseFacade {
     // --- Estatísticas e Consultas ---
     double consultarFaturacaoTotal(Funcionario actor, int restauranteId);
     Map<String, Integer> consultarProdutosMaisVendidos(Funcionario actor, int restauranteId);
+    
+    // Novos métodos de estatística
+    Map<String, Long> consultarVolumePedidos(Funcionario actor, int restauranteId);
+    double consultarTempoMedioEspera(Funcionario actor, int restauranteId);
+    Map<String, Double> consultarNecessidadesStock(Funcionario actor, int restauranteId, int threshold);
+    Map<String, Long> consultarCargaEstacoes(Funcionario actor, int restauranteId);
+
     void enviarAvisoCozinha(Funcionario actor, int restauranteId, String mensagem, boolean urgente);
 }

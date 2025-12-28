@@ -23,15 +23,20 @@ public class GestaoUI {
     public void show() {
         System.out.println("\n*** Portal de Gestão ***");
         while (true) {
-            System.out.println("\n🔐 Autenticação Necessária");
+            System.out.println("\n🔐 Autenticação Necessária (Deixe vazio e Enter para Sair)");
             String user = lerString("Utilizador: ");
-            if (user.isEmpty()) return; 
+            if (user.isEmpty()) {
+                System.out.println("A encerrar o sistema de gestão...");
+                break; // Encerra o loop e sai
+            }
+            
             String pass = lerString("Password: ");
 
             if (controller.login(user, pass)) {
                 System.out.println("✅ Bem-vindo, " + controller.getNomeUtilizador());
                 menuPrincipal();
                 controller.logout(); 
+                // Loop continua para permitir novo login, mas utilizador pode sair com Enter vazio
             } else {
                 System.out.println("❌ Credenciais inválidas.");
             }
@@ -69,7 +74,7 @@ public class GestaoUI {
             "🏭 Gerir Estações",
             "📦 Atualizar Stock",
             "📜 Alterar Catálogo Ativo",
-            "📈 Estatísticas",
+            "📈 Dashboard & Estatísticas",
             "📢 Enviar Aviso à Cozinha"
         });
         menu.setHandler(1, () -> { menuEquipa(); return false; });
@@ -253,10 +258,27 @@ public class GestaoUI {
     }
 
     private void mostrarEstatisticas() {
-        System.out.println("\n📊 ESTATÍSTICAS");
+        System.out.println("\n📊 --- DASHBOARD ESTATÍSTICO --- 📊");
+        
+        System.out.println("\n💰 FINANCEIRO:");
         System.out.println(controller.getRelatorioFinanceiro());
-        System.out.println("\n🏆 TOP 5 PRODUTOS:");
-        controller.getTopProdutos().forEach(System.out::println);
+        
+        System.out.println("\n📦 VOLUME DE PEDIDOS:");
+        controller.getRelatorioVolumePedidos().forEach(line -> System.out.println("  " + line));
+
+        System.out.println("\n⏱️ PERFORMANCE:");
+        System.out.println("  " + controller.getTempoMedioEspera());
+
+        System.out.println("\n🏆 TOP PRODUTOS:");
+        controller.getTopProdutos().forEach(line -> System.out.println("  " + line));
+
+        System.out.println("\n🔥 CARGA NAS ESTAÇÕES (Tarefas):");
+        controller.getCargaEstacoes().forEach(line -> System.out.println("  " + line));
+
+        System.out.println("\n⚠️ ALERTAS DE STOCK (Critico < 20):");
+        List<String> alertas = controller.getAlertasStock(20);
+        if (alertas.isEmpty()) System.out.println("  ✅ Stock Saudável");
+        else alertas.forEach(line -> System.out.println("  " + line));
     }
 
     // --- Helpers Genéricos ---
@@ -274,18 +296,6 @@ public class GestaoUI {
 
     private <T> List<Integer> selecionarMultiplos(List<T> lista, java.util.function.Function<T, String> nomeMapper, String titulo) {
         List<Integer> selecionadosIds = new ArrayList<>();
-        // Assume que as entidades têm getId() via reflexão ou mapeamento simples, 
-        // mas aqui mapeamos pelo índice da lista original para obter o ID depois no controller se necessário,
-        // ou retornamos IDs se T for conhecido. 
-        // Para simplificar, vou assumir que o controller recebe IDs.
-        // Como T é genérico, a UI não sabe chamar .getId(). 
-        // Vou fazer um hack simples: a UI retorna os IDs baseados na lista original assumindo que a lista não muda durante a seleção.
-        // Espere, o controller pede List<Integer> ids.
-        // Terei de usar reflexão ou interface comum.
-        // Simplificação: Vou retornar indices e o controller que se vire? Não, o controller pede IDs.
-        // Vou assumir que T tem getId() (todos têm). Mas Java generics...
-        // Vou pedir ao utilizador para selecionar indices e depois mapeio para IDs dentro do método usando cast (feito) ou interface (ideal).
-        // Como são classes diferentes, vou usar reflexão básica no loop abaixo.
         
         while (true) {
             Integer idx = escolherItem(lista, nomeMapper, titulo + " (Adicionar mais)");

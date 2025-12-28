@@ -11,6 +11,9 @@ public interface IVendaFacade extends IBaseFacade {
     
     /** Finaliza o estado do pedido para confirmado e retorna tempo de entrega estimado. */
     double finalizarPedido(Pedido pedido);
+
+    /** Cancela um pedido em curso, removendo-o do sistema. */
+    void cancelarPedido(Pedido pedido);
     
     /** Retorna produtos filtrados por stock e alergénios. */
     List<Produto> listarProdutosDisponiveis(Restaurante restaurante, List<String> alergenicos);

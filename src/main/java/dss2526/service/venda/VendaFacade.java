@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 /**
  * Facade STATELESS.
- * Contém a lógica de negócio (Regras), mas não guarda dados da sessão.
+ * Implementação da lógica de negócio para o subsistema de Venda.
  */
 public class VendaFacade extends BaseFacade implements IVendaFacade {
 
@@ -32,20 +32,27 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         p.setRestauranteId(restaurante.getId());
         p.setParaLevar(paraLevar);
         p.setEstado(EstadoPedido.INICIADO);
-        p.setDataHora(LocalDateTime.now());
-        // Persistir o pedido inicialmente
+        p.setDataCriacao(LocalDateTime.now());
+        // Persistir o pedido inicialmente conforme a arquitetura do sistema
         return registarPedido(p);
     }
 
     @Override
+    public void cancelarPedido(Pedido pedido) {
+        if (pedido != null && pedido.getId() != 0) {
+            // Remove o pedido da base de dados (ou poderia marcar como CANCELADO)
+            pedido.setEstado(EstadoPedido.CANCELADO);
+            atualizarPedido(pedido);
+        }
+    }
+
+    @Override
     public List<Produto> listarProdutosDisponiveis(Restaurante restaurante, List<String> alergenicos) {
-        // 1. Obter catálogo
         Catalogo catalogo = obterCatalogo(restaurante.getCatalogoId());
         if (catalogo == null) return List.of();
 
-        // 2. Obter produtos e filtrar
         return catalogo.getProdutoIds().stream()
-                .map(this::obterProduto) // BaseFacade
+                .map(this::obterProduto)
                 .filter(p -> p != null)
                 .filter(p -> !contemAlergenicos(p, alergenicos))
                 .filter(p -> verificarStockProduto(p, restaurante))
@@ -60,21 +67,15 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return catalogo.getMenuIds().stream()
                 .map(this::obterMenu)
                 .filter(m -> m != null)
-                .filter(m -> {
-                    // Um menu está disponível se todos os seus produtos estiverem disponíveis
-                    return m.getLinhas().stream().allMatch(lm -> {
+                .filter(m -> m.getLinhas().stream().allMatch(lm -> {
                         Produto p = obterProduto(lm.getProdutoId());
-                        return p != null && 
-                               !contemAlergenicos(p, alergenicos) && 
-                               verificarStockProduto(p, restaurante);
-                    });
-                })
+                        return p != null && !contemAlergenicos(p, alergenicos) && verificarStockProduto(p, restaurante);
+                    }))
                 .collect(Collectors.toList());
     }
 
     @Override
     public Pedido adicionarLinhaAoPedido(Pedido pedido, LinhaPedido linha) {
-        // Regra de negócio: Atualizar preço ou validar novamente se necessário
         pedido.addLinha(linha);
         return atualizarPedido(pedido);
     }
@@ -92,23 +93,17 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
     @Override
     public double finalizarPedido(Pedido pedido) {
         pedido.setEstado(EstadoPedido.CONFIRMADO);
-        pedido.setDataHora(LocalDateTime.now());
         atualizarPedido(pedido);
-        
         return calcularEstimativaTempo(pedido);
     }
 
     private double calcularEstimativaTempo(Pedido p) {
         double maxMinutos = 0.0;
-
         for (LinhaPedido lp : p.getLinhas()) {
             double tempoItem = 0.0;
-
             if (lp.getTipo() == TipoItem.PRODUTO) {
                 tempoItem = calcularTempoProduto(lp.getItemId());
             } else {
-                // Se for Menu, assume-se que o tempo é determinado pelo produto mais demorado do menu
-                // ou pela soma dos produtos (depende da lógica, aqui uso o mais demorado para paralelismo)
                 Menu m = menuDAO.findById(lp.getItemId());
                 if (m != null) {
                     tempoItem = m.getLinhas().stream()
@@ -116,72 +111,40 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
                             .max().orElse(0.0);
                 }
             }
-
-            // Num sistema paralelo, esperamos pelo item mais demorado
-            if (tempoItem > maxMinutos) {
-                maxMinutos = tempoItem;
-            }
+            if (tempoItem > maxMinutos) maxMinutos = tempoItem;
         }
-        
-        // Adiciona uma margem de segurança (ex: 2 min para embalamento/entrega)
         return maxMinutos > 0 ? maxMinutos + 2.0 : 0.0;
     }
 
     private double calcularTempoProduto(int produtoId) {
         Produto prod = produtoDAO.findById(produtoId);
         if (prod == null) return 0.0;
-
-        // Soma a duração de todos os passos deste produto
         return prod.getPassoIds().stream()
                 .map(passoDAO::findById)
                 .filter(Objects::nonNull)
-                .mapToDouble(passo -> {
-                    if (passo.getDuracao() != null) {
-                        return passo.getDuracao().toSeconds() / 60.0; // Converte para minutos
-                    }
-                    return 0.0;
-                })
+                .mapToDouble(passo -> passo.getDuracao() != null ? passo.getDuracao().toSeconds() / 60.0 : 0.0)
                 .sum();
     }
 
-    // --- Métodos Auxiliares de Lógica de Negócio (Privados) ---
-
     private boolean contemAlergenicos(Produto p, List<String> alergenicosEvitar) {
         if (alergenicosEvitar == null || alergenicosEvitar.isEmpty()) return false;
-        
-        // Verifica se algum ingrediente do produto tem alergénios proibidos
-        // Assumindo que Produto tem lista de Ingredientes ou getAlergenicos direto
-        // Implementação genérica:
         List<Ingrediente> ingredientes = p.getLinhas().stream()
                 .map(lp -> obterIngrediente(lp.getIngredienteId()))
                 .collect(Collectors.toList());
-
         for (Ingrediente ing : ingredientes) {
-            // Supondo que Ingrediente tem getAlergenico() que devolve String
-            if (ing != null && alergenicosEvitar.contains(ing.getAlergenico())) {
-                return true;
-            }
+            if (ing != null && alergenicosEvitar.contains(ing.getAlergenico())) return true;
         }
         return false;
     }
 
     private boolean verificarStockProduto(Produto p, Restaurante r) {
-        List<LinhaProduto> componentes = p.getLinhas();
-        
-        for (LinhaProduto comp : componentes) {
-            Integer qtdNecessaria = comp.getQuantidade();
+        for (LinhaProduto comp : p.getLinhas()) {
             Integer ingredienteId = comp.getIngredienteId();
-
-            // Verificar no stock do restaurante
             Integer stockDisponivel = r.getStock().stream()
                     .filter(s -> s.getIngredienteId() == ingredienteId)
                     .map(LinhaStock::getQuantidade)
-                    .findFirst()
-                    .orElse(0);
-
-            if (stockDisponivel < qtdNecessaria) {
-                return false; 
-            }
+                    .findFirst().orElse(0);
+            if (stockDisponivel < comp.getQuantidade()) return false; 
         }
         return true;
     }
