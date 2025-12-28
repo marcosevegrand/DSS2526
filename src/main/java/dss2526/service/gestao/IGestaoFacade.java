@@ -1,9 +1,16 @@
 package dss2526.service.gestao;
 
-import dss2526.domain.entity.*;
+import java.util.Map;
+
+import dss2526.domain.entity.Catalogo;
+import dss2526.domain.entity.Funcionario;
+import dss2526.domain.entity.Ingrediente;
+import dss2526.domain.entity.Menu;
+import dss2526.domain.entity.Passo;
+import dss2526.domain.entity.Produto;
+import dss2526.domain.entity.Restaurante;
 import dss2526.domain.enumeration.Trabalho;
 import dss2526.service.base.IBaseFacade;
-import java.util.Map;
 
 public interface IGestaoFacade extends IBaseFacade {
 

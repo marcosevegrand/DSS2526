@@ -1,13 +1,28 @@
 package dss2526.service.producao;
 
-import dss2526.domain.entity.*;
-import dss2526.domain.enumeration.*;
-import dss2526.service.base.BaseFacade;
-
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import dss2526.domain.entity.Estacao;
+import dss2526.domain.entity.Ingrediente;
+import dss2526.domain.entity.LinhaMenu;
+import dss2526.domain.entity.LinhaPedido;
+import dss2526.domain.entity.Mensagem;
+import dss2526.domain.entity.Menu;
+import dss2526.domain.entity.Passo;
+import dss2526.domain.entity.Pedido;
+import dss2526.domain.entity.Produto;
+import dss2526.domain.entity.Tarefa;
+import dss2526.domain.enumeration.EstadoPedido;
+import dss2526.domain.enumeration.EstadoTarefa;
+import dss2526.domain.enumeration.TipoItem;
+import dss2526.domain.enumeration.Trabalho;
+import dss2526.service.base.BaseFacade;
 
 public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
     private static ProducaoFacade instance;
@@ -184,4 +199,67 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
 
     private long obterDuracaoTarefa(Tarefa t) { Passo p = passoDAO.findById(t.getPassoId()); return (p != null && p.getDuracao() != null) ? p.getDuracao().toSeconds() : 0; }
     private boolean verificarTrabalhoTarefa(Tarefa t, Trabalho trab) { Passo p = passoDAO.findById(t.getPassoId()); return p != null && p.getTrabalho() == trab; }
+
+    @Override
+    public void reportarPedidoIncorreto(int pedidoId) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        if (p != null) {
+            difundirMensagem(p.getRestauranteId(), "Pedido #" + pedidoId + " reportado como INCORRETO pelo cliente.", true);
+        }
+    }
+
+    @Override
+    public void gerarTarefasCorrecao(int pedidoId) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        if (p != null) {
+            boolean criou = false;
+            for (LinhaPedido lp : p.getLinhas()) {
+                if (lp.getTipo() == TipoItem.PRODUTO) {
+                    Produto prod = produtoDAO.findById(lp.getItemId());
+                    if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lp.getQuantidade());
+                } else {
+                    Menu m = menuDAO.findById(lp.getItemId());
+                    if (m != null) for (LinhaMenu lm : m.getLinhas()) {
+                        Produto prod = produtoDAO.findById(lm.getProdutoId());
+                        if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lm.getQuantidade() * lp.getQuantidade());
+                    }
+                }
+            }
+            if (criou) {
+                difundirMensagem(p.getRestauranteId(), "Tarefas de correção geradas para o Pedido #" + pedidoId + ".", true);
+            }
+        }
+    }
+
+    @Override
+    public void verificarPedidosEsquecidos(int restauranteId) {
+        List<Pedido> pedidos = pedidoDAO.findAllByRestaurante(restauranteId);
+        LocalDateTime agora = LocalDateTime.now();
+        
+        for (Pedido p : pedidos) {
+            // Check orders that are PRONTO (ready) but not yet delivered
+            if (p.getEstado() == EstadoPedido.PRONTO && p.getDataCriacao() != null) {
+                long minutosEspera = ChronoUnit.MINUTES.between(p.getDataCriacao(), agora);
+                
+                // Alert if order has been ready for more than 10 minutes
+                if (minutosEspera > 10) {
+                    difundirMensagem(restauranteId, 
+                        "ALERTA: Pedido #" + p.getId() + " está pronto há " + minutosEspera + " minutos!", 
+                        true);
+                }
+            }
+            
+            // Check orders in preparation that are taking too long
+            if (p.getEstado() == EstadoPedido.EM_PREPARACAO && p.getDataCriacao() != null) {
+                long minutosEmPreparacao = ChronoUnit.MINUTES.between(p.getDataCriacao(), agora);
+                
+                // Alert if order has been in preparation for more than 30 minutes
+                if (minutosEmPreparacao > 30) {
+                    difundirMensagem(restauranteId, 
+                        "ALERTA: Pedido #" + p.getId() + " em preparação há " + minutosEmPreparacao + " minutos!", 
+                        true);
+                }
+            }
+        }
+    }
 }

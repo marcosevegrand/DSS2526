@@ -1,8 +1,12 @@
 package dss2526.service.producao;
 
-import dss2526.domain.entity.*;
-import dss2526.service.base.IBaseFacade;
 import java.util.List;
+
+import dss2526.domain.entity.Ingrediente;
+import dss2526.domain.entity.Mensagem;
+import dss2526.domain.entity.Pedido;
+import dss2526.domain.entity.Tarefa;
+import dss2526.service.base.IBaseFacade;
 
 public interface IProducaoFacade extends IBaseFacade {
     
@@ -35,4 +39,10 @@ public interface IProducaoFacade extends IBaseFacade {
     List<Mensagem> consultarMensagens(int restauranteId);
     
     void difundirMensagem(int restauranteId, String texto, boolean urgente);
+
+    void reportarPedidoIncorreto(int pedidoId);
+
+    void gerarTarefasCorrecao(int pedidoId);
+
+    void verificarPedidosEsquecidos(int restauranteId);
 }
