@@ -6,7 +6,7 @@ public class LinhaPedido {
     private int id;
     private int pedidoId;
     private int itemId;
-    private TipoItem tipo; // PRODUTO ou MENU
+    private TipoItem tipo;
     private int quantidade;
     private double precoUnitario;
     private String observacao;

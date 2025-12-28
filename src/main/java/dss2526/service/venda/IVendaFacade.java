@@ -18,7 +18,7 @@ public interface IVendaFacade extends IBaseFacade {
     /** Retorna produtos filtrados por stock e alergénios. */
     List<Produto> listarProdutosDisponiveis(Restaurante restaurante, List<String> alergenicos);
     
-    /** Retorna menus filtrados por stock e alergénios. */
+    /** RetornaparaLevar menus filtrados por stock e alergénios. */
     List<Menu> listarMenusDisponiveis(Restaurante restaurante, List<String> alergenicos);
     
     /** Adiciona uma linha ao pedido após validações de negócio. */

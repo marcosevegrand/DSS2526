@@ -95,7 +95,6 @@ CREATE TABLE Pedido (
     FOREIGN KEY (restaurante_id) REFERENCES Restaurante(id)
 );
 
-
 -- 9. Mensagem
 CREATE TABLE Mensagem (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -111,6 +110,17 @@ CREATE TABLE Passo (
     nome VARCHAR(255) NOT NULL,
     duracao_minutos BIGINT,
     trabalho VARCHAR(50)
+);
+
+-- 11. Pagamento
+CREATE TABLE Pagamento (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    pedido_id INTEGER NOT NULL,
+    tipo VARCHAR(50) NOT NULL, -- 'CAIXA' or 'TERMINAL'
+    valor DECIMAL(10, 2) NOT NULL,
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    confirmado BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (pedido_id) REFERENCES Pedido(id)
 );
 
 -- --- Association Tables ---

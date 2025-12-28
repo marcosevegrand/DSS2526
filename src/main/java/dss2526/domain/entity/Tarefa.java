@@ -9,6 +9,7 @@ public class Tarefa {
     int passoId;
     int produtoId;
     int pedidoId;
+    int estacaoId;
     EstadoTarefa estado;
     LocalDateTime dataCriacao;
     LocalDateTime dataInicio;

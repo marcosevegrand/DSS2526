@@ -1,8 +1,9 @@
 package dss2526.domain.entity;
 
 import java.util.*;
+import dss2526.domain.contract.Item;
 
-public class Menu {
+public class Menu implements Item {
     private int id;
     private String nome;
     private double preco;

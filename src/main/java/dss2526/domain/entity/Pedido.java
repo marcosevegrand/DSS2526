@@ -3,8 +3,9 @@ package dss2526.domain.entity;
 import dss2526.domain.enumeration.EstadoPedido;
 import java.time.LocalDateTime;
 import java.util.*;
+import dss2526.domain.contract.Item;
 
-public class Pedido {
+public class Pedido implements Item {
     private int id;
     private int restauranteId;
     private boolean paraLevar; 
