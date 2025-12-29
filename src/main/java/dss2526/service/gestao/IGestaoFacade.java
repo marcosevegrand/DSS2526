@@ -3,6 +3,7 @@ package dss2526.service.gestao;
 import dss2526.domain.entity.*;
 import dss2526.service.base.IBaseFacade;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface IGestaoFacade extends IBaseFacade {
     Funcionario autenticarFuncionario(String user, String pass);
@@ -10,7 +11,9 @@ public interface IGestaoFacade extends IBaseFacade {
     // Gestão de Equipa
     void contratarFuncionario(int actorId, Funcionario novo);
     void demitirFuncionario(int actorId, int funcionarioId);
-    
+    List<Funcionario> listarFuncionariosPorRestaurante(int rId);
+    List<Estacao> listarEstacoesPorRestaurante(int rId);
+
     // Gestão de Stock
     void atualizarStockIngrediente(int actorId, int restauranteId, int ingredienteId, int delta);
     

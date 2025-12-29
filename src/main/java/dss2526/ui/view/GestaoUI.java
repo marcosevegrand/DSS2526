@@ -21,10 +21,13 @@ public class GestaoUI {
                 String op = sc.nextLine();
                 if(op.equals("1")) {
                     System.out.print("User: "); String nu = sc.nextLine();
-                    c.contratar(nu, "123", Funcao.FUNCIONARIO, c.getRestauranteProprio());
+                    int rid = c.isCOO() ? c.getRestauranteId(pick("Restaurante para contratar", c.getRestaurantes())) : c.getRestauranteProprio();
+                    c.contratar(nu, "123", Funcao.FUNCIONARIO, rid);
                 } else if(op.equals("2")) {
-                    System.out.print("ID Funcionário: ");
-                    c.demitir(Integer.parseInt(sc.nextLine()));
+                    List<String> listaFunc = c.getNomesFuncionarios(); // Novo método no controller
+                    int idx = pick("Funcionário para demitir", listaFunc);
+                    int idFunc = c.getFuncionarioId(idx); // Recupera o ID real através do índice
+                    c.demitir(idFunc);
                 }
                 return false;
             })
@@ -35,6 +38,7 @@ public class GestaoUI {
                 c.stock(rid, idx, Integer.parseInt(sc.nextLine()));
                 return false;
             })
+
             .addOption("Gestão de Estações", () -> {
                 int rid = c.isCOO() ? c.getRestauranteId(pick("Restaurante", c.getRestaurantes())) : c.getRestauranteProprio();
                 System.out.println("1. Adicionar | 2. Remover");
@@ -43,11 +47,16 @@ public class GestaoUI {
                     System.out.print("É Caixa? (s/n): ");
                     c.addEstacao(rid, name, sc.nextLine().equalsIgnoreCase("s"));
                 } else {
-                    System.out.print("ID Estação: ");
-                    c.remEstacao(Integer.parseInt(sc.nextLine()));
+                    // LISTAGEM DINÂMICA DE ESTAÇÕES
+                    List<String> listaEstacoes = c.getNomesEstacoes(rid);
+                    int idx = pick("Estação para remover", listaEstacoes);
+                    int idEst = c.getEstacaoId(idx);
+                    c.remEstacao(idEst);
                 }
                 return false;
-            })
+                
+            })     
+
             .addOption("Dashboard de Estatísticas", () -> {
                 int rid = c.isCOO() ? c.getRestauranteId(pick("Restaurante", c.getRestaurantes())) : c.getRestauranteProprio();
                 System.out.println("\n" + c.stats(rid, null, null));
@@ -61,7 +70,8 @@ public class GestaoUI {
                 else if(c.isCOO()) c.msgGlobal(t);
                 return false;
             })
-            .run();
+        .run();
+
     }
 
     private int pick(String t, List<String> l) {

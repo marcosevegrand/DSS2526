@@ -85,4 +85,33 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
             });
         }
     }
+
+    @Override
+    public List<Restaurante> listarRestaurantes() {
+        return restauranteDAO.findAll();
+    }
+
+    @Override
+    public List<Ingrediente> listarIngredientes() {
+        return ingredienteDAO.findAll();
+    }
+
+    @Override
+    public List<Funcionario> listarFuncionariosPorRestaurante(int rId) {
+        // Se o rId for 0 (caso do COO a ver global), podemos retornar todos
+        if (rId == 0) return funcionarioDAO.findAll();
+        
+        return funcionarioDAO.findAll().stream()
+                .filter(f -> f.getRestauranteId() != null && f.getRestauranteId() == rId)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Estacao> listarEstacoesPorRestaurante(int rId) {
+        return estacaoDAO.findAll().stream()
+                .filter(e -> e.getRestauranteId() == rId)
+                .collect(Collectors.toList());
+    }
+
+
 }

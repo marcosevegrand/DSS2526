@@ -12,6 +12,8 @@ public class GestaoController {
     private Funcionario sessao;
     private List<Integer> cacheIngIds = new ArrayList<>();
     private List<Integer> cacheRestIds = new ArrayList<>();
+    private List<Integer> cacheFuncIds = new ArrayList<>();
+    private List<Integer> cacheEstIds = new ArrayList<>();
 
     public boolean autenticar(String u, String p) { 
         this.sessao = facade.autenticarFuncionario(u, p); 
@@ -33,6 +35,34 @@ public class GestaoController {
         cacheIngIds = list.stream().map(Ingrediente::getId).collect(Collectors.toList());
         return list.stream().map(Ingrediente::getNome).collect(Collectors.toList());
     }
+
+    public List<String> getNomesFuncionarios() {
+        int rid = (isCOO()) ? getRestauranteProprio() : sessao.getRestauranteId();
+        List<Funcionario> lista = facade.listarFuncionariosPorRestaurante(rid);
+        
+        this.cacheFuncIds = lista.stream().map(Funcionario::getId).collect(Collectors.toList());
+        return lista.stream()
+                    .map(f -> f.getUtilizador() + " (" + f.getFuncao() + ")")
+                    .collect(Collectors.toList());
+    }
+
+    public int getFuncionarioId(int idx) {
+        return cacheFuncIds.get(idx);
+    }
+
+    public List<String> getNomesEstacoes(int restauranteId) {
+        List<Estacao> lista = facade.listarEstacoesPorRestaurante(restauranteId);
+        
+        this.cacheEstIds = lista.stream().map(Estacao::getId).collect(Collectors.toList());
+        return lista.stream()
+                    .map(e -> e.getNome() + (e instanceof Estacao.Caixa ? " [CAIXA]" : " [COZINHA]"))
+                    .collect(Collectors.toList());
+    }
+
+    public int getEstacaoId(int idx) {
+        return cacheEstIds.get(idx);
+    }
+
 
     public void stock(int rid, int idx, int d) { facade.atualizarStockIngrediente(sessao.getId(), rid, cacheIngIds.get(idx), d); }
     public String stats(int rid, LocalDateTime i, LocalDateTime f) { return facade.obterDashboardEstatisticas(rid, i, f); }
