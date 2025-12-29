@@ -1,96 +1,55 @@
 package dss2526.ui.controller;
 
 import dss2526.domain.entity.*;
-import dss2526.domain.enumeration.Funcao;
-import dss2526.service.gestao.GestaoFacade;
-import dss2526.service.gestao.IGestaoFacade;
+import dss2526.domain.enumeration.*;
+import dss2526.service.gestao.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class GestaoController {
-    private final IGestaoFacade facade;
+    private final IGestaoFacade facade = GestaoFacade.getInstance();
+    private Funcionario sessao;
+    private List<Integer> cacheIngIds = new ArrayList<>();
+    private List<Integer> cacheRestIds = new ArrayList<>();
+
+    public boolean autenticar(String u, String p) { 
+        this.sessao = facade.autenticarFuncionario(u, p); 
+        return sessao != null; 
+    }
     
-    // Estado da Sessao
-    private int utilizadorId = -1;
-    private Funcao roleUtilizador;
-    private int restauranteAtivoId = -1;
+    public boolean isCOO() { return sessao != null && sessao.getFuncao() == Funcao.COO; }
+    public int getRestauranteProprio() { return sessao.getRestauranteId() != null ? sessao.getRestauranteId() : 0; }
 
-    // Caches de IDs para mapeamento UI
-    private List<Integer> cacheIdsRestaurantes = new ArrayList<>();
-    private List<Integer> cacheIdsFuncionarios = new ArrayList<>();
-    private List<Integer> cacheIdsIngredientes = new ArrayList<>();
+    public List<String> getRestaurantes() { 
+        List<Restaurante> l = facade.listarRestaurantes();
+        cacheRestIds = l.stream().map(Restaurante::getId).collect(Collectors.toList());
+        return l.stream().map(Restaurante::getNome).collect(Collectors.toList()); 
+    }
+    public int getRestauranteId(int idx) { return cacheRestIds.get(idx); }
 
-    public GestaoController() {
-        this.facade = GestaoFacade.getInstance();
+    public List<String> getIngredientes() {
+        List<Ingrediente> list = facade.listarIngredientes();
+        cacheIngIds = list.stream().map(Ingrediente::getId).collect(Collectors.toList());
+        return list.stream().map(Ingrediente::getNome).collect(Collectors.toList());
     }
 
-    public boolean autenticar(String u, String p) {
-        Funcionario f = facade.login(u, p);
-        if (f != null && f.getPassword().equals(p)) {
-            this.utilizadorId = f.getId();
-            this.roleUtilizador = f.getFuncao();
-            if (f.getRestauranteId() != null) this.restauranteAtivoId = f.getRestauranteId();
-            return true;
-        }
-        return false;
-    }
+    public void stock(int rid, int idx, int d) { facade.atualizarStockIngrediente(sessao.getId(), rid, cacheIngIds.get(idx), d); }
+    public String stats(int rid, LocalDateTime i, LocalDateTime f) { return facade.obterDashboardEstatisticas(rid, i, f); }
 
-    public boolean ehCOO() { return roleUtilizador == Funcao.COO; }
-    public boolean ehGerente() { return roleUtilizador == Funcao.GERENTE; }
-
-    // --- Restaurantes ---
-    public List<String> listarRestaurantes() {
-        List<Restaurante> lista = facade.listarRestaurantes();
-        this.cacheIdsRestaurantes = lista.stream().map(Restaurante::getId).collect(Collectors.toList());
-        return lista.stream().map(r -> r.getNome() + " (" + r.getLocalizacao() + ")").collect(Collectors.toList());
+    public void contratar(String u, String p, Funcao f, Integer rid) {
+        Funcionario n = new Funcionario(); n.setUtilizador(u); n.setPassword(p); n.setFuncao(f); n.setRestauranteId(rid);
+        facade.contratarFuncionario(sessao.getId(), n);
     }
+    public void demitir(int fid) { facade.demitirFuncionario(sessao.getId(), fid); }
 
-    public void selecionarRestaurante(int index) {
-        this.restauranteAtivoId = cacheIdsRestaurantes.get(index);
+    public void addEstacao(int rid, String n, boolean isCaixa) {
+        Estacao e = isCaixa ? new Estacao.Caixa() : new Estacao.Cozinha();
+        e.setNome(n); e.setRestauranteId(rid);
+        facade.adicionarEstacaoTrabalho(sessao.getId(), e);
     }
+    public void remEstacao(int eid) { facade.removerEstacaoTrabalho(sessao.getId(), eid); }
 
-    // --- Funcionarios ---
-    public List<String> listarFuncionarios() {
-        List<Funcionario> lista = facade.listarFuncionariosDeRestaurante(restauranteAtivoId);
-        this.cacheIdsFuncionarios = lista.stream().map(Funcionario::getId).collect(Collectors.toList());
-        return lista.stream().map(f -> f.getUtilizador() + " [" + f.getFuncao() + "]").collect(Collectors.toList());
-    }
-
-    public void contratar(String user, String pass, int cargo) {
-        Funcionario f = new Funcionario();
-        f.setUtilizador(user); f.setPassword(pass);
-        f.setFuncao(cargo == 2 ? Funcao.GERENTE : Funcao.FUNCIONARIO);
-        facade.contratarFuncionario(utilizadorId, restauranteAtivoId, f);
-    }
-
-    public void demitir(int index) {
-        facade.demitirFuncionario(utilizadorId, cacheIdsFuncionarios.get(index));
-    }
-
-    // --- Stock ---
-    public List<String> listarIngredientes() {
-        List<Ingrediente> lista = facade.listarIngredientes();
-        this.cacheIdsIngredientes = lista.stream().map(Ingrediente::getId).collect(Collectors.toList());
-        return lista.stream().map(Ingrediente::getNome).collect(Collectors.toList());
-    }
-
-    public void atualizarStock(int index, int qtd) {
-        facade.atualizarStock(utilizadorId, restauranteAtivoId, cacheIdsIngredientes.get(index), qtd);
-    }
-
-    // --- Estatisticas ---
-    public String obterDadosEstatisticos(LocalDateTime inicio, LocalDateTime fim) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Faturacao: ").append(facade.consultarFaturacao(restauranteAtivoId, inicio, fim)).append(" EUR\n");
-        sb.append("Tempo Medio Espera: ").append(facade.consultarTempoMedioEspera(restauranteAtivoId, inicio, fim)).append(" min\n");
-        
-        sb.append("Volume por Estado:\n");
-        facade.consultarVolumePedidos(restauranteAtivoId, inicio, fim).forEach((k, v) -> sb.append("- ").append(k).append(": ").append(v).append("\n"));
-        
-        sb.append("Top Produtos:\n");
-        facade.consultarTopProdutos(restauranteAtivoId, inicio, fim).forEach((k, v) -> sb.append("- ").append(k).append(": ").append(v).append("\n"));
-        
-        return sb.toString();
-    }
+    public void msgRest(int rid, String t) { facade.enviarMensagemRestaurante(sessao.getId(), rid, t); }
+    public void msgGlobal(String t) { facade.difundirMensagemGlobal(sessao.getId(), t); }
 }

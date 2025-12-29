@@ -1,154 +1,117 @@
 package dss2526.ui.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.function.BooleanSupplier;
+import java.util.stream.IntStream;
 
-/**
- * Versao modificada da classe fornecida pelo professor José Creissac Campos
- */
 public class NewMenu {
 
-    // Interfaces auxiliares
+    public enum MenuStyle {
+        NUMBERED, LETTERED, BULLET("• "), DASH("- "), ARROW("> ");
+        private final String prefix;
+        MenuStyle() { this.prefix = null; }
+        MenuStyle(String prefix) { this.prefix = prefix; }
 
-    /** Functional interface para handlers com controlo de saída. */
-    public interface Handler {
-        /**
-         * Executa o handler.
-         * @return true para sair do menu após executar, false para continuar no menu
-         */
-        boolean execute();
+        public String getPrefix(int i) {
+            if (this == NUMBERED) return (i + 1) + ". ";
+            if (this == LETTERED) return (char) ('A' + i) + ". ";
+            return prefix;
+        }
     }
 
-    /** Functional interface para handlers legados (sem retorno). */
-    @FunctionalInterface
-    public interface LegacyHandler {
-        void execute();
+    public enum BorderStyle {
+        SIMPLE("====="), DOUBLE("═════"), ASTERISK("*****"), HASH("#####"), NONE("");
+        private final String b;
+        BorderStyle(String b) { this.b = b; }
+        public void print(String t) {
+            System.out.println(this == NONE ? "\n" + t : "\n" + b + " " + t + " " + b);
+        }
     }
 
-    /** Functional interface para pré-condições. */
-    public interface PreCondition {  
-        boolean validate();
-    }
+    @FunctionalInterface public interface Handler { boolean execute(); }
 
-    // Variável de classe para suportar leitura
+    private static final Scanner sc = new Scanner(System.in);
+    private final String title;
+    private final List<String> options;
+    private final List<BooleanSupplier> preconditions;
+    private final List<Handler> handlers;
+    private MenuStyle style = MenuStyle.NUMBERED;
+    private BorderStyle border = BorderStyle.SIMPLE;
+    private boolean showLineNumbers = false;
+    private String prompt = ">>> ";
 
-    private static Scanner is = new Scanner(System.in);
-
-    // Variáveis de instância
-
-    private String title;                   // Título do NewMenu
-    private List<String> opcoes;            // Lista de opções
-    private List<PreCondition> disponivel;  // Lista de pré-condições
-    private List<Handler> handlers;         // Lista de handlers
-
-    // Construtor
-
-    /**
-     * Constructor for objects of class NewMenu
-     */
-    public NewMenu(String title, String[] opcoes) {
+    public NewMenu(String title, List<String> options) {
         this.title = title;
-        this.opcoes = Arrays.asList(opcoes);
-        this.disponivel = new ArrayList<>();
-        this.handlers = new ArrayList<>();
-        this.opcoes.forEach(s-> {
-            this.disponivel.add(() -> true);
-            this.handlers.add(() -> {
-                System.out.println("\nChoice not implemented!");
-                return false; // Por omissão, não sai do menu
-            });
-        });
+        this.options = new ArrayList<>(options);
+        this.preconditions = new ArrayList<>(Collections.nCopies(options.size(), () -> true));
+        this.handlers = new ArrayList<>(Collections.nCopies(options.size(), () -> {
+            System.out.println("\nOpção não implementada!");
+            return false;
+        }));
     }
 
-    // Métodos de instância
+    public void registerHandlers(Handler... hs) { IntStream.range(0, Math.min(hs.length, handlers.size())).forEach(i -> handlers.set(i, hs[i])); }
+    public void setHandler(int i, Handler h) { handlers.set(i - 1, h); }
+    public void setMenuStyle(MenuStyle s) { this.style = s; }
+    public void setBorderStyle(BorderStyle b) { this.border = b; }
+    public void setPromptSymbol(String p) { this.prompt = p; }
 
-    /**
-     * Correr o NewMenu.
-     *
-     * Termina com a opção 0 (zero) ou se um handler retornar true.
-     */
     public void run() {
-        int op;
+        int choice;
         boolean exit = false;
         do {
             show();
-            op = readOption();
-            if (op > 0 && !this.disponivel.get(op - 1).validate()) {
-                System.out.println("\nChoice not available! Try again.");
-            } else if (op > 0) {
-                // Executar handler e verificar se deve sair
-                exit = this.handlers.get(op - 1).execute();
+            choice = readOption();
+            if (choice > 0) {
+                if (!preconditions.get(choice - 1).getAsBoolean()) System.out.println("\nOpção indisponível!");
+                else exit = handlers.get(choice - 1).execute();
             }
-        } while (op != 0 && !exit);
+        } while (choice != 0 && !exit);
     }
 
-    /**
-     * Método que regista uma pré-condição numa opção do NewMenu.
-     *
-     * @param i índice da opção (começa em 1)
-     * @param b pré-condição a registar
-     */
-    public void setPreCondition(int i, PreCondition b) {
-        this.disponivel.set(i - 1, b);
-    }
-
-    /**
-     * Método para registar um handler com controlo de saída numa opção do NewMenu.
-     *
-     * @param i indice da opção  (começa em 1)
-     * @param h handler a registar
-     */
-    public void setHandler(int i, Handler h) {
-        this.handlers.set(i - 1, h);
-    }
-
-    /**
-     * Método para registar um handler legado (sem retorno) numa opção do NewMenu.
-     * O menu não será fechado após a execução deste handler.
-     *
-     * @param i indice da opção  (começa em 1)
-     * @param h handler legado a registar
-     */
-    public void setHandler(int i, LegacyHandler h) {
-        this.handlers.set(i - 1, () -> {
-            h.execute();
-            return false; // Por omissão, não sai do menu
-        });
-    }
-
-    // Métodos auxiliares
-
-    /** Apresentar o NewMenu */
     private void show() {
-        System.out.println("\n===== " + this.title + " =====");
-        for (int i = 0; i < this.opcoes.size(); i++) {
-            System.out.print(i + 1);
-            System.out.print(". ");
-            System.out.println(this.disponivel.get(i).validate() ? this.opcoes.get(i) : "---");
+        border.print(title);
+        for (int i = 0; i < options.size(); i++) {
+            String ln = showLineNumbers ? String.format("[%2d] ", i + 1) : "";
+            String opt = preconditions.get(i).getAsBoolean() ? options.get(i) : "---";
+            System.out.println(ln + style.getPrefix(i) + opt);
         }
-        System.out.println("0. Sair");
+        System.out.println((showLineNumbers ? "[ 0] " : "") + style.getPrefix(options.size()) + "0. Sair");
     }
 
-    /** Ler uma opção válida */
     private int readOption() {
-        int op;
-        System.out.print(">>>> ");
+        System.out.print(prompt);
+        if (!sc.hasNextLine()) return 0;
+        String line = sc.nextLine().trim();
         try {
-            if (!is.hasNextLine()) {
-                System.out.println("\nNo input detected. Exiting menu.");
-                return 0; // Exit gracefully
+            if (style == MenuStyle.LETTERED && !line.isEmpty()) {
+                int val = Character.toUpperCase(line.charAt(0)) - 'A' + 1;
+                return (val > 0 && val <= options.size()) ? val : (line.equals("0") ? 0 : -1);
             }
-            String line = is.nextLine();
-            op = Integer.parseInt(line);
-        } catch (NumberFormatException e) { // Not an int
-            op = -1;
+            int op = Integer.parseInt(line);
+            return (op >= 0 && op <= options.size()) ? op : -1;
+        } catch (Exception e) { return -1; }
+    }
+
+    public static Builder builder(String title) { return new Builder(title); }
+
+    public static class Builder {
+        private final String t;
+        private final List<String> opts = new ArrayList<>();
+        private final List<Handler> hnds = new ArrayList<>();
+        private MenuStyle s = MenuStyle.NUMBERED;
+        private BorderStyle b = BorderStyle.SIMPLE;
+        private String p = ">>>> ";
+
+        Builder(String title) { this.t = title; }
+        public Builder addOption(String o, Handler h) { opts.add(o); hnds.add(h); return this; }
+        public Builder style(MenuStyle s) { this.s = s; return this; }
+        public Builder border(BorderStyle b) { this.b = b; return this; }
+        public void run() {
+            NewMenu m = new NewMenu(t, opts);
+            m.setMenuStyle(s); m.setBorderStyle(b); m.setPromptSymbol(p);
+            m.registerHandlers(hnds.toArray(Handler[]::new));
+            m.run();
         }
-        if (op < 0 || op > this.opcoes.size()) {
-            System.out.println("\nInvalid choice. Try again.");
-            op = -1;
-        }
-        return op;
     }
 }

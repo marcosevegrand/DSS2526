@@ -3,7 +3,6 @@ package dss2526.service.gestao;
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.*;
 import dss2526.service.base.BaseFacade;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,111 +16,73 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
     }
 
     @Override
-    public Funcionario login(String u, String p) {
-        return funcionarioDAO.findByUtilizador(u);
-    }
-
-    private boolean verificarPermissao(int actorId, Integer restauranteId, Funcao minima) {
-        Funcionario f = funcionarioDAO.findById(actorId);
-        if (f == null) return false;
-        if (f.getFuncao() == Funcao.COO) return true;
-        if (minima == Funcao.COO) return false;
-        return f.getFuncao() == Funcao.GERENTE && f.getRestauranteId().equals(restauranteId);
+    public Funcionario autenticarFuncionario(String user, String pass) {
+        Funcionario f = funcionarioDAO.findByUtilizador(user);
+        if (f != null && f.getPassword().equals(pass) && f.getFuncao() != Funcao.FUNCIONARIO) return f;
+        return null;
     }
 
     @Override
-    public void criarRestaurante(int actorId, String nome, String localizacao) {
-        if (!verificarPermissao(actorId, null, Funcao.COO)) throw new SecurityException("Acesso negado");
-        Restaurante r = new Restaurante();
-        r.setNome(nome);
-        r.setLocalizacao(localizacao);
-        restauranteDAO.create(r);
+    public void contratarFuncionario(int aId, Funcionario n) {
+        funcionarioDAO.create(n);
     }
 
     @Override
-    public void contratarFuncionario(int actorId, int rId, Funcionario novo) {
-        if (!verificarPermissao(actorId, rId, Funcao.GERENTE)) throw new SecurityException("Sem permissoes");
-        novo.setRestauranteId(rId);
-        funcionarioDAO.create(novo);
+    public void demitirFuncionario(int aId, int fId) {
+        funcionarioDAO.delete(fId);
     }
 
     @Override
-    public void demitirFuncionario(int actorId, int fId) {
-        Funcionario alvo = funcionarioDAO.findById(fId);
-        if (alvo != null && verificarPermissao(actorId, alvo.getRestauranteId(), Funcao.GERENTE)) {
-            funcionarioDAO.delete(fId);
-        }
-    }
-
-    @Override
-    public void atualizarStock(int actorId, int rId, int iId, int qtd) {
-        if (!verificarPermissao(actorId, rId, Funcao.FUNCIONARIO)) throw new SecurityException("Acesso negado");
+    public void atualizarStockIngrediente(int aId, int rId, int iId, int delta) {
         Restaurante r = restauranteDAO.findById(rId);
-        Optional<LinhaStock> linha = r.getStock().stream().filter(s -> s.getIngredienteId() == iId).findFirst();
-        if (linha.isPresent()) {
-            linha.get().setQuantidade(linha.get().getQuantidade() + qtd);
-        } else {
-            LinhaStock ls = new LinhaStock();
-            ls.setRestauranteId(rId);
-            ls.setIngredienteId(iId);
-            ls.setQuantidade(qtd);
-            r.addLinhaStock(ls);
-        }
+        r.getStock().stream().filter(s -> s.getIngredienteId() == iId).findFirst()
+            .ifPresentOrElse(s -> s.setQuantidade(s.getQuantidade() + delta), () -> {
+                LinhaStock ls = new LinhaStock(); ls.setRestauranteId(rId); ls.setIngredienteId(iId); ls.setQuantidade(delta);
+                r.addLinhaStock(ls);
+            });
         restauranteDAO.update(r);
     }
 
-    // --- Metodos de Estatistica Filtrados ---
-
-    private List<Pedido> obterPedidosFiltrados(int rId, LocalDateTime inicio, LocalDateTime fim) {
-        return pedidoDAO.findAllByRestaurante(rId).stream()
-                .filter(p -> (inicio == null || p.getDataCriacao().isAfter(inicio)))
-                .filter(p -> (fim == null || p.getDataCriacao().isBefore(fim)))
-                .collect(Collectors.toList());
+    @Override
+    public void adicionarEstacaoTrabalho(int aId, Estacao e) {
+        estacaoDAO.create(e);
     }
 
     @Override
-    public double consultarFaturacao(int rId, LocalDateTime inicio, LocalDateTime fim) {
-        return obterPedidosFiltrados(rId, inicio, fim).stream()
-                .filter(p -> p.getEstado() != EstadoPedido.CANCELADO)
-                .mapToDouble(Pedido::calcularPrecoTotal).sum();
+    public void removerEstacaoTrabalho(int aId, int eId) {
+        estacaoDAO.delete(eId);
     }
 
     @Override
-    public Map<String, Integer> consultarTopProdutos(int rId, LocalDateTime inicio, LocalDateTime fim) {
-        Map<String, Integer> contagem = new HashMap<>();
-        obterPedidosFiltrados(rId, inicio, fim).forEach(p -> p.getLinhas().forEach(l -> {
-            String nome = l.getTipo() == TipoItem.PRODUTO ? 
-                    produtoDAO.findById(l.getItemId()).getNome() : menuDAO.findById(l.getItemId()).getNome();
-            contagem.put(nome, contagem.getOrDefault(nome, 0) + l.getQuantidade());
-        }));
-        return contagem;
+    public String obterDashboardEstatisticas(int rId, LocalDateTime i, LocalDateTime f) {
+        List<Pedido> peds = pedidoDAO.findAllByRestaurante(rId).stream()
+            .filter(p -> p.getEstado() != EstadoPedido.CANCELADO)
+            .filter(p -> (i == null || p.getDataCriacao().isAfter(i)) && (f == null || p.getDataCriacao().isBefore(f)))
+            .collect(Collectors.toList());
+        
+        double fat = peds.stream().mapToDouble(Pedido::calcularPrecoTotal).sum();
+        long vol = peds.size();
+        return "RELATÓRIO: Faturação Total: " + fat + "€ | Volume: " + vol + " pedidos finalizados.";
     }
 
     @Override
-    public double consultarTempoMedioEspera(int rId, LocalDateTime inicio, LocalDateTime fim) {
-        List<Pedido> concluidos = obterPedidosFiltrados(rId, inicio, fim).stream()
-                .filter(p -> p.getDataConclusao() != null)
-                .collect(Collectors.toList());
-        if (concluidos.isEmpty()) return 0.0;
-        double total = concluidos.stream()
-                .mapToLong(p -> Duration.between(p.getDataCriacao(), p.getDataConclusao()).toMinutes())
-                .sum();
-        return total / concluidos.size();
+    public void enviarMensagemRestaurante(int aId, int rId, String texto) {
+        Mensagem m = new Mensagem();
+        m.setRestauranteId(rId);
+        m.setTexto("[GERÊNCIA] " + texto);
+        m.setDataHora(LocalDateTime.now());
+        mensagemDAO.create(m);
     }
 
     @Override
-    public Map<String, Long> consultarVolumePedidos(int rId, LocalDateTime inicio, LocalDateTime fim) {
-        return obterPedidosFiltrados(rId, inicio, fim).stream()
-                .collect(Collectors.groupingBy(p -> p.getEstado().name(), Collectors.counting()));
+    public void difundirMensagemGlobal(int aId, String texto) {
+        Funcionario actor = funcionarioDAO.findById(aId);
+        if (actor.getFuncao() == Funcao.COO) {
+            restauranteDAO.findAll().forEach(r -> {
+                Mensagem m = new Mensagem(); m.setRestauranteId(r.getId());
+                m.setTexto("[GLOBAL - COO] " + texto); m.setDataHora(LocalDateTime.now());
+                mensagemDAO.create(m);
+            });
+        }
     }
-
-    // Outros metodos delegados de CRUD conforme necessario...
-    @Override public void criarIngrediente(int aId, String n, String u, String al) {
-        if (!verificarPermissao(aId, null, Funcao.COO)) return;
-        Ingrediente i = new Ingrediente(); i.setNome(n); i.setUnidade(u); i.setAlergenico(al);
-        ingredienteDAO.create(i);
-    }
-    @Override public void criarProduto(int aId, String n, double pr, List<Integer> p, Map<Integer, Integer> r) { /* Implementacao CRUD */ }
-    @Override public void criarCatalogo(int aId, String n, List<Integer> p, List<Integer> m) { /* Implementacao CRUD */ }
-    @Override public void configurarEstacao(int aId, int rId, String n, Trabalho t) { /* Implementacao CRUD */ }
 }

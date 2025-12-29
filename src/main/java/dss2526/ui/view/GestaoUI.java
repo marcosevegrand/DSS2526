@@ -2,115 +2,71 @@ package dss2526.ui.view;
 
 import dss2526.ui.controller.GestaoController;
 import dss2526.ui.util.NewMenu;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Scanner;
+import dss2526.domain.enumeration.Funcao;
+import java.util.*;
 
 public class GestaoUI {
-    private final GestaoController controller;
-    private final Scanner sc;
+    private final GestaoController c = new GestaoController();
+    private final Scanner sc = new Scanner(System.in);
 
-    public GestaoUI(GestaoController controller) {
-        this.controller = controller;
-        this.sc = new Scanner(System.in);
-    }
-
-    public void show() {
-        System.out.println("PORTAL DE GESTAO");
+    public void run() {
         System.out.print("Utilizador: "); String u = sc.nextLine();
-        System.out.print("Password: "); String p = sc.nextLine();
+        System.out.print("Senha: "); String p = sc.nextLine();
+        if(!c.autenticar(u, p)) { System.out.println("Acesso negado."); return; }
 
-        if (controller.autenticar(u, p)) {
-            if (controller.ehCOO()) menuCOO();
-            else menuGerente();
-        } else {
-            System.out.println("Login falhou.");
-        }
+        NewMenu.builder("PAINEL DE GESTÃO")
+            .style(NewMenu.MenuStyle.NUMBERED)
+            .addOption("Recursos Humanos (Contratar/Demitir)", () -> {
+                System.out.println("1. Contratar | 2. Demitir");
+                String op = sc.nextLine();
+                if(op.equals("1")) {
+                    System.out.print("User: "); String nu = sc.nextLine();
+                    c.contratar(nu, "123", Funcao.FUNCIONARIO, c.getRestauranteProprio());
+                } else if(op.equals("2")) {
+                    System.out.print("ID Funcionário: ");
+                    c.demitir(Integer.parseInt(sc.nextLine()));
+                }
+                return false;
+            })
+            .addOption("Gestão de Inventário", () -> {
+                int rid = c.isCOO() ? c.getRestauranteId(pick("Restaurante", c.getRestaurantes())) : c.getRestauranteProprio();
+                int idx = pick("Ingrediente", c.getIngredientes());
+                System.out.print("Quantidade (+/-): ");
+                c.stock(rid, idx, Integer.parseInt(sc.nextLine()));
+                return false;
+            })
+            .addOption("Gestão de Estações", () -> {
+                int rid = c.isCOO() ? c.getRestauranteId(pick("Restaurante", c.getRestaurantes())) : c.getRestauranteProprio();
+                System.out.println("1. Adicionar | 2. Remover");
+                if(sc.nextLine().equals("1")) {
+                    System.out.print("Nome: "); String name = sc.nextLine();
+                    System.out.print("É Caixa? (s/n): ");
+                    c.addEstacao(rid, name, sc.nextLine().equalsIgnoreCase("s"));
+                } else {
+                    System.out.print("ID Estação: ");
+                    c.remEstacao(Integer.parseInt(sc.nextLine()));
+                }
+                return false;
+            })
+            .addOption("Dashboard de Estatísticas", () -> {
+                int rid = c.isCOO() ? c.getRestauranteId(pick("Restaurante", c.getRestaurantes())) : c.getRestauranteProprio();
+                System.out.println("\n" + c.stats(rid, null, null));
+                return false;
+            })
+            .addOption("Enviar Comunicação", () -> {
+                System.out.println("1. Mensagem Local | 2. Mensagem Global (COO)");
+                String op = sc.nextLine();
+                System.out.print("Texto: "); String t = sc.nextLine();
+                if(op.equals("1")) c.msgRest(c.isCOO() ? c.getRestauranteId(pick("Restaurante", c.getRestaurantes())) : c.getRestauranteProprio(), t);
+                else if(c.isCOO()) c.msgGlobal(t);
+                return false;
+            })
+            .run();
     }
 
-    private void menuCOO() {
-        NewMenu menu = new NewMenu("PAINEL COO", new String[]{
-            "Listar Restaurantes",
-            "Selecionar Restaurante para Gestao Local",
-            "Criar Novo Restaurante"
-        });
-        menu.setHandler(1, () -> { controller.listarRestaurantes().forEach(System.out::println); return false; });
-        menu.setHandler(2, () -> { 
-            int idx = escolher("Selecione o Restaurante", controller.listarRestaurantes());
-            controller.selecionarRestaurante(idx);
-            menuGerente();
-            return false; 
-        });
-        menu.run();
-    }
-
-    private void menuGerente() {
-        NewMenu menu = new NewMenu("GESTAO DE UNIDADE", new String[]{
-            "Gerir Equipa (Contratar/Demitir)",
-            "Atualizar Stock",
-            "Consultar Estatisticas"
-        });
-        
-        menu.setHandler(1, () -> { fluxosEquipa(); return false; });
-        menu.setHandler(2, () -> { fluxosStock(); return false; });
-        menu.setHandler(3, () -> { fluxosEstatisticas(); return false; });
-        menu.run();
-    }
-
-    private void fluxosEquipa() {
-        System.out.println("1. Listar/Demitir | 2. Contratar");
-        String op = sc.nextLine();
-        if (op.equals("1")) {
-            List<String> funcs = controller.listarFuncionarios();
-            if (funcs.isEmpty()) return;
-            int idx = escolher("Selecione para demitir (ou 0 cancelar)", funcs);
-            controller.demitir(idx);
-        } else {
-            System.out.print("Username: "); String u = sc.nextLine();
-            System.out.print("Password: "); String p = sc.nextLine();
-            System.out.print("Cargo (1-Func, 2-Gerente): "); int c = Integer.parseInt(sc.nextLine());
-            controller.contratar(u, p, c);
-        }
-    }
-
-    private void fluxosStock() {
-        List<String> ings = controller.listarIngredientes();
-        int idx = escolher("Ingrediente", ings);
-        System.out.print("Quantidade a adicionar: ");
-        int q = Integer.parseInt(sc.nextLine());
-        controller.atualizarStock(idx, q);
-    }
-
-    private void fluxosEstatisticas() {
-        System.out.println("Filtro Temporal (Formato: yyyy-MM-dd HH:mm)");
-        System.out.println("Deixe em branco para 'Desde o inicio'");
-        
-        LocalDateTime inicio = lerData("Data Inicio: ");
-        LocalDateTime fim = lerData("Data Fim: ");
-        
-        System.out.println("\n--- RESULTADOS ---");
-        System.out.println(controller.obterDadosEstatisticos(inicio, fim));
-        System.out.println("Pressione Enter para continuar...");
-        sc.nextLine();
-    }
-
-    private LocalDateTime lerData(String msg) {
-        System.out.print(msg);
-        String s = sc.nextLine();
-        if (s.isBlank()) return null;
-        try {
-            return LocalDateTime.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-        } catch (Exception e) {
-            System.out.println("Formato invalido. Ignorando filtro.");
-            return null;
-        }
-    }
-
-    private int escolher(String t, List<String> ops) {
-        System.out.println("\n" + t);
-        for (int i = 0; i < ops.size(); i++) System.out.println((i + 1) + ". " + ops.get(i));
-        System.out.print("Seleccao: ");
-        return Integer.parseInt(sc.nextLine()) - 1;
+    private int pick(String t, List<String> l) {
+        for(int i=0; i<l.size(); i++) System.out.println((i+1)+". "+l.get(i));
+        System.out.print(t + " > ");
+        try { return Integer.parseInt(sc.nextLine())-1; } catch(Exception e) { return 0; }
     }
 }
