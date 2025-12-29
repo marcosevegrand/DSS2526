@@ -1,29 +1,40 @@
 package dss2526.service.venda;
 
 import dss2526.domain.entity.*;
+import dss2526.domain.enumeration.*;
+import dss2526.domain.contract.Item;
 import dss2526.service.base.IBaseFacade;
 import java.util.List;
 
 public interface IVendaFacade extends IBaseFacade {
+    // Fluxo Inicial
+    Pedido iniciarPedido(int restauranteId);
+    List<Ingrediente> listarAlergenicosDisponiveis();
     
-    /** Cria uma nova instância de pedido associada ao restaurante. */
-    Pedido iniciarPedido(Restaurante restaurante, Boolean paraLevar);
+    // Listagem Unificada
+    List<Item> listarItemsDisponiveis(int restauranteId, List<Integer> alergenicoIds);
     
-    /** Finaliza o estado do pedido para confirmado e retorna tempo de entrega estimado. */
-    double finalizarPedido(Pedido pedido);
+    // Gestão de Pedido
+    boolean adicionarLinhaAoPedido(int pedidoId, int itemId, TipoItem tipo, int quantidade, String observacao);
+    
+    /**
+     * Remove uma linha específica do pedido em curso.
+     */
+    boolean removerLinhaDoPedido(int pedidoId, int linhaPedidoId);
 
-    /** Cancela um pedido em curso, removendo-o do sistema. */
-    void cancelarPedido(Pedido pedido);
+    /**
+     * Cancela o pedido em curso, mudando o seu estado para CANCELADO.
+     */
+    void cancelarPedidoVenda(int pedidoId);
     
-    /** Retorna produtos filtrados por stock e alergénios. */
-    List<Produto> listarProdutosDisponiveis(Restaurante restaurante, List<String> alergenicos);
+    double obterEstimativaEntrega(int pedidoId);
     
-    /** RetornaparaLevar menus filtrados por stock e alergénios. */
-    List<Menu> listarMenusDisponiveis(Restaurante restaurante, List<String> alergenicos);
+    // Acompanhamento
+    List<Pedido> listarPedidosAtivos(int restauranteId);
     
-    /** Adiciona uma linha ao pedido após validações de negócio. */
-    Pedido adicionarLinhaAoPedido(Pedido pedido, LinhaPedido linha);
-    
-    /** Remove uma linha do pedido. */
-    Pedido removerLinhaDoPedido(Pedido pedido, int index);
+    // Pagamento
+    List<TipoPagamento> listarOpcoesPagamento(int restauranteId);
+    Pagamento criarPagamento(int pedidoId, TipoPagamento tipo);
+    boolean confirmarPagamento(int pagamentoId);
+    boolean confirmarPedido(int pedidoId);
 }

@@ -1,6 +1,5 @@
 -- ======================================================================================
--- POVOAMENTO DE DADOS (SEM PEDIDOS/TAREFAS)
--- Nota: Executar o script schema.sql primeiro para criar as tabelas.
+-- POVOAMENTO DE DADOS V3
 -- ======================================================================================
 
 USE restaurante;
@@ -15,6 +14,7 @@ TRUNCATE TABLE Produto_Passo;
 TRUNCATE TABLE Passo_Ingrediente;
 TRUNCATE TABLE Catalogo_Produto;
 TRUNCATE TABLE Catalogo_Menu;
+TRUNCATE TABLE Estacao_Trabalho;
 TRUNCATE TABLE Passo;
 TRUNCATE TABLE Mensagem;
 TRUNCATE TABLE Pedido;
@@ -25,172 +25,145 @@ TRUNCATE TABLE Estacao;
 TRUNCATE TABLE Funcionario;
 TRUNCATE TABLE Catalogo;
 TRUNCATE TABLE Restaurante;
+TRUNCATE TABLE Pagamento;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. Catálogos
-INSERT INTO Catalogo (id, nome) VALUES
-(1, 'Menu Geral FastBurger');
+INSERT INTO Catalogo (id, nome) VALUES 
+(1, 'Menu Completo Restaurante'),
+(2, 'Menu Sem Sobremesas Geladas');
 
 -- 2. Restaurantes
 INSERT INTO Restaurante (id, nome, localizacao, catalogo_id) VALUES
-(1, 'FastBurger - Lisboa Centro', 'Lisboa - Baixa', 1),
-(2, 'FastBurger - Lisboa Oriente', 'Lisboa - Parque das Nações', 1),
-(3, 'FastBurger - Porto Aliados', 'Porto - Aliados', 1),
-(4, 'FastBurger - Almada Seixal', 'Almada - Pragal', 1),
-(5, 'FastBurger - Braga Minho', 'Braga - Minho', 1);
+(1, 'Sabor e Tradição - Lisboa', 'Lisboa Centro', 1),
+(2, 'Sabor e Tradição - Porto', 'Porto Boavista', 1),
+(3, 'Sabor e Tradição - Faro', 'Faro Baixa', 2);
 
--- 3. Funcionários
+-- 3. Funcionários (1 COO, 1 Gerente/Rest, 4 Func/Rest)
 INSERT INTO Funcionario (id, restaurante_id, utilizador, password, funcao) VALUES
-(1, 1, 'joao.caixa',      'pass', 'FUNCIONARIO'),
-(2, 1, 'maria.grelha',    'pass', 'FUNCIONARIO'),
-(3, 1, 'ana.gerente',     'pass', 'GERENTE'),
-(4, 2, 'tiago.fritura',   'pass', 'FUNCIONARIO'),
-(5, 2, 'carlos.coo',      'pass', 'COO'),
-(6, 3, 'rita.sysadmin',   'pass', 'SYSADMIN'),
-(7, 4, 'pedro.montagem',  'pass', 'FUNCIONARIO'),
-(8, 5, 'sara.bebidas',    'pass', 'FUNCIONARIO');
+-- Administração Central
+(1, NULL, 'marco.coo', 'pass', 'COO'),
+-- Restaurante 1
+(2, 1, 'gerente.lisboa', 'pass', 'GERENTE'),
+(3, 1, 'ana.lisboa', 'pass', 'FUNCIONARIO'),
+(4, 1, 'pedro.lisboa', 'pass', 'FUNCIONARIO'),
+(5, 1, 'rita.lisboa', 'pass', 'FUNCIONARIO'),
+(6, 1, 'joao.lisboa', 'pass', 'FUNCIONARIO'),
+-- Restaurante 2
+(7, 2, 'gerente.porto', 'pass', 'GERENTE'),
+(8, 2, 'bruno.porto', 'pass', 'FUNCIONARIO'),
+(9, 2, 'carla.porto', 'pass', 'FUNCIONARIO'),
+(10, 2, 'diogo.porto', 'pass', 'FUNCIONARIO'),
+(11, 2, 'elisa.porto', 'pass', 'FUNCIONARIO'),
+-- Restaurante 3
+(12, 3, 'gerente.faro', 'pass', 'GERENTE'),
+(13, 3, 'filipe.faro', 'pass', 'FUNCIONARIO'),
+(14, 3, 'guilherme.faro', 'pass', 'FUNCIONARIO'),
+(15, 3, 'helena.faro', 'pass', 'FUNCIONARIO'),
+(16, 3, 'ines.faro', 'pass', 'FUNCIONARIO');
 
--- 4. Estações (6 tipos por restaurante = 30 estações)
--- Lisboa Centro (1)
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (1, 'CAIXA'), (1, 'GRELHA'), (1, 'FRITURA'), (1, 'BEBIDAS'), (1, 'GELADOS'), (1, 'MONTAGEM');
--- Lisboa Oriente (2)
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (2, 'CAIXA'), (2, 'GRELHA'), (2, 'FRITURA'), (2, 'BEBIDAS'), (2, 'GELADOS'), (2, 'MONTAGEM');
--- Porto Aliados (3)
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (3, 'CAIXA'), (3, 'GRELHA'), (3, 'FRITURA'), (3, 'BEBIDAS'), (3, 'GELADOS'), (3, 'MONTAGEM');
--- Almada (4)
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (4, 'CAIXA'), (4, 'GRELHA'), (4, 'FRITURA'), (4, 'BEBIDAS'), (4, 'GELADOS'), (4, 'MONTAGEM');
--- Braga (5)
-INSERT INTO Estacao (restaurante_id, trabalho) VALUES (5, 'CAIXA'), (5, 'GRELHA'), (5, 'FRITURA'), (5, 'BEBIDAS'), (5, 'GELADOS'), (5, 'MONTAGEM');
+-- 4. Estações (Distribuição de carga por restaurante)
+INSERT INTO Estacao (id, restaurante_id, nome, tipo) VALUES
+-- Restaurante 1
+(1, 1, 'Caixa Central', 'CAIXA'),
+(2, 1, 'Setor Quente', 'COZINHA'),
+(3, 1, 'Setor Frio e Bar', 'COZINHA'),
+-- Restaurante 2
+(4, 2, 'Balcão de Pagamento', 'CAIXA'),
+(5, 2, 'Grelha e Forno', 'COZINHA'),
+(6, 2, 'Fritura e Prep. Fria', 'COZINHA'),
+-- Restaurante 3 (Simplificado)
+(7, 3, 'Caixa e Entrega', 'CAIXA'),
+(8, 3, 'Cozinha Geral', 'COZINHA');
 
--- 5. Ingredientes (Expandido)
+-- 5. Especialidades de Trabalho (Estacao_Trabalho)
+INSERT INTO Estacao_Trabalho (estacao_id, trabalho) VALUES
+-- R1
+(2, 'GRELHA'), (2, 'FRITURA'), (2, 'FORNO'),
+(3, 'SALADAS'), (3, 'BEBIDAS'), (3, 'GELADOS'), (3, 'PASTELARIA'), (3, 'CAFETARIA'),
+-- R2
+(5, 'GRELHA'), (5, 'FORNO'), (5, 'PASTELARIA'),
+(6, 'FRITURA'), (6, 'SALADAS'), (6, 'BEBIDAS'), (6, 'CAFETARIA'), (6, 'GELADOS'),
+-- R3 (Faz tudo menos gelados conforme catálogo)
+(8, 'GRELHA'), (8, 'FRITURA'), (8, 'FORNO'), (8, 'SALADAS'), (8, 'BEBIDAS'), (8, 'PASTELARIA'), (8, 'CAFETARIA');
+
+-- 6. Ingredientes
 INSERT INTO Ingrediente (id, nome, unidade, alergenico) VALUES
-(1, 'Pão de hambúrguer', 'un', 'GLUTEN'),
-(2, 'Carne de vaca',     'un', NULL),
-(3, 'Queijo cheddar',    'fatia', 'LACTOSE'),
-(4, 'Bacon',             'fatia', NULL),
-(5, 'Batata para fritar','kg', NULL),
-(6, 'Óleo vegetal',      'L', NULL),
-(7, 'Alface',            'folha', NULL),
-(8, 'Tomate',            'fatia', NULL),
-(9, 'Molho especial',    'g', 'OVO'),
-(10,'Refrigerante cola', 'L', NULL),
-(11,'Gelado baunilha',   'g', 'LACTOSE'),
-(12,'Copo descartável',  'un', NULL),
-(13,'Sal',               'g', NULL),
-(14,'Frango panado',     'un', 'GLUTEN'),
-(15,'Pão de brioche',    'un', 'GLUTEN'),
-(16,'Hamburguer Vegan',  'un', 'SOJA'),
-(17,'Maionese',          'g', 'OVO'),
-(18,'Ketchup',           'g', NULL),
-(19,'Mostarda',          'g', 'MOSTARDA'),
-(20,'Cebola roxa',       'fatia', NULL),
-(21,'Picles',            'un', NULL),
-(22,'Gelado Chocolate',  'g', 'LACTOSE'),
-(23,'Leite',             'L', 'LACTOSE'),
-(24,'Xarope Morango',    'ml', NULL);
+(1, 'Pão de Hambúrguer', 'un', 'GLUTEN'), (2, 'Carne Vaca 150g', 'un', NULL),
+(3, 'Massa de Pizza', 'un', 'GLUTEN'), (4, 'Queijo Mozzarella', 'kg', 'LACTOSE'),
+(5, 'Batatas', 'kg', NULL), (6, 'Mix de Alfaces', 'kg', NULL),
+(7, 'Peito de Frango', 'un', NULL), (8, 'Café Grão', 'kg', NULL),
+(9, 'Cerveja 0.33L', 'un', 'GLUTEN'), (10, 'Leite', 'L', 'LACTOSE'),
+(11, 'Base Gelado Baunilha', 'kg', 'LACTOSE'), (12, 'Ovos', 'un', 'OVOS'),
+(13, 'Farinha', 'kg', 'GLUTEN'), (14, 'Água Mineral', 'un', NULL);
 
--- 6. Produtos (Expandido)
+-- 7. Produtos (5 Mains, 3 Drinks, 3 Ice Creams, 3 Others)
 INSERT INTO Produto (id, nome, preco) VALUES
-(1, 'Hambúrguer Clássico',           4.50),
-(2, 'Cheeseburger',                  4.90),
-(3, 'Hambúrguer Bacon & Cheese',     5.50),
-(4, 'Batatas Fritas Pequenas',       1.80),
-(5, 'Batatas Fritas Grandes',        2.30),
-(6, 'Chicken Nuggets (6 unidades)',  3.90),
-(7, 'Refrigerante Cola 0.5L',        1.70),
-(8, 'Gelado de Baunilha',            1.50),
-(9, 'Veggie Burger',                 5.90),
-(10,'Chicken Sandwich',              4.80),
-(11,'Milkshake Morango',             3.50),
-(12,'Sundae Chocolate',              2.00);
+-- 5 Principais
+(1, 'Hambúrguer de Assinatura', 8.50), -- GRELHA
+(2, 'Pizza Margherita', 10.00),        -- FORNO
+(3, 'Frango Frito Crocante', 7.50),    -- FRITURA
+(4, 'Salada Caesar', 9.00),            -- SALADAS
+(5, 'Bife na Grelha', 12.00),          -- GRELHA
+-- 3 Bebidas
+(6, 'Cerveja da Casa', 2.50),          -- BEBIDAS
+(7, 'Sumo de Laranja Natural', 3.00),  -- BEBIDAS
+(8, 'Água das Pedras', 1.50),          -- BEBIDAS
+-- 3 Gelados
+(9, 'Copa de Baunilha', 4.00),         -- GELADOS
+(10, 'Gelado de Chocolate', 4.00),     -- GELADOS
+(11, 'Sorvete de Frutos Vermelhos', 4.50), -- GELADOS
+-- 3 Outros (Pastelaria, Cafetaria, Forno/Entrada)
+(12, 'Espresso Gourmet', 1.00),        -- CAFETARIA
+(13, 'Fatia de Bolo de Chocolate', 3.50), -- PASTELARIA
+(14, 'Pão de Alho no Forno', 2.50);    -- FORNO
 
--- 7. Menus
+-- 8. Menus (3 Menus)
 INSERT INTO Menu (id, nome, preco) VALUES
-(1, 'Menu Clássico',                   7.90),
-(2, 'Menu Bacon & Cheese',             8.90),
-(3, 'Menu Nuggets',                    7.50),
-(4, 'Menu Infantil',                   5.50),
-(5, 'Menu Veggie',                     8.50),
-(6, 'Menu Frango',                     7.80);
+(1, 'Menu Burguer (Burguer + Batata + Bebida)', 11.50),
+(2, 'Menu Italiano (Pizza + Bebida + Café)', 12.50),
+(3, 'Menu Fit (Salada + Água + Fruta)', 10.00);
 
--- 8. Catalogo -> Menu / Produto
-INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES (1,1), (1,2), (1,3), (1,4), (1,5), (1,6);
-INSERT INTO Catalogo_Produto (catalogo_id, produto_id) SELECT 1, id FROM Produto;
+-- 9. Catálogo -> Produtos (C2 exclui 9, 10, 11)
+INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES 
+(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14),
+(2,1),(2,2),(2,3),(2,4),(2,5),(2,6),(2,7),(2,8),(2,12),(2,13),(2,14);
 
--- 9. Linhas de Menu
+-- 10. Catálogo -> Menus
+INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES (1,1),(1,2),(1,3),(2,1),(2,2),(2,3);
+
+-- 11. Linhas de Menu
 INSERT INTO LinhaMenu (menu_id, produto_id, quantidade) VALUES
-(1, 1, 1), (1, 5, 1), (1, 7, 1), -- Classico: Burguer + Batata G + Cola
-(2, 3, 1), (2, 5, 1), (2, 7, 1), -- Bacon: BaconBurguer + Batata G + Cola
-(3, 6, 1), (3, 4, 1), (3, 7, 1), -- Nuggets: Nuggets + Batata P + Cola
-(4, 2, 1), (4, 4, 1), (4, 8, 1), -- Infantil: Cheese + Batata P + Gelado
-(5, 9, 1), (5, 5, 1), (5, 7, 1), -- Veggie: Veggie + Batata G + Cola
-(6, 10,1), (6, 5, 1), (6, 7, 1); -- Frango: Sanduiche + Batata G + Cola
+(1,1,1), (1,6,1), (2,2,1), (2,6,1), (2,12,1), (3,4,1), (3,8,1);
 
--- 10. Passos (Workflow: Preparação -> Montagem -> Caixa)
--- 1-10: Preparação, 11-15: Montagem, 16-20: Caixa
+-- 12. Passos de Confeção (Regra: Máximo 3 passos por produto)
 INSERT INTO Passo (id, nome, duracao_minutos, trabalho) VALUES
--- Cozinha Quente
-(1, 'Grelhar Carne',        5, 'GRELHA'),
-(2, 'Grelhar Veggie',       6, 'GRELHA'),
-(3, 'Fritar Batatas',       4, 'FRITURA'),
-(4, 'Fritar Nuggets',       5, 'FRITURA'),
-(5, 'Fritar Frango',        5, 'FRITURA'),
--- Bar / Sobremesas
-(6, 'Servir Bebida',        1, 'BEBIDAS'),
-(7, 'Preparar Milkshake',   3, 'BEBIDAS'),
-(8, 'Servir Gelado',        1, 'GELADOS'),
--- Montagem
-(9, 'Montar Hambúrguer',    2, 'MONTAGEM'),
-(10,'Montar Sanduíche',     2, 'MONTAGEM'),
-(11,'Embalar Batatas',      1, 'MONTAGEM'),
-(12,'Embalar Nuggets',      1, 'MONTAGEM'),
--- Entrega
-(13,'Entrega ao Cliente',   1, 'CAIXA'); 
+(1, 'Grelhar Carne', 6, 'GRELHA'),
+(2, 'Preparar Massa e Forno', 8, 'FORNO'),
+(3, 'Fritar Peças de Frango', 7, 'FRITURA'),
+(4, 'Lavar e Montar Salada', 4, 'SALADAS'),
+(5, 'Extrair Café', 1, 'CAFETARIA'),
+(6, 'Servir Bebida Fria', 1, 'BEBIDAS'),
+(7, 'Preparar Taça Gelada', 2, 'GELADOS'),
+(8, 'Preparar Massa Pastelaria', 15, 'PASTELARIA');
 
--- 11. Produto -> Passos
--- Hambúrgueres: Grelha -> Montagem -> Caixa
+-- 13. Produto -> Passos
 INSERT INTO Produto_Passo (produto_id, passo_id) VALUES 
-(1, 1), (1, 9), (1, 13), -- Classico
-(2, 1), (2, 9), (2, 13), -- Cheese
-(3, 1), (3, 9), (3, 13), -- Bacon
-(9, 2), (9, 9), (9, 13), -- Veggie
-(10,5), (10,10),(10,13); -- Frango Sanduiche
+(1, 1), (2, 2), (3, 3), (4, 4), (5, 1), -- Mains
+(6, 6), (7, 6), (8, 6), -- Drinks
+(9, 7), (10, 7), (11, 7), -- Ice Cream
+(12, 5), (13, 8), (14, 2); -- Others
 
--- Acompanhamentos: Fritura -> Montagem -> Caixa
-INSERT INTO Produto_Passo (produto_id, passo_id) VALUES
-(4, 3), (4, 11), (4, 13), -- Batata P
-(5, 3), (5, 11), (5, 13), -- Batata G
-(6, 4), (6, 12), (6, 13); -- Nuggets
-
--- Bebidas/Sobremesas: Preparação -> Caixa (Sem montagem)
-INSERT INTO Produto_Passo (produto_id, passo_id) VALUES
-(7, 6), (7, 13), -- Cola
-(11,7), (11,13), -- Milkshake
-(8, 8), (8, 13), -- Gelado Baunilha
-(12,8), (12,13); -- Sundae
-
--- 12. Passo -> Ingrediente (Exemplos principais)
+-- 14. Passo -> Ingrediente
 INSERT INTO Passo_Ingrediente (passo_id, ingrediente_id) VALUES
-(1, 2), -- Grelhar Carne: Carne
-(2, 16), -- Grelhar Veggie: Veggie Burger
-(3, 5), (3, 6), (3, 13), -- Fritar Batatas
-(4, 14), (4, 6), -- Fritar Nuggets
-(5, 14), (5, 6), -- Fritar Frango
-(6, 10), (6, 12), -- Bebida: Cola + Copo
-(7, 23), (7, 24), (7, 12), -- Milkshake: Leite + Xarope + Copo
-(8, 11), (8, 12), -- Gelado: Baunilha + Copo
-(9, 1), (9, 7), (9, 8), (9, 9), -- Montar Burguer: Pão, Alface, Tomate, Molho
-(10,15), (10,7), (10,17); -- Montar Sanduiche: Brioche, Alface, Maionese
+(1, 2), (1, 1), (2, 3), (2, 4), (3, 7), (4, 6), (5, 8), (6, 9), (7, 11), (8, 13), (8, 12);
 
--- 13. Stock Inicial (Para os 5 restaurantes)
--- Inserir stock básico para todos os ingredientes (1-24) em todos os restaurantes (1-5)
+-- 15. Stock Inicial Significativo
 INSERT INTO LinhaStock (restaurante_id, ingrediente_id, quantidade)
-SELECT r.id, i.id, 500 -- Quantidade generica inicial
-FROM Restaurante r CROSS JOIN Ingrediente i;
+SELECT r.id, i.id, 5000 FROM Restaurante r CROSS JOIN Ingrediente i;
 
--- 14. Mensagens Iniciais
-INSERT INTO Mensagem (restaurante_id, texto) VALUES
-(1, 'Bem-vindos ao novo sistema de Produção!'),
-(1, 'Lembrar de verificar a temperatura das arcas.'),
-(2, 'Promoção Menu Veggie ativa hoje.'),
-(3, 'Stock de copos baixo, aguardar reposição.');
+-- 16. Mensagem de Boas-Vindas
+INSERT INTO Mensagem (restaurante_id, texto, data_hora) VALUES
+(1, 'Bem-vindos à rede Sabor e Tradição! Bom trabalho a todos.', CURRENT_TIMESTAMP),
+(2, 'Bem-vindos à rede Sabor e Tradição! Bom trabalho a todos.', CURRENT_TIMESTAMP),
+(3, 'Bem-vindos à rede Sabor e Tradição! Bom trabalho a todos.', CURRENT_TIMESTAMP);

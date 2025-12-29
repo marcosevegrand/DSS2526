@@ -4,10 +4,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import dss2526.domain.contract.Item;
 import dss2526.domain.enumeration.EstadoPedido;
 
-public class Pedido implements Item {
+public class Pedido {
     private int id;
     private int restauranteId;
     private boolean paraLevar;

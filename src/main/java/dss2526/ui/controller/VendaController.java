@@ -1,149 +1,130 @@
 package dss2526.ui.controller;
 
+import dss2526.domain.entity.*;
+import dss2526.domain.enumeration.*;
+import dss2526.domain.contract.Item;
+import dss2526.service.venda.IVendaFacade;
+import dss2526.service.venda.VendaFacade;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import dss2526.domain.entity.*;
-import dss2526.domain.enumeration.TipoItem;
-import dss2526.service.venda.IVendaFacade;
-import dss2526.service.venda.VendaFacade;
-
 public class VendaController {
 
-    private final IVendaFacade vendaFacade;
-
-    private Restaurante restauranteSelecionado;
-    private Pedido pedidoAtual;
-    private List<String> alergenicosAtuais;
+    private final IVendaFacade facade;
+    private int restauranteId = -1;
+    private int pedidoId = -1;
+    private List<Integer> alergenicosSelecionadosIds = new ArrayList<>();
     
-    private List<Restaurante> cacheRestaurantes;
-    private List<Produto> cacheProdutosDisponiveis;
-    private List<Menu> cacheMenusDisponiveis;
+    // Caches para mapeamento de UI
+    private List<Integer> cacheItemIds = new ArrayList<>();
+    private List<TipoItem> cacheItemTipos = new ArrayList<>();
+    private List<Integer> cacheAlergenicosIds = new ArrayList<>();
+    private List<Integer> cacheLinhaIds = new ArrayList<>();
 
     public VendaController() {
-        this.vendaFacade = VendaFacade.getInstance();
-        this.alergenicosAtuais = new ArrayList<>();
+        this.facade = VendaFacade.getInstance();
     }
 
-    public List<String> getListaRestaurantes() {
-        this.cacheRestaurantes = vendaFacade.listarRestaurantes();
-        return cacheRestaurantes.stream()
-                .map(r -> String.format("%-25s [ID: %d]", r.getNome(), r.getId())) 
-                .collect(Collectors.toList());
+    public List<String> getNomesRestaurantes() {
+        List<Restaurante> rests = facade.listarRestaurantes();
+        return rests.stream().map(r -> r.getNome() + " [" + r.getLocalizacao() + "]").collect(Collectors.toList());
     }
 
     public void selecionarRestaurante(int index) {
-        if (cacheRestaurantes != null && index >= 0 && index < cacheRestaurantes.size()) {
-            this.restauranteSelecionado = cacheRestaurantes.get(index);
-        } else {
-            throw new IllegalArgumentException("Restaurante inválido.");
-        }
+        this.restauranteId = facade.listarRestaurantes().get(index).getId();
     }
 
-    public void iniciarPedido(boolean paraLevar, List<String> alergenicos) {
-        if (restauranteSelecionado == null) throw new IllegalStateException("Restaurante não selecionado.");
-        this.alergenicosAtuais = alergenicos.stream()
-                .filter(s -> s != null && !s.isBlank())
-                .map(String::trim).map(String::toUpperCase)
+    public List<String> getNomesAlergenicos() {
+        List<Ingrediente> lista = facade.listarAlergenicosDisponiveis();
+        this.cacheAlergenicosIds = lista.stream().map(Ingrediente::getId).collect(Collectors.toList());
+        return lista.stream().map(Ingrediente::getAlergenico).collect(Collectors.toList());
+    }
+
+    public void setAlergenicosPorIndices(List<Integer> indices) {
+        this.alergenicosSelecionadosIds = indices.stream()
+                .map(i -> cacheAlergenicosIds.get(i))
                 .collect(Collectors.toList());
-        this.pedidoAtual = vendaFacade.iniciarPedido(restauranteSelecionado, paraLevar);
-        atualizarItensDisponiveis();
     }
 
-    private void atualizarItensDisponiveis() {
-        this.cacheProdutosDisponiveis = vendaFacade.listarProdutosDisponiveis(restauranteSelecionado, alergenicosAtuais);
-        this.cacheMenusDisponiveis = vendaFacade.listarMenusDisponiveis(restauranteSelecionado, alergenicosAtuais);
+    public void iniciarPedido() {
+        Pedido p = facade.iniciarPedido(restauranteId);
+        this.pedidoId = p.getId();
     }
 
-    public boolean isPedidoAtivo() {
-        return this.pedidoAtual != null;
-    }
-
-    public void cancelarPedido() {
-        if (this.pedidoAtual != null) {
-            vendaFacade.cancelarPedido(this.pedidoAtual);
-            this.pedidoAtual = null;
-            this.alergenicosAtuais = null;
-        }
-    }
-
-    public List<String> getItensDisponiveisLegiveis() {
-        if (pedidoAtual == null) return new ArrayList<>();
+    public List<String> getCatalogoFormatado() {
+        List<Item> itens = facade.listarItemsDisponiveis(restauranteId, alergenicosSelecionadosIds);
+        this.cacheItemIds = new ArrayList<>();
+        this.cacheItemTipos = new ArrayList<>();
+        
         List<String> display = new ArrayList<>();
-        String formato = "%-9s %-30s | %6.2f €";
-        for (Produto p : cacheProdutosDisponiveis) display.add(String.format(formato, "[PRODUTO]", p.getNome(), p.getPreco()));
-        for (Menu m : cacheMenusDisponiveis) display.add(String.format(formato, "[MENU]", m.getNome(), m.getPreco()));
+        for (Item it : itens) {
+            cacheItemIds.add(it.getId());
+            TipoItem tipo = (it instanceof Produto) ? TipoItem.PRODUTO : TipoItem.MENU;
+            cacheItemTipos.add(tipo);
+            String label = (tipo == TipoItem.PRODUTO) ? "[PROD]" : "[MENU]";
+            display.add(String.format("%-7s %-30s | %.2f EUR", label, it.getNome(), it.getPreco()));
+        }
         return display;
     }
 
-    public void adicionarItemAoPedido(int indexGlobal, int quantidade) {
-        if (pedidoAtual == null) return;
-        LinhaPedido linha = new LinhaPedido();
-        linha.setQuantidade(quantidade);
-        int numProdutos = cacheProdutosDisponiveis.size();
-        if (indexGlobal < numProdutos) {
-            Produto p = cacheProdutosDisponiveis.get(indexGlobal);
-            linha.setItemId(p.getId());
-            linha.setTipo(TipoItem.PRODUTO);
-            linha.setPrecoUnitario(p.getPreco());
+    public void adicionarItem(int index, int qtd, String obs) {
+        facade.adicionarLinhaAoPedido(pedidoId, cacheItemIds.get(index), cacheItemTipos.get(index), qtd, obs);
+    }
+
+    public List<String> getItensNoPedido() {
+        Pedido p = facade.obterPedido(pedidoId);
+        this.cacheLinhaIds = new ArrayList<>();
+        List<String> display = new ArrayList<>();
+        for (LinhaPedido lp : p.getLinhas()) {
+            cacheLinhaIds.add(lp.getId());
+            String nome = (lp.getTipo() == TipoItem.PRODUTO) ? 
+                facade.obterProduto(lp.getItemId()).getNome() : facade.obterMenu(lp.getItemId()).getNome();
+            display.add(nome + " (x" + lp.getQuantidade() + ") - " + lp.getPreco() + " EUR");
+        }
+        return display;
+    }
+
+    public void removerItem(int index) {
+        int linhaId = cacheLinhaIds.get(index);
+        facade.removerLinhaDoPedido(pedidoId, linhaId);
+    }
+
+    public void cancelarPedidoAtual() {
+        if (pedidoId != -1) facade.cancelarPedidoVenda(pedidoId);
+    }
+
+    public String getResumoPedido() {
+        Pedido p = facade.obterPedido(pedidoId);
+        StringBuilder sb = new StringBuilder("\n*** RESUMO DO PEDIDO #" + pedidoId + " ***\n");
+        if (p.getLinhas().isEmpty()) sb.append("(Carrinho vazio)\n");
+        for (String s : getItensNoPedido()) sb.append("- ").append(s).append("\n");
+        sb.append("----------------------------\n");
+        sb.append("TOTAL A PAGAR: ").append(p.calcularPrecoTotal()).append(" EUR\n");
+        return sb.toString();
+    }
+
+    public List<String> getAcompanhamento() {
+        return facade.listarPedidosAtivos(restauranteId).stream()
+                .map(p -> "Pedido #" + p.getId() + " - " + p.getEstado())
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getOpcoesPagamento() {
+        return facade.listarOpcoesPagamento(restauranteId).stream().map(Enum::name).collect(Collectors.toList());
+    }
+
+    public String finalizar(int pagIndex) {
+        TipoPagamento tipo = facade.listarOpcoesPagamento(restauranteId).get(pagIndex);
+        Pagamento pag = facade.criarPagamento(pedidoId, tipo);
+        if (tipo == TipoPagamento.TERMINAL) {
+            facade.confirmarPagamento(pag.getId());
+            facade.confirmarPedido(pedidoId);
+            return "Pagamento TERMINAL OK. Pedido #" + pedidoId + " em preparação.";
         } else {
-            int menuIndex = indexGlobal - numProdutos;
-            if (menuIndex < cacheMenusDisponiveis.size()) {
-                Menu m = cacheMenusDisponiveis.get(menuIndex);
-                linha.setItemId(m.getId());
-                linha.setTipo(TipoItem.MENU);
-                linha.setPrecoUnitario(m.getPreco());
-            } else return;
-        }
-        this.pedidoAtual = vendaFacade.adicionarLinhaAoPedido(pedidoAtual, linha);
-    }
-
-    public List<String> getResumoPedido() {
-        if (pedidoAtual == null) return List.of("Nenhum pedido ativo.");
-        List<String> resumo = new ArrayList<>();
-        resumo.add("-------------------------------------------------------");
-        resumo.add(String.format(" PEDIDO #%-4d | %s", pedidoAtual.getId(), restauranteSelecionado.getNome()));
-        resumo.add("-------------------------------------------------------");
-        double total = 0.0;
-        int i = 0;
-        String lineFormat = "%2d. %-32s  x%2d  | %6.2f €";
-        for (LinhaPedido lp : pedidoAtual.getLinhas()) {
-            String nomeItem = resolverNomeItem(lp);
-            if (nomeItem.length() > 32) nomeItem = nomeItem.substring(0, 29) + "...";
-            double subtotal = lp.getPrecoUnitario() * lp.getQuantidade(); 
-            total += subtotal;
-            resumo.add(String.format(lineFormat, (i + 1), nomeItem, lp.getQuantidade(), subtotal));
-            i++;
-        }
-        resumo.add("-------------------------------------------------------");
-        resumo.add(String.format(" TOTAL %35s | %6.2f €", "", total));
-        resumo.add("-------------------------------------------------------");
-        return resumo;
-    }
-
-    public void removerItemDoPedido(int indexLinha) {
-        if (pedidoAtual != null) this.pedidoAtual = vendaFacade.removerLinhaDoPedido(pedidoAtual, indexLinha);
-    }
-
-    public String finalizarPedido() {
-        if (pedidoAtual != null) {
-            double minutos = vendaFacade.finalizarPedido(pedidoAtual);
-            String msg = String.format("Pedido #%d Confirmado.\nTempo estimado de espera: %.0f minutos.", pedidoAtual.getId(), minutos);
-            this.pedidoAtual = null;
-            this.alergenicosAtuais = null;
-            return msg;
-        }
-        return "Erro ao finalizar.";
-    }
-
-    private String resolverNomeItem(LinhaPedido lp) {
-        if (lp.getTipo() == TipoItem.PRODUTO) {
-            Produto p = vendaFacade.obterProduto(lp.getItemId());
-            return p != null ? p.getNome() : "Produto " + lp.getItemId();
-        } else {
-            Menu m = vendaFacade.obterMenu(lp.getItemId());
-            return m != null ? m.getNome() : "Menu " + lp.getItemId();
+            facade.confirmarPedido(pedidoId);
+            return "Pedido #" + pedidoId + " aguarda pagamento na CAIXA.";
         }
     }
 }

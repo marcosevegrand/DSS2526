@@ -103,6 +103,33 @@ public class PagamentoDAOImpl implements PagamentoDAO {
     }
 
     @Override
+    public Pagamento findByPedido(int pedidoId) {
+        // Check if the payment for this order is already in the Identity Map
+        for (Pagamento p : pagamentoMap.values()) {
+            if (p.getPedidoId() == pedidoId) {
+                return p;
+            }
+        }
+
+        String sql = "SELECT * FROM Pagamento WHERE pedido_id = ?";
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, pedidoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Pagamento p = map(rs);
+                    pagamentoMap.put(p.getId(), p);
+                    return p;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
     public List<Pagamento> findAll() {
         List<Pagamento> list = new ArrayList<>();
         String sql = "SELECT * FROM Pagamento ORDER BY id";

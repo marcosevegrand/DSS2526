@@ -19,6 +19,7 @@ public class BaseFacade implements IBaseFacade {
     protected final TarefaDAO tarefaDAO = TarefaDAOImpl.getInstance();
     protected final MensagemDAO mensagemDAO = MensagemDAOImpl.getInstance();
     protected final PedidoDAO pedidoDAO = PedidoDAOImpl.getInstance();
+    protected final PagamentoDAO pagamentoDAO = PagamentoDAOImpl.getInstance();
 
     // --- Restaurante Logic ---
     @Override
@@ -288,4 +289,32 @@ public class BaseFacade implements IBaseFacade {
     public List<Pedido> listarPedidosDeRestaurante(Integer id) {
         return pedidoDAO.findAllByRestaurante(id);
     }
+
+    // --- Pagamento Logic ---
+    @Override
+    public Pagamento registarPagamento(Pagamento p) {
+        return pagamentoDAO.create(p);
+    }
+    @Override
+    public Pagamento obterPagamento(Integer id) {
+        return pagamentoDAO.findById(id);
+    }
+    @Override
+    public Pagamento obterPagamentoDePedido(Integer id) {
+        return pagamentoDAO.findByPedido(id);
+    }
+    @Override
+    public Pagamento atualizarPagamento(Pagamento p) {
+        return pagamentoDAO.update(p);
+    }
+    @Override
+    public Boolean removerPagamento(Integer id) {
+        return pagamentoDAO.delete(id);
+    }
+    @Override
+    public List<Pagamento> listarPagamentos() {
+        return pagamentoDAO.findAll();
+    }
+
+
 }

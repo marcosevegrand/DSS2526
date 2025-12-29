@@ -1,51 +1,31 @@
 package dss2526.service.gestao;
 
-import java.util.Map;
-
-import dss2526.domain.entity.Catalogo;
-import dss2526.domain.entity.Funcionario;
-import dss2526.domain.entity.Ingrediente;
-import dss2526.domain.entity.Menu;
-import dss2526.domain.entity.Passo;
-import dss2526.domain.entity.Produto;
-import dss2526.domain.entity.Restaurante;
+import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.Trabalho;
 import dss2526.service.base.IBaseFacade;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 public interface IGestaoFacade extends IBaseFacade {
+    // Autenticacao
+    Funcionario login(String utilizador, String password);
 
-    // --- Autenticação ---
-    Funcionario login(String user, String password);
+    // Gestao Global (COO)
+    void criarRestaurante(int actorId, String nome, String localizacao);
+    void criarIngrediente(int actorId, String nome, String unidade, String alergenico);
+    void criarProduto(int actorId, String nome, double preco, List<Integer> passos, Map<Integer, Integer> receita);
+    void criarCatalogo(int actorId, String nome, List<Integer> produtos, List<Integer> menus);
 
-    // --- Gestão Global (Apenas COO) ---
-    Restaurante criarRestaurante(Funcionario actor, String nome, String localizacao);
-    void removerRestaurante(Funcionario actor, int id);
-    
-    Produto criarProduto(Funcionario actor, Produto p);
-    Menu criarMenu(Funcionario actor, Menu m);
-    Ingrediente criarIngrediente(Funcionario actor, Ingrediente i);
-    Passo criarPasso(Funcionario actor, Passo p);
-    Catalogo criarCatalogo(Funcionario actor, String nome);
-    
-    // --- Gestão Local (COO ou Gerente do Restaurante) ---
-    void contratarFuncionario(Funcionario actor, Funcionario novo);
-    void demitirFuncionario(Funcionario actor, int funcionarioId);
-    void adicionarEstacao(Funcionario actor, int restauranteId, Trabalho trabalho);
-    void removerEstacao(Funcionario actor, int estacaoId);
-    void alterarCatalogoRestaurante(Funcionario actor, int restauranteId, int catalogoId);
-    
-    // --- Gestão Operacional (COO, Gerente ou Funcionario do Restaurante) ---
-    void atualizarStock(Funcionario actor, int restauranteId, int ingredienteId, int quantidade);
-    
-    // --- Estatísticas e Consultas ---
-    double consultarFaturacaoTotal(Funcionario actor, int restauranteId);
-    Map<String, Integer> consultarProdutosMaisVendidos(Funcionario actor, int restauranteId);
-    
-    // Novos métodos de estatística
-    Map<String, Long> consultarVolumePedidos(Funcionario actor, int restauranteId);
-    double consultarTempoMedioEspera(Funcionario actor, int restauranteId);
-    Map<String, Double> consultarNecessidadesStock(Funcionario actor, int restauranteId, int threshold);
-    Map<String, Long> consultarCargaEstacoes(Funcionario actor, int restauranteId);
+    // Gestao Local (Gerente ou COO)
+    void contratarFuncionario(int actorId, int restauranteId, Funcionario novo);
+    void demitirFuncionario(int actorId, int funcionarioId);
+    void atualizarStock(int actorId, int restauranteId, int ingredienteId, int quantidade);
+    void configurarEstacao(int actorId, int restauranteId, String nome, Trabalho trabalho);
 
-    void enviarAvisoCozinha(Funcionario actor, int restauranteId, String mensagem, boolean urgente);
+    // Estatisticas com Filtro Temporal
+    double consultarFaturacao(int restauranteId, LocalDateTime inicio, LocalDateTime fim);
+    Map<String, Integer> consultarTopProdutos(int restauranteId, LocalDateTime inicio, LocalDateTime fim);
+    double consultarTempoMedioEspera(int restauranteId, LocalDateTime inicio, LocalDateTime fim);
+    Map<String, Long> consultarVolumePedidos(int restauranteId, LocalDateTime inicio, LocalDateTime fim);
 }

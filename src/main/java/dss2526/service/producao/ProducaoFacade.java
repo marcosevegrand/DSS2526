@@ -1,28 +1,13 @@
 package dss2526.service.producao;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import dss2526.domain.entity.Estacao;
-import dss2526.domain.entity.Ingrediente;
-import dss2526.domain.entity.LinhaMenu;
-import dss2526.domain.entity.LinhaPedido;
-import dss2526.domain.entity.Mensagem;
-import dss2526.domain.entity.Menu;
-import dss2526.domain.entity.Passo;
-import dss2526.domain.entity.Pedido;
-import dss2526.domain.entity.Produto;
-import dss2526.domain.entity.Tarefa;
-import dss2526.domain.enumeration.EstadoPedido;
-import dss2526.domain.enumeration.EstadoTarefa;
-import dss2526.domain.enumeration.TipoItem;
-import dss2526.domain.enumeration.Trabalho;
+import dss2526.domain.entity.*;
+import dss2526.domain.enumeration.*;
 import dss2526.service.base.BaseFacade;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
     private static ProducaoFacade instance;
@@ -33,233 +18,219 @@ public class ProducaoFacade extends BaseFacade implements IProducaoFacade {
     }
 
     @Override
-    public List<Tarefa> consultarTarefasOtimizadas(int restauranteId, int estacaoId) {
-        gerarTarefasParaPedidosNovos(restauranteId);
-        Estacao estacao = estacaoDAO.findById(estacaoId);
-        if (estacao == null) return new ArrayList<>();
-        Trabalho trabalhoEstacao = estacao.getTrabalho();
-
-        List<Pedido> pedidosAtivos = pedidoDAO.findAllByRestaurante(restauranteId).stream()
-                .filter(p -> p.getEstado() != EstadoPedido.ENTREGUE)
-                .collect(Collectors.toList());
-
-        List<Tarefa> tarefasParaMostrar = new ArrayList<>();
-        for (Pedido p : pedidosAtivos) {
-            List<Tarefa> tarefasDoPedido = tarefaDAO.findAllByPedido(p.getId());
-            List<Tarefa> tarefasPendentes = tarefasDoPedido.stream()
-                    .filter(t -> t.getEstado() == EstadoTarefa.PENDENTE).collect(Collectors.toList());
-            List<Tarefa> tarefasIniciadas = tarefasDoPedido.stream()
-                    .filter(t -> t.getEstado() != EstadoTarefa.PENDENTE && t.getDataInicio() != null).collect(Collectors.toList());
-            
-            long maxDuracaoSegundos = tarefasDoPedido.stream()
-                    .mapToLong(this::obterDuracaoTarefa).max().orElse(0);
-
-            if (tarefasIniciadas.isEmpty()) {
-                for (Tarefa t : tarefasPendentes) {
-                    if (verificarTrabalhoTarefa(t, trabalhoEstacao) && obterDuracaoTarefa(t) >= maxDuracaoSegundos) {
-                        tarefasParaMostrar.add(t);
-                    }
-                }
-            } else {
-                LocalDateTime t0 = tarefasIniciadas.stream().map(Tarefa::getDataInicio).min(LocalDateTime::compareTo).orElse(LocalDateTime.now());
-                long segundosDecorridos = ChronoUnit.SECONDS.between(t0, LocalDateTime.now());
-                for (Tarefa t : tarefasPendentes) {
-                    if (verificarTrabalhoTarefa(t, trabalhoEstacao)) {
-                        if (segundosDecorridos >= (maxDuracaoSegundos - obterDuracaoTarefa(t))) {
-                            tarefasParaMostrar.add(t);
-                        }
-                    }
-                }
-            }
-        }
-        tarefasParaMostrar.sort(Comparator.comparingInt(Tarefa::getPedidoId));
-        return tarefasParaMostrar;
-    }
-
-    @Override
     public void iniciarTarefa(int tarefaId) {
         Tarefa t = tarefaDAO.findById(tarefaId);
-        if (t != null && t.getEstado() == EstadoTarefa.PENDENTE) {
-            t.setEstado(EstadoTarefa.EM_EXECUCAO);
-            t.setDataInicio(LocalDateTime.now());
-            tarefaDAO.update(t);
+        if (t == null || t.getEstado() != EstadoTarefa.PENDENTE) return;
+
+        // 1. Obter contexto do pedido e do restaurante
+        Pedido p = pedidoDAO.findById(t.getPedidoId());
+        Restaurante rest = restauranteDAO.findById(p.getRestauranteId());
+        Passo passo = passoDAO.findById(t.getPassoId());
+
+        // 2. Ajuste de Stock: Executado apenas no momento do início efetivo da tarefa
+        if (rest != null && passo != null) {
+            for (Integer ingId : passo.getIngredienteIds()) {
+                Optional<LinhaStock> stockItem = rest.getStock().stream()
+                        .filter(ls -> ls.getIngredienteId() == ingId)
+                        .findFirst();
+                
+                if (stockItem.isPresent()) {
+                    // Deduz 1 unidade base para a tarefa (simplificação da receita)
+                    int novaQtd = stockItem.get().getQuantidade() - 1;
+                    stockItem.get().setQuantidade(Math.max(0, novaQtd));
+                }
+            }
+            restauranteDAO.update(rest);
         }
+
+        // 3. Atualizar estado da tarefa
+        t.setEstado(EstadoTarefa.EM_EXECUCAO);
+        t.setDataInicio(LocalDateTime.now());
+        tarefaDAO.update(t);
     }
 
     @Override
-    public void concluirTarefa(int tarefaId) {
-        Tarefa t = tarefaDAO.findById(tarefaId);
-        if (t != null) {
-            t.setEstado(EstadoTarefa.CONCLUIDA);
-            t.setDataConclusao(LocalDateTime.now());
-            if (t.getDataInicio() == null) t.setDataInicio(LocalDateTime.now());
-            tarefaDAO.update(t);
+    public void refazerLinhaPedido(int pedidoId, int linhaPedidoId) {
+        Pedido pedido = pedidoDAO.findById(pedidoId);
+        if (pedido == null) return;
 
-            Passo p = passoDAO.findById(t.getPassoId());
-            if (p != null && p.getTrabalho() == Trabalho.CAIXA) {
-                finalizarPedidoComoEntregue(t.getPedidoId());
-            } else {
-                verificarConclusaoPedido(t.getPedidoId());
+        // Localizar a linha dentro da composição do pedido
+        Optional<LinhaPedido> linhaOpt = pedido.getLinhas().stream()
+                .filter(l -> l.getId() == linhaPedidoId)
+                .findFirst();
+
+        if (linhaOpt.isPresent()) {
+            LinhaPedido linha = linhaOpt.get();
+            
+            // Reverter estado do pedido para permitir re-processamento na cozinha
+            pedido.setEstado(EstadoPedido.EM_PREPARACAO);
+            pedido.setDataConclusao(null);
+            pedidoDAO.update(pedido);
+
+            // Gerar novas tarefas para a linha reportada com falha
+            processarLinhaParaTarefas(pedidoId, linha);
+
+            // Notificar cozinha
+            Mensagem msg = new Mensagem();
+            msg.setRestauranteId(pedido.getRestauranteId());
+            msg.setTexto("ALERTA: Item rejeitado na entrega. Refazer: Pedido #" + pedidoId);
+            msg.setDataHora(LocalDateTime.now());
+            mensagemDAO.create(msg);
+        }
+    }
+
+    private boolean processarLinhaParaTarefas(int pedidoId, LinhaPedido lp) {
+        if (lp.getTipo() == TipoItem.PRODUTO) {
+            return criarTarefasParaProduto(pedidoId, lp.getItemId(), lp.getQuantidade());
+        } else {
+            Menu m = menuDAO.findById(lp.getItemId());
+            if (m != null) {
+                boolean result = false;
+                for (LinhaMenu lm : m.getLinhas()) {
+                    result |= criarTarefasParaProduto(pedidoId, lm.getProdutoId(), lm.getQuantidade() * lp.getQuantidade());
+                }
+                return result;
             }
         }
+        return false;
     }
 
-    private void finalizarPedidoComoEntregue(int pedidoId) {
-        Pedido p = pedidoDAO.findById(pedidoId);
-        if (p != null) {
-            p.setEstado(EstadoPedido.ENTREGUE);
-            // CORREÇÃO CRÍTICA: Atualizar timestamp final para estatísticas
-            p.setDataConclusao(LocalDateTime.now());
-            pedidoDAO.update(p);
+    private boolean criarTarefasParaProduto(int pedidoId, int produtoId, int qtd) {
+        Produto prod = produtoDAO.findById(produtoId);
+        if (prod == null) return false;
+        for (int i = 0; i < qtd; i++) {
+            for (int passoId : prod.getPassoIds()) {
+                Tarefa t = new Tarefa();
+                t.setPedidoId(pedidoId);
+                t.setProdutoId(produtoId);
+                t.setPassoId(passoId);
+                t.setEstado(EstadoTarefa.PENDENTE);
+                t.setDataCriacao(LocalDateTime.now());
+                tarefaDAO.create(t);
+            }
         }
+        return true;
     }
 
-    private void verificarConclusaoPedido(int pedidoId) {
-        List<Tarefa> total = tarefaDAO.findAllByPedido(pedidoId);
-        if (!total.isEmpty() && total.stream().allMatch(t -> t.getEstado() == EstadoTarefa.CONCLUIDA)) {
-            Pedido p = pedidoDAO.findById(pedidoId);
-            if (p != null && p.getEstado() != EstadoPedido.ENTREGUE) {
-                // CORREÇÃO: Usar o estado PRONTO definido no Enum
-                p.setEstado(EstadoPedido.PRONTO);
+    @Override
+    public void verificarNovosPedidos(int restauranteId) {
+        List<Pedido> confirmados = pedidoDAO.findAllByRestaurante(restauranteId).stream()
+                .filter(p -> p.getEstado() == EstadoPedido.CONFIRMADO)
+                .collect(Collectors.toList());
+
+        for (Pedido p : confirmados) {
+            boolean criou = false;
+            for (LinhaPedido lp : p.getLinhas()) {
+                criou |= processarLinhaParaTarefas(p.getId(), lp);
+            }
+            if (criou) {
+                p.setEstado(EstadoPedido.EM_PREPARACAO);
                 pedidoDAO.update(p);
             }
         }
     }
 
     @Override
-    public void registarAtrasoPorFaltaIngrediente(int tarefaId, int ingredienteId) {
-        Tarefa t = tarefaDAO.findById(tarefaId);
-        if (t != null) {
-            t.setEstado(EstadoTarefa.ATRASADA);
-            tarefaDAO.update(t);
-            Pedido p = pedidoDAO.findById(t.getPedidoId());
-            if (p != null) {
-                Ingrediente ing = ingredienteDAO.findById(ingredienteId);
-                difundirMensagem(p.getRestauranteId(), "Tarefa #" + t.getId() + " PARADA - Falta " + (ing != null ? ing.getNome() : "Ingrediente"), true);
-            }
-        }
-    }
+    public List<Tarefa> listarTarefasDisponiveisParaIniciar(int restauranteId, int estacaoId) {
+        verificarNovosPedidos(restauranteId);
+        Estacao est = estacaoDAO.findById(estacaoId);
+        if (est == null || est instanceof Estacao.Caixa) return new ArrayList<>();
 
-    @Override
-    public List<Ingrediente> listarIngredientesDaTarefa(int tarefaId) {
-        Tarefa t = tarefaDAO.findById(tarefaId);
-        if (t == null) return List.of();
-        Passo p = passoDAO.findById(t.getPassoId());
-        return p == null ? List.of() : p.getIngredienteIds().stream().map(ingredienteDAO::findById).filter(Objects::nonNull).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Pedido> consultarPedidosEmProducao(int restauranteId) {
-        gerarTarefasParaPedidosNovos(restauranteId);
-        return pedidoDAO.findAllByRestaurante(restauranteId).stream()
-                .filter(p -> p.getEstado() != EstadoPedido.ENTREGUE)
-                .sorted(Comparator.comparingInt(Pedido::getId))
+        return tarefaDAO.findAll().stream()
+                .filter(t -> t.getEstado() == EstadoTarefa.PENDENTE)
+                .filter(t -> {
+                    Pedido p = pedidoDAO.findById(t.getPedidoId());
+                    return p != null && p.getRestauranteId() == restauranteId;
+                })
+                .filter(t -> {
+                    Passo step = passoDAO.findById(t.getPassoId());
+                    return step != null && est.podeConfecionar(step.getTrabalho());
+                })
                 .collect(Collectors.toList());
     }
 
-    @Override public List<Tarefa> consultarTarefasDoPedido(int pedidoId) { return tarefaDAO.findAllByPedido(pedidoId); }
-    @Override public List<Mensagem> consultarMensagens(int restauranteId) { return mensagemDAO.findAllByRestaurante(restauranteId).stream().sorted(Comparator.comparing(Mensagem::getDataHora).reversed()).collect(Collectors.toList()); }
-    @Override public void difundirMensagem(int rId, String txt, boolean urg) { Mensagem m = new Mensagem(); m.setRestauranteId(rId); m.setTexto(txt); m.setDataHora(LocalDateTime.now()); mensagemDAO.create(m); }
-
-    // Helpers
-    private void gerarTarefasParaPedidosNovos(int restauranteId) {
-        List<Pedido> confirmados = pedidoDAO.findAllByRestaurante(restauranteId).stream()
-                .filter(p -> p.getEstado() == EstadoPedido.CONFIRMADO).collect(Collectors.toList());
-        for (Pedido p : confirmados) {
-            boolean criou = false;
-            for (LinhaPedido lp : p.getLinhas()) {
-                if (lp.getTipo() == TipoItem.PRODUTO) {
-                    Produto prod = produtoDAO.findById(lp.getItemId());
-                    if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lp.getQuantidade());
-                } else {
-                    Menu m = menuDAO.findById(lp.getItemId());
-                    if (m != null) for (LinhaMenu lm : m.getLinhas()) {
-                        Produto prod = produtoDAO.findById(lm.getProdutoId());
-                        if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lm.getQuantidade() * lp.getQuantidade());
-                    }
-                }
-            }
-            if (criou) { p.setEstado(EstadoPedido.EM_PREPARACAO); pedidoDAO.update(p); }
-        }
+    @Override
+    public List<Tarefa> listarTarefasEmExecucaoNaEstacao(int restauranteId, int estacaoId) {
+        return tarefaDAO.findAll().stream()
+                .filter(t -> t.getEstado() == EstadoTarefa.EM_EXECUCAO || t.getEstado() == EstadoTarefa.ATRASADA)
+                .filter(t -> {
+                    Pedido p = pedidoDAO.findById(t.getPedidoId());
+                    return p != null && p.getRestauranteId() == restauranteId;
+                })
+                .filter(t -> {
+                    Estacao est = estacaoDAO.findById(estacaoId);
+                    Passo step = passoDAO.findById(t.getPassoId());
+                    return est != null && step != null && est.podeConfecionar(step.getTrabalho());
+                })
+                .collect(Collectors.toList());
     }
-
-    private boolean criarTarefasProduto(int pedidoId, Produto prod, int quantidade) {
-        boolean criou = false;
-        for (int i = 0; i < quantidade; i++) {
-            for (Integer passoId : prod.getPassoIds()) {
-                Tarefa t = new Tarefa();
-                t.setPedidoId(pedidoId); t.setProdutoId(prod.getId()); t.setPassoId(passoId);
-                t.setDataCriacao(LocalDateTime.now()); t.setEstado(EstadoTarefa.PENDENTE);
-                tarefaDAO.create(t);
-                criou = true;
-            }
-        }
-        return criou;
-    }
-
-    private long obterDuracaoTarefa(Tarefa t) { Passo p = passoDAO.findById(t.getPassoId()); return (p != null && p.getDuracao() != null) ? p.getDuracao().toSeconds() : 0; }
-    private boolean verificarTrabalhoTarefa(Tarefa t, Trabalho trab) { Passo p = passoDAO.findById(t.getPassoId()); return p != null && p.getTrabalho() == trab; }
 
     @Override
-    public void reportarPedidoIncorreto(int pedidoId) {
+    public void concluirTarefa(int tarefaId) {
+        Tarefa t = tarefaDAO.findById(tarefaId);
+        if (t == null) return;
+        t.setEstado(EstadoTarefa.CONCLUIDA);
+        t.setDataConclusao(LocalDateTime.now());
+        tarefaDAO.update(t);
+
+        List<Tarefa> total = tarefaDAO.findAllByPedido(t.getPedidoId());
+        if (total.stream().allMatch(x -> x.getEstado() == EstadoTarefa.CONCLUIDA)) {
+            Pedido p = pedidoDAO.findById(t.getPedidoId());
+            p.setEstado(EstadoPedido.PRONTO);
+            pedidoDAO.update(p);
+        }
+    }
+
+    @Override
+    public void processarPagamento(int pedidoId) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        Pagamento pag = pagamentoDAO.findByPedido(pedidoId);
+        if (p != null && pag != null) {
+            pag.setConfirmado(true);
+            pag.setData(LocalDateTime.now());
+            pagamentoDAO.update(pag);
+            p.setEstado(EstadoPedido.CONFIRMADO);
+            pedidoDAO.update(p);
+            verificarNovosPedidos(p.getRestauranteId());
+        }
+    }
+
+    @Override
+    public List<Pedido> listarPedidosAguardandoPagamento(int restauranteId) {
+        return pedidoDAO.findAllByRestaurante(restauranteId).stream()
+                .filter(p -> p.getEstado() == EstadoPedido.AGUARDA_PAGAMENTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Pedido> listarPedidosProntosParaEntrega(int restauranteId) {
+        return pedidoDAO.findAllByRestaurante(restauranteId).stream()
+                .filter(p -> p.getEstado() == EstadoPedido.PRONTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void confirmarEntrega(int pedidoId) {
         Pedido p = pedidoDAO.findById(pedidoId);
         if (p != null) {
-            difundirMensagem(p.getRestauranteId(), "Pedido #" + pedidoId + " reportado como INCORRETO pelo cliente.", true);
+            p.setEstado(EstadoPedido.ENTREGUE);
+            p.setDataConclusao(LocalDateTime.now());
+            pedidoDAO.update(p);
         }
     }
 
-    @Override
-    public void gerarTarefasCorrecao(int pedidoId) {
-        Pedido p = pedidoDAO.findById(pedidoId);
-        if (p != null) {
-            boolean criou = false;
-            for (LinhaPedido lp : p.getLinhas()) {
-                if (lp.getTipo() == TipoItem.PRODUTO) {
-                    Produto prod = produtoDAO.findById(lp.getItemId());
-                    if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lp.getQuantidade());
-                } else {
-                    Menu m = menuDAO.findById(lp.getItemId());
-                    if (m != null) for (LinhaMenu lm : m.getLinhas()) {
-                        Produto prod = produtoDAO.findById(lm.getProdutoId());
-                        if (prod != null) criou |= criarTarefasProduto(p.getId(), prod, lm.getQuantidade() * lp.getQuantidade());
-                    }
-                }
-            }
-            if (criou) {
-                difundirMensagem(p.getRestauranteId(), "Tarefas de correção geradas para o Pedido #" + pedidoId + ".", true);
-            }
-        }
+    @Override public void cancelarPedido(int pId) { 
+        Pedido p = pedidoDAO.findById(pId);
+        if (p != null) { p.setEstado(EstadoPedido.CANCELADO); pedidoDAO.update(p); }
     }
-
-    @Override
-    public void verificarPedidosEsquecidos(int restauranteId) {
-        List<Pedido> pedidos = pedidoDAO.findAllByRestaurante(restauranteId);
-        LocalDateTime agora = LocalDateTime.now();
-        
-        for (Pedido p : pedidos) {
-            // Check orders that are PRONTO (ready) but not yet delivered
-            if (p.getEstado() == EstadoPedido.PRONTO && p.getDataCriacao() != null) {
-                long minutosEspera = ChronoUnit.MINUTES.between(p.getDataCriacao(), agora);
-                
-                // Alert if order has been ready for more than 10 minutes
-                if (minutosEspera > 10) {
-                    difundirMensagem(restauranteId, 
-                        "ALERTA: Pedido #" + p.getId() + " está pronto há " + minutosEspera + " minutos!", 
-                        true);
-                }
-            }
-            
-            // Check orders in preparation that are taking too long
-            if (p.getEstado() == EstadoPedido.EM_PREPARACAO && p.getDataCriacao() != null) {
-                long minutosEmPreparacao = ChronoUnit.MINUTES.between(p.getDataCriacao(), agora);
-                
-                // Alert if order has been in preparation for more than 30 minutes
-                if (minutosEmPreparacao > 30) {
-                    difundirMensagem(restauranteId, 
-                        "ALERTA: Pedido #" + p.getId() + " em preparação há " + minutosEmPreparacao + " minutos!", 
-                        true);
-                }
-            }
-        }
+    @Override public void registarAtrasoTarefa(int tId) {
+        Tarefa t = tarefaDAO.findById(tId);
+        if (t != null) { t.setEstado(EstadoTarefa.ATRASADA); tarefaDAO.update(t); }
     }
+    @Override public List<Pedido> consultarMonitorGlobal(int rId) { 
+        return pedidoDAO.findAllByRestaurante(rId).stream()
+                .filter(p -> p.getEstado() != EstadoPedido.ENTREGUE && p.getEstado() != EstadoPedido.CANCELADO)
+                .collect(Collectors.toList()); 
+    }
+    @Override public List<Mensagem> consultarMensagensRestaurante(int rId) { return mensagemDAO.findAllByRestaurante(rId); }
 }

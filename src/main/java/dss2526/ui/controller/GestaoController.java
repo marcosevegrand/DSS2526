@@ -2,230 +2,95 @@ package dss2526.ui.controller;
 
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.Funcao;
-import dss2526.domain.enumeration.Trabalho;
 import dss2526.service.gestao.GestaoFacade;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
+import dss2526.service.gestao.IGestaoFacade;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GestaoController {
+    private final IGestaoFacade facade;
     
-    private final GestaoFacade facade;
-    
-    // Estado da Sessão
-    private Funcionario utilizadorLogado;
-    private int restauranteAtivoId = -1; 
+    // Estado da Sessao
+    private int utilizadorId = -1;
+    private Funcao roleUtilizador;
+    private int restauranteAtivoId = -1;
+
+    // Caches de IDs para mapeamento UI
+    private List<Integer> cacheIdsRestaurantes = new ArrayList<>();
+    private List<Integer> cacheIdsFuncionarios = new ArrayList<>();
+    private List<Integer> cacheIdsIngredientes = new ArrayList<>();
 
     public GestaoController() {
         this.facade = GestaoFacade.getInstance();
     }
 
-    // --- Autenticação e Contexto ---
-
-    public boolean login(String u, String p) {
-        this.utilizadorLogado = facade.login(u, p);
-        if (this.utilizadorLogado != null) {
-            if (utilizadorLogado.getRestauranteId() != null) {
-                this.restauranteAtivoId = utilizadorLogado.getRestauranteId();
-            }
+    public boolean autenticar(String u, String p) {
+        Funcionario f = facade.login(u, p);
+        if (f != null && f.getPassword().equals(p)) {
+            this.utilizadorId = f.getId();
+            this.roleUtilizador = f.getFuncao();
+            if (f.getRestauranteId() != null) this.restauranteAtivoId = f.getRestauranteId();
             return true;
         }
         return false;
     }
 
-    public void logout() {
-        this.utilizadorLogado = null;
-        this.restauranteAtivoId = -1;
-    }
+    public boolean ehCOO() { return roleUtilizador == Funcao.COO; }
+    public boolean ehGerente() { return roleUtilizador == Funcao.GERENTE; }
 
-    public boolean isCOO() {
-        return utilizadorLogado != null && utilizadorLogado.getFuncao() == Funcao.COO;
-    }
-
-    public boolean isGerente() {
-        return utilizadorLogado != null && utilizadorLogado.getFuncao() == Funcao.GERENTE;
-    }
-
-    public String getNomeUtilizador() {
-        return utilizadorLogado != null ? utilizadorLogado.getUtilizador() : "Visitante";
-    }
-
-    public void selecionarRestauranteContexto(int rId) {
-        if (isCOO()) {
-            this.restauranteAtivoId = rId;
-        }
-    }
-
-    public String getNomeRestauranteAtivo() {
-        if (restauranteAtivoId == -1) return "Nenhum";
-        Restaurante r = facade.obterRestaurante(restauranteAtivoId);
-        return r != null ? r.getNome() : "Desconhecido";
-    }
-
-    // --- Listagens Globais (para seleção na UI) ---
-
-    public List<Ingrediente> listarTodosIngredientes() {
-        return facade.listarIngredientes();
-    }
-
-    public List<Passo> listarTodosPassos() {
-        return facade.listarPassos();
-    }
-
-    public List<Produto> listarTodosProdutos() {
-        return facade.listarProdutos();
-    }
-
-    public List<Catalogo> listarTodosCatalogos() {
-        return facade.listarCatalogos();
-    }
-
-    // --- Operações Globais (COO) ---
-
+    // --- Restaurantes ---
     public List<String> listarRestaurantes() {
-        return facade.listarRestaurantes().stream()
-                .map(r -> String.format("%d. %s (%s)", r.getId(), r.getNome(), r.getLocalizacao()))
-                .collect(Collectors.toList());
+        List<Restaurante> lista = facade.listarRestaurantes();
+        this.cacheIdsRestaurantes = lista.stream().map(Restaurante::getId).collect(Collectors.toList());
+        return lista.stream().map(r -> r.getNome() + " (" + r.getLocalizacao() + ")").collect(Collectors.toList());
     }
 
-    public void criarRestaurante(String nome, String local) {
-        facade.criarRestaurante(utilizadorLogado, nome, local);
+    public void selecionarRestaurante(int index) {
+        this.restauranteAtivoId = cacheIdsRestaurantes.get(index);
     }
 
-    public void criarIngrediente(String nome, String unidade, String alergenico) {
-        Ingrediente i = new Ingrediente();
-        i.setNome(nome);
-        i.setUnidade(unidade);
-        i.setAlergenico(alergenico.isBlank() ? null : alergenico);
-        facade.criarIngrediente(utilizadorLogado, i);
+    // --- Funcionarios ---
+    public List<String> listarFuncionarios() {
+        List<Funcionario> lista = facade.listarFuncionariosDeRestaurante(restauranteAtivoId);
+        this.cacheIdsFuncionarios = lista.stream().map(Funcionario::getId).collect(Collectors.toList());
+        return lista.stream().map(f -> f.getUtilizador() + " [" + f.getFuncao() + "]").collect(Collectors.toList());
     }
 
-    public void criarPasso(String nome, long duracaoMinutos, Trabalho trabalho, List<Integer> ingredientesIds) {
-        Passo p = new Passo();
-        p.setNome(nome);
-        p.setDuracao(Duration.ofMinutes(duracaoMinutos));
-        p.setTrabalho(trabalho);
-        p.setIngredienteIds(ingredientesIds);
-        facade.criarPasso(utilizadorLogado, p);
-    }
-
-    public void criarProduto(String nome, double preco, List<Integer> passosIds, List<Integer> ingredientesIds, List<Integer> quantidades) {
-        Produto p = new Produto();
-        p.setNome(nome);
-        p.setPreco(preco);
-        p.setPassoIds(passosIds);
-        
-        // Criar Linhas de Produto (Receita)
-        for (int i = 0; i < ingredientesIds.size(); i++) {
-            LinhaProduto lp = new LinhaProduto();
-            lp.setIngredienteId(ingredientesIds.get(i));
-            lp.setQuantidade(quantidades.get(i));
-            p.addLinha(lp);
-        }
-        
-        facade.criarProduto(utilizadorLogado, p);
-    }
-
-    public void criarMenu(String nome, double preco, List<Integer> produtosIds) {
-        Menu m = new Menu();
-        m.setNome(nome);
-        m.setPreco(preco);
-        for (Integer pId : produtosIds) {
-            LinhaMenu lm = new LinhaMenu();
-            lm.setProdutoId(pId);
-            lm.setQuantidade(1);
-            m.addLinha(lm);
-        }
-        facade.criarMenu(utilizadorLogado, m);
-    }
-
-    public void criarCatalogo(String nome) {
-        facade.criarCatalogo(utilizadorLogado, nome);
-    }
-
-    // --- Operações Locais (Restaurante Ativo) ---
-
-    public List<String> listarFuncionariosLocais() {
-        if (restauranteAtivoId == -1) return List.of();
-        return facade.listarFuncionariosDeRestaurante(restauranteAtivoId).stream()
-                .map(f -> String.format("ID: %d | %s | %s", f.getId(), f.getUtilizador(), f.getFuncao()))
-                .collect(Collectors.toList());
-    }
-
-    public void contratarFuncionario(String user, String pass, Funcao funcao) {
+    public void contratar(String user, String pass, int cargo) {
         Funcionario f = new Funcionario();
-        f.setUtilizador(user);
-        f.setPassword(pass);
-        f.setFuncao(funcao);
-        f.setRestauranteId(restauranteAtivoId);
-        facade.contratarFuncionario(utilizadorLogado, f);
+        f.setUtilizador(user); f.setPassword(pass);
+        f.setFuncao(cargo == 2 ? Funcao.GERENTE : Funcao.FUNCIONARIO);
+        facade.contratarFuncionario(utilizadorId, restauranteAtivoId, f);
     }
 
-    public void demitirFuncionario(int idFunc) {
-        facade.demitirFuncionario(utilizadorLogado, idFunc);
+    public void demitir(int index) {
+        facade.demitirFuncionario(utilizadorId, cacheIdsFuncionarios.get(index));
     }
 
-    public List<String> listarEstacoesLocais() {
-        return facade.listarEstacoesDeRestaurante(restauranteAtivoId).stream()
-                .map(e -> String.format("ID: %d | %s", e.getId(), e.getTrabalho()))
-                .collect(Collectors.toList());
+    // --- Stock ---
+    public List<String> listarIngredientes() {
+        List<Ingrediente> lista = facade.listarIngredientes();
+        this.cacheIdsIngredientes = lista.stream().map(Ingrediente::getId).collect(Collectors.toList());
+        return lista.stream().map(Ingrediente::getNome).collect(Collectors.toList());
     }
 
-    public void adicionarEstacao(Trabalho t) {
-        facade.adicionarEstacao(utilizadorLogado, restauranteAtivoId, t);
+    public void atualizarStock(int index, int qtd) {
+        facade.atualizarStock(utilizadorId, restauranteAtivoId, cacheIdsIngredientes.get(index), qtd);
     }
 
-    public void atualizarStock(int idIngrediente, int qtdAdicionar) {
-        facade.atualizarStock(utilizadorLogado, restauranteAtivoId, idIngrediente, qtdAdicionar);
-    }
-
-    public void enviarMensagem(String txt, boolean urgente) {
-        facade.enviarAvisoCozinha(utilizadorLogado, restauranteAtivoId, txt, urgente);
-    }
-
-    public void mudarCatalogoRestaurante(int catalogoId) {
-        facade.alterarCatalogoRestaurante(utilizadorLogado, restauranteAtivoId, catalogoId);
-    }
-
-    // --- Estatísticas (Atualizado) ---
-
-    public String getRelatorioFinanceiro() {
-        double total = facade.consultarFaturacaoTotal(utilizadorLogado, restauranteAtivoId);
-        return String.format("💰 Faturação Total Acumulada: %.2f €", total);
-    }
-
-    public List<String> getRelatorioVolumePedidos() {
-        Map<String, Long> stats = facade.consultarVolumePedidos(utilizadorLogado, restauranteAtivoId);
-        return stats.entrySet().stream()
-                .map(e -> String.format("📦 %s: %d", e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    public String getTempoMedioEspera() {
-        double media = facade.consultarTempoMedioEspera(utilizadorLogado, restauranteAtivoId);
-        return String.format("⏱️ Tempo Médio de Espera: %.1f minutos", media);
-    }
-
-    public List<String> getAlertasStock(int limite) {
-        Map<String, Double> stock = facade.consultarNecessidadesStock(utilizadorLogado, restauranteAtivoId, limite);
-        return stock.entrySet().stream()
-                .map(e -> String.format("⚠️ STOCK BAIXO: %s (Qtd: %.1f)", e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-    }
-    
-    public List<String> getCargaEstacoes() {
-        Map<String, Long> carga = facade.consultarCargaEstacoes(utilizadorLogado, restauranteAtivoId);
-        return carga.entrySet().stream()
-                .map(e -> String.format("🔥 %s: %d tarefas realizadas", e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getTopProdutos() {
-        Map<String, Integer> top = facade.consultarProdutosMaisVendidos(utilizadorLogado, restauranteAtivoId);
-        return top.entrySet().stream()
-                .map(e -> String.format("🏆 %s: %d vendidos", e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
+    // --- Estatisticas ---
+    public String obterDadosEstatisticos(LocalDateTime inicio, LocalDateTime fim) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Faturacao: ").append(facade.consultarFaturacao(restauranteAtivoId, inicio, fim)).append(" EUR\n");
+        sb.append("Tempo Medio Espera: ").append(facade.consultarTempoMedioEspera(restauranteAtivoId, inicio, fim)).append(" min\n");
+        
+        sb.append("Volume por Estado:\n");
+        facade.consultarVolumePedidos(restauranteAtivoId, inicio, fim).forEach((k, v) -> sb.append("- ").append(k).append(": ").append(v).append("\n"));
+        
+        sb.append("Top Produtos:\n");
+        facade.consultarTopProdutos(restauranteAtivoId, inicio, fim).forEach((k, v) -> sb.append("- ").append(k).append(": ").append(v).append("\n"));
+        
+        return sb.toString();
     }
 }

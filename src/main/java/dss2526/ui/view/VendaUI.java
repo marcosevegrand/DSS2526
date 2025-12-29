@@ -2,162 +2,108 @@ package dss2526.ui.view;
 
 import dss2526.ui.controller.VendaController;
 import dss2526.ui.util.NewMenu;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Arrays;
 
 public class VendaUI {
-    
     private final VendaController controller;
-    private final Scanner scanner;
+    private final Scanner sc;
 
     public VendaUI() {
         this.controller = new VendaController();
-        this.scanner = new Scanner(System.in);
+        this.sc = new Scanner(System.in);
     }
 
     public void run() {
-        mostrarCabecalhoPrincipal();
-        
-        List<String> opcoesRestaurante = controller.getListaRestaurantes();
-        if (opcoesRestaurante.isEmpty()) { 
-            System.out.println("⚠  Não há restaurantes disponíveis no sistema."); 
-            return; 
-        }
+        System.out.println("\n===== SUBSISTEMA DE VENDA =====");
+        List<String> rests = controller.getNomesRestaurantes();
+        if (rests.isEmpty()) return;
+        controller.selecionarRestaurante(escolher("Selecione o Restaurante", rests));
 
-        System.out.println("\n📍 SELEÇÃO DE LOCALIZAÇÃO");
-        Integer indexRestaurante = escolher("Selecione o Restaurante", opcoesRestaurante);
-        if (indexRestaurante == null) return;
-        controller.selecionarRestaurante(indexRestaurante);
+        NewMenu menu = new NewMenu("LOJA PRINCIPAL", new String[]{
+            "Novo Pedido",
+            "Consultar Estado de Pedidos"
+        });
 
-        NewMenu menu = new NewMenu("TERMINAL DE VENDA", new String[]{ "📝 Iniciar Novo Pedido" });
-        menu.setHandler(1, () -> { fluxoSessaoPedido(); return false; });
+        menu.setHandler(1, () -> { fluxoPedido(); return false; });
+        menu.setHandler(2, () -> { controller.getAcompanhamento().forEach(System.out::println); return false; });
         menu.run();
     }
 
-    /**
-     * Gere o fluxo de um novo pedido.
-     * Se o utilizador sair do menu de gestão sem finalizar, o pedido é automaticamente cancelado.
-     */
-    private void fluxoSessaoPedido() {
-        separador(); System.out.println("🛒  NOVO PEDIDO"); separador();
+    private void fluxoPedido() {
+        // 1. Filtros Iniciais
+        System.out.println("\n--- RESTRIÇÕES ALIMENTARES ---");
+        List<String> alerg = controller.getNomesAlergenicos();
+        for(int i=0; i<alerg.size(); i++) System.out.println((i+1) + ". " + alerg.get(i));
+        System.out.print("Introduza números dos alergénicos a evitar (ex: 1 2) ou Enter: ");
+        String line = sc.nextLine();
+        if (!line.isBlank()) {
+            List<Integer> sel = new ArrayList<>();
+            for(String s : line.split("\\s+")) {
+                try { sel.add(Integer.parseInt(s)-1); } catch(Exception e){}
+            }
+            controller.setAlergenicosPorIndices(sel);
+        }
+
+        controller.iniciarPedido();
+
+        // 2. Loop de Gestão de Carrinho
+        NewMenu carrinhoMenu = new NewMenu("GESTOR DE PEDIDO", new String[]{
+            "Adicionar Item",
+            "Remover Item",
+            "Finalizar Pedido (Ver Resumo)"
+        });
+
+        carrinhoMenu.setHandler(1, () -> {
+            List<String> catalogo = controller.getCatalogoFormatado();
+            if (catalogo.isEmpty()) { System.out.println("Sem itens disponíveis."); return false; }
+            int itemOp = escolher("Catálogo", catalogo);
+            System.out.print("Quantidade: "); int qtd = Integer.parseInt(sc.nextLine());
+            System.out.print("Observações: "); String obs = sc.nextLine();
+            controller.adicionarItem(itemOp, qtd, obs);
+            System.out.println("Item adicionado.");
+            return false;
+        });
+
+        carrinhoMenu.setHandler(2, () -> {
+            List<String> itens = controller.getItensNoPedido();
+            if (itens.isEmpty()) { System.out.println("O carrinho está vazio."); return false; }
+            int remOp = escolher("Remover qual item?", itens);
+            controller.removerItem(remOp);
+            System.out.println("Item removido.");
+            return false;
+        });
+
+        carrinhoMenu.setHandler(3, () -> {
+            System.out.println(controller.getResumoPedido());
+            System.out.print("Confirmar e avançar para pagamento? (s/n): ");
+            if (sc.nextLine().equalsIgnoreCase("s")) {
+                fluxoPagamento();
+                return true; // Sai do menu do carrinho
+            }
+            return false; // Volta ao menu do carrinho para editar
+        });
+
+        // O método run() do NewMenu sai com 0. 
+        // Vamos garantir que se o utilizador sair do ciclo (opção 0), o pedido é cancelado.
+        System.out.println("\n(Dica: Selecione 0 para Sair/Cancelar o pedido)");
+        carrinhoMenu.run();
         
-        String inputParaLevar = lerString("🥡 Pedido para levar? (s/n): ").trim().toLowerCase();
-        boolean paraLevar = inputParaLevar.startsWith("s");
-        String alergenicosInput = lerString("⚠️  Alergénios a evitar (sep. vírgula, ENTER vazio): ");
-        List<String> alergenicos = alergenicosInput.isBlank() ? List.of() : Arrays.asList(alergenicosInput.split(","));
-
-        try { 
-            controller.iniciarPedido(paraLevar, alergenicos); 
-        } catch (Exception e) { 
-            System.out.println("❌ Erro ao iniciar pedido: " + e.getMessage()); 
-            return; 
-        }
-
-        NewMenu menuPedido = new NewMenu("GESTÃO DE PEDIDO", new String[]{ 
-            "➕ Adicionar Item", 
-            "➖ Remover Item", 
-            "👀 Consultar Pedido", 
-            "✅ Finalizar Pedido" 
-        });
-
-        // Opção 1: Adicionar
-        menuPedido.setHandler(1, () -> {
-            List<String> itens = controller.getItensDisponiveisLegiveis();
-            if (itens.isEmpty()) { 
-                System.out.println("ℹ️  Não há itens disponíveis para estes critérios."); 
-                return false; 
-            }
-            separador(); System.out.println("📋 CATÁLOGO DISPONÍVEL");
-            Integer itemIndex = escolher("Selecione o Item", itens);
-            if (itemIndex != null) {
-                Integer qtd = lerInt("🔢 Quantidade: ");
-                if (qtd > 0) {
-                    controller.adicionarItemAoPedido(itemIndex, qtd);
-                    System.out.println("✨ Item adicionado com sucesso.");
-                }
-            }
-            return false;
-        });
-
-        // Opção 2: Remover
-        menuPedido.setHandler(2, () -> {
-            mostrarResumoPedido();
-            Integer indexLinha = lerInt("🗑️  Número da linha a remover (0 para voltar): ");
-            if (indexLinha > 0) { 
-                controller.removerItemDoPedido(indexLinha - 1); 
-                System.out.println("🗑️  Item removido."); 
-            }
-            return false;
-        });
-
-        // Opção 3: Consultar
-        menuPedido.setHandler(3, () -> { 
-            mostrarResumoPedido(); 
-            esperarEnter(); 
-            return false; 
-        });
-
-        // Opção 4: Finalizar
-        menuPedido.setHandler(4, () -> {
-            mostrarResumoPedido();
-            String confirm = lerString("💳 Confirmar e pagar? (s/n): ");
-            if (confirm.equalsIgnoreCase("s")) {
-                String resultado = controller.finalizarPedido();
-                System.out.println("\n========================================");
-                System.out.println("   PEDIDO FINALIZADO COM SUCESSO!");
-                System.out.println("----------------------------------------");
-                System.out.println(resultado);
-                System.out.println("========================================\n");
-                esperarEnter();
-                return true; // SAI DO MENU DE GESTÃO (FINALIZADO)
-            }
-            return false;
-        });
-
-        // Executa o menu
-        menuPedido.run();
-
-        // LÓGICA DE CANCELAMENTO AUTOMÁTICO
-        // Se após o run() o controller ainda tiver um pedido ativo, 
-        // significa que o utilizador escolheu "Sair" (0) em vez de finalizar.
-        if (controller.isPedidoAtivo()) {
-            System.out.println("\n🛑 Saída detetada. O pedido em curso foi cancelado.");
-            controller.cancelarPedido();
-        }
+        // Se chegarmos aqui e o pedido ainda estiver "INICIADO", cancelamos.
+        controller.cancelarPedidoAtual();
     }
 
-    private void mostrarCabecalhoPrincipal() {
-        System.out.println("\n\n");
-        System.out.println("#########################################");
-        System.out.println("#      🍔 FASTBURGER - POS SYSTEM 🍟    #");
-        System.out.println("#########################################");
+    private void fluxoPagamento() {
+        List<String> pags = controller.getOpcoesPagamento();
+        int pOp = escolher("Forma de Pagamento", pags);
+        System.out.println("\n" + controller.finalizar(pOp));
     }
-    private void separador() { System.out.println("-----------------------------------------"); }
-    private void mostrarResumoPedido() { System.out.println(); controller.getResumoPedido().forEach(System.out::println); System.out.println(); }
-    
-    private Integer escolher(String titulo, List<String> opcoes) {
-        System.out.println("\n>>> " + titulo + " <<<");
-        for (int i = 0; i < opcoes.size(); i++) { System.out.printf("%d. %s%n", i + 1, opcoes.get(i)); }
-        int escolha = lerInt("👉 Opção (0 para cancelar): ");
-        if (escolha <= 0 || escolha > opcoes.size()) return null;
-        return escolha - 1; 
+
+    private int escolher(String t, List<String> ops) {
+        System.out.println("\n--- " + t + " ---");
+        for (int i = 0; i < ops.size(); i++) System.out.println((i + 1) + ". " + ops.get(i));
+        System.out.print("Seleção: ");
+        try { return Integer.parseInt(sc.nextLine()) - 1; } catch (Exception e) { return 0; }
     }
-    
-    private Integer lerInt(String msg) {
-        while (true) {
-            try { 
-                System.out.print(msg); 
-                String line = scanner.nextLine(); 
-                if (line.trim().isEmpty()) return 0; 
-                return Integer.parseInt(line.trim()); 
-            } catch (NumberFormatException e) { 
-                System.out.println("❌ Por favor insira um número válido."); 
-            }
-        }
-    }
-    
-    private String lerString(String msg) { System.out.print(msg); return scanner.nextLine(); }
-    private void esperarEnter() { System.out.println("\n(Pressione ENTER para continuar...)"); scanner.nextLine(); }
 }

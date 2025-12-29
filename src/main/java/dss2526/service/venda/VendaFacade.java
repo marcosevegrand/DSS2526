@@ -2,150 +2,157 @@ package dss2526.service.venda;
 
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.*;
+import dss2526.domain.contract.Item;
 import dss2526.service.base.BaseFacade;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * Facade STATELESS.
- * Implementação da lógica de negócio para o subsistema de Venda.
- */
 public class VendaFacade extends BaseFacade implements IVendaFacade {
 
     private static VendaFacade instance;
-
     private VendaFacade() {}
-
     public static synchronized VendaFacade getInstance() {
-        if (instance == null) {
-            instance = new VendaFacade();
-        }
+        if (instance == null) instance = new VendaFacade();
         return instance;
     }
 
     @Override
-    public Pedido iniciarPedido(Restaurante restaurante, Boolean paraLevar) {
+    public Pedido iniciarPedido(int restauranteId) {
         Pedido p = new Pedido();
-        p.setRestauranteId(restaurante.getId());
-        p.setParaLevar(paraLevar);
+        p.setRestauranteId(restauranteId);
         p.setEstado(EstadoPedido.INICIADO);
         p.setDataCriacao(LocalDateTime.now());
-        // Persistir o pedido inicialmente conforme a arquitetura do sistema
-        return registarPedido(p);
+        return pedidoDAO.create(p);
     }
 
     @Override
-    public void cancelarPedido(Pedido pedido) {
-        if (pedido != null && pedido.getId() != 0) {
-            // Remove o pedido da base de dados (ou poderia marcar como CANCELADO)
-            pedido.setEstado(EstadoPedido.CANCELADO);
-            atualizarPedido(pedido);
+    public List<Ingrediente> listarAlergenicosDisponiveis() {
+        return ingredienteDAO.findAll().stream()
+                .filter(i -> i.getAlergenico() != null && !i.getAlergenico().isBlank())
+                .collect(Collectors.toMap(Ingrediente::getAlergenico, i -> i, (i1, i2) -> i1))
+                .values().stream().collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Item> listarItemsDisponiveis(int restauranteId, List<Integer> alergenicoIds) {
+        Restaurante r = restauranteDAO.findById(restauranteId);
+        if (r == null) return new ArrayList<>();
+        Catalogo c = catalogoDAO.findById(r.getCatalogoId());
+        List<Item> res = new ArrayList<>();
+        if (c == null) return res;
+
+        for (int pid : c.getProdutoIds()) {
+            Produto p = produtoDAO.findById(pid);
+            if (p != null && !contemAlergenicos(p, alergenicoIds)) res.add(p);
         }
-    }
-
-    @Override
-    public List<Produto> listarProdutosDisponiveis(Restaurante restaurante, List<String> alergenicos) {
-        Catalogo catalogo = obterCatalogo(restaurante.getCatalogoId());
-        if (catalogo == null) return List.of();
-
-        return catalogo.getProdutoIds().stream()
-                .map(this::obterProduto)
-                .filter(p -> p != null)
-                .filter(p -> !contemAlergenicos(p, alergenicos))
-                .filter(p -> verificarStockProduto(p, restaurante))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Menu> listarMenusDisponiveis(Restaurante restaurante, List<String> alergenicos) {
-        Catalogo catalogo = obterCatalogo(restaurante.getCatalogoId());
-        if (catalogo == null) return List.of();
-
-        return catalogo.getMenuIds().stream()
-                .map(this::obterMenu)
-                .filter(m -> m != null)
-                .filter(m -> m.getLinhas().stream().allMatch(lm -> {
-                        Produto p = obterProduto(lm.getProdutoId());
-                        return p != null && !contemAlergenicos(p, alergenicos) && verificarStockProduto(p, restaurante);
-                    }))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public Pedido adicionarLinhaAoPedido(Pedido pedido, LinhaPedido linha) {
-        pedido.addLinha(linha);
-        return atualizarPedido(pedido);
-    }
-
-    @Override
-    public Pedido removerLinhaDoPedido(Pedido pedido, int index) {
-        if (index >= 0 && index < pedido.getLinhas().size()) {
-            LinhaPedido lp = pedido.getLinhas().get(index);
-            pedido.removeLinha(lp);
-            return atualizarPedido(pedido);
+        for (int mid : c.getMenuIds()) {
+            Menu m = menuDAO.findById(mid);
+            if (m != null && m.getLinhas().stream().allMatch(lm -> {
+                Produto p = produtoDAO.findById(lm.getProdutoId());
+                return p != null && !contemAlergenicos(p, alergenicoIds);
+            })) res.add(m);
         }
-        return pedido;
+        return res;
     }
 
     @Override
-    public double finalizarPedido(Pedido pedido) {
-        pedido.setEstado(EstadoPedido.CONFIRMADO);
-        atualizarPedido(pedido);
-        return calcularEstimativaTempo(pedido);
-    }
-
-    private double calcularEstimativaTempo(Pedido p) {
-        double maxMinutos = 0.0;
-        for (LinhaPedido lp : p.getLinhas()) {
-            double tempoItem = 0.0;
-            if (lp.getTipo() == TipoItem.PRODUTO) {
-                tempoItem = calcularTempoProduto(lp.getItemId());
-            } else {
-                Menu m = menuDAO.findById(lp.getItemId());
-                if (m != null) {
-                    tempoItem = m.getLinhas().stream()
-                            .mapToDouble(lm -> calcularTempoProduto(lm.getProdutoId()))
-                            .max().orElse(0.0);
-                }
-            }
-            if (tempoItem > maxMinutos) maxMinutos = tempoItem;
-        }
-        return maxMinutos > 0 ? maxMinutos + 2.0 : 0.0;
-    }
-
-    private double calcularTempoProduto(int produtoId) {
-        Produto prod = produtoDAO.findById(produtoId);
-        if (prod == null) return 0.0;
-        return prod.getPassoIds().stream()
-                .map(passoDAO::findById)
-                .filter(Objects::nonNull)
-                .mapToDouble(passo -> passo.getDuracao() != null ? passo.getDuracao().toSeconds() / 60.0 : 0.0)
-                .sum();
-    }
-
-    private boolean contemAlergenicos(Produto p, List<String> alergenicosEvitar) {
-        if (alergenicosEvitar == null || alergenicosEvitar.isEmpty()) return false;
-        List<Ingrediente> ingredientes = p.getLinhas().stream()
-                .map(lp -> obterIngrediente(lp.getIngredienteId()))
-                .collect(Collectors.toList());
-        for (Ingrediente ing : ingredientes) {
-            if (ing != null && alergenicosEvitar.contains(ing.getAlergenico())) return true;
-        }
-        return false;
-    }
-
-    private boolean verificarStockProduto(Produto p, Restaurante r) {
-        for (LinhaProduto comp : p.getLinhas()) {
-            Integer ingredienteId = comp.getIngredienteId();
-            Integer stockDisponivel = r.getStock().stream()
-                    .filter(s -> s.getIngredienteId() == ingredienteId)
-                    .map(LinhaStock::getQuantidade)
-                    .findFirst().orElse(0);
-            if (stockDisponivel < comp.getQuantidade()) return false; 
-        }
+    public boolean adicionarLinhaAoPedido(int pedidoId, int itemId, TipoItem tipo, int quantidade, String obs) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        if (p == null) return false;
+        LinhaPedido lp = new LinhaPedido();
+        lp.setPedidoId(pedidoId);
+        lp.setItemId(itemId);
+        lp.setTipo(tipo);
+        lp.setQuantidade(quantidade);
+        lp.setObservacao(obs);
+        double preco = (tipo == TipoItem.PRODUTO) ? 
+                produtoDAO.findById(itemId).getPreco() : menuDAO.findById(itemId).getPreco();
+        lp.setPrecoUnitario(preco);
+        p.addLinha(lp);
+        pedidoDAO.update(p);
         return true;
+    }
+
+    @Override
+    public boolean removerLinhaDoPedido(int pedidoId, int linhaPedidoId) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        if (p == null) return false;
+        boolean removido = p.getLinhas().removeIf(l -> l.getId() == linhaPedidoId);
+        if (removido) {
+            pedidoDAO.update(p);
+        }
+        return removido;
+    }
+
+    @Override
+    public void cancelarPedidoVenda(int pedidoId) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        if (p != null) {
+            p.setEstado(EstadoPedido.CANCELADO);
+            pedidoDAO.update(p);
+        }
+    }
+
+    @Override
+    public double obterEstimativaEntrega(int pedidoId) {
+        return 15.0; 
+    }
+
+    @Override
+    public List<Pedido> listarPedidosAtivos(int restauranteId) {
+        return pedidoDAO.findAllByRestaurante(restauranteId).stream()
+                .filter(p -> p.getEstado() != EstadoPedido.ENTREGUE && p.getEstado() != EstadoPedido.CANCELADO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TipoPagamento> listarOpcoesPagamento(int restauranteId) {
+        return List.of(TipoPagamento.TERMINAL, TipoPagamento.CAIXA);
+    }
+
+    @Override
+    public Pagamento criarPagamento(int pedidoId, TipoPagamento tipo) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        Pagamento pag = new Pagamento();
+        pag.setPedidoId(pedidoId);
+        pag.setValor(p.calcularPrecoTotal());
+        pag.setTipo(tipo);
+        pag.setConfirmado(false);
+        pag.setData(LocalDateTime.now());
+        return pagamentoDAO.create(pag);
+    }
+
+    @Override
+    public boolean confirmarPagamento(int pagamentoId) {
+        Pagamento pag = pagamentoDAO.findById(pagamentoId);
+        if (pag == null) return false;
+        pag.setConfirmado(true);
+        pag.setData(LocalDateTime.now());
+        pagamentoDAO.update(pag);
+        return true;
+    }
+
+    @Override
+    public boolean confirmarPedido(int pedidoId) {
+        Pedido p = pedidoDAO.findById(pedidoId);
+        if (p == null) return false;
+        
+        Pagamento pag = pagamentoDAO.findByPedido(pedidoId);
+        if (pag != null && pag.isConfirmado()) {
+            p.setEstado(EstadoPedido.CONFIRMADO);
+        } else {
+            p.setEstado(EstadoPedido.AGUARDA_PAGAMENTO);
+        }
+        
+        pedidoDAO.update(p);
+        return true;
+    }
+
+    private boolean contemAlergenicos(Produto p, List<Integer> alergenicoIds) {
+        if (alergenicoIds == null || alergenicoIds.isEmpty()) return false;
+        return p.getLinhas().stream().anyMatch(l -> alergenicoIds.contains(l.getIngredienteId()));
     }
 }

@@ -1,10 +1,11 @@
 package dss2526.domain.enumeration;
 
 public enum EstadoPedido {
-    INICIADO,       // Cliente começou a escolher
-    CONFIRMADO,     // Cliente pagou/confirmou (vai para a cozinha)
-    EM_PREPARACAO,  // Cozinha começou a trabalhar
-    PRONTO,         // Cozinha terminou, aguarda entrega
-    ENTREGUE,       // Cliente recebeu o pedido
-    CANCELADO       // Anulado
+    INICIADO,           // Cliente em processo de escolha
+    AGUARDA_PAGAMENTO,  // Pedido finalizado mas aguarda pagamento na caixa
+    CONFIRMADO,         // Pago/Confirmado (Pronto para gerar tarefas)
+    EM_PREPARACAO,      // Cozinha a trabalhar nas tarefas
+    PRONTO,             // Todas as tarefas concluídas, aguarda entrega
+    ENTREGUE,           // Entregue ao cliente
+    CANCELADO           // Anulado
 }

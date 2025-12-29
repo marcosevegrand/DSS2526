@@ -89,4 +89,12 @@ public interface IBaseFacade {
     Boolean removerPedido(Integer id);
     List<Pedido> listarPedidos();
     List<Pedido> listarPedidosDeRestaurante(Integer id);
+
+    // --- Pagamento Logic ---
+    Pagamento registarPagamento(Pagamento p);
+    Pagamento obterPagamento(Integer id);
+    Pagamento atualizarPagamento(Pagamento p);
+    Boolean removerPagamento(Integer id);
+    List<Pagamento> listarPagamentos();
+    Pagamento obterPagamentoDePedido(Integer id);
 }
