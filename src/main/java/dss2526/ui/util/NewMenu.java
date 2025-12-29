@@ -55,6 +55,7 @@ public class NewMenu {
     public void setMenuStyle(MenuStyle s) { this.style = s; }
     public void setBorderStyle(BorderStyle b) { this.border = b; }
     public void setPromptSymbol(String p) { this.prompt = p; }
+    public void setShowLineNumbers(boolean show) { this.showLineNumbers = show; }
 
     public void run() {
         int choice;
@@ -72,11 +73,13 @@ public class NewMenu {
     private void show() {
         border.print(title);
         for (int i = 0; i < options.size(); i++) {
-            String ln = showLineNumbers ? String.format("[%2d] ", i + 1) : "";
+            // Se showLineNumbers estiver ativo e o estilo não for NUMBERED, prefixamos com o número
+            String ln = (showLineNumbers && style != MenuStyle.NUMBERED) ? (i + 1) + ". " : "";
             String opt = preconditions.get(i).getAsBoolean() ? options.get(i) : "---";
             System.out.println(ln + style.getPrefix(i) + opt);
         }
-        System.out.println((showLineNumbers ? "[ 0] " : "") + style.getPrefix(options.size()) + "0. Sair");
+        String lnExit = (showLineNumbers && style != MenuStyle.NUMBERED) ? "0. " : "";
+        System.out.println(lnExit + "0. Sair");
     }
 
     private int readOption() {
@@ -85,8 +88,9 @@ public class NewMenu {
         String line = sc.nextLine().trim();
         try {
             if (style == MenuStyle.LETTERED && !line.isEmpty()) {
+                if (line.equals("0")) return 0;
                 int val = Character.toUpperCase(line.charAt(0)) - 'A' + 1;
-                return (val > 0 && val <= options.size()) ? val : (line.equals("0") ? 0 : -1);
+                return (val > 0 && val <= options.size()) ? val : -1;
             }
             int op = Integer.parseInt(line);
             return (op >= 0 && op <= options.size()) ? op : -1;
@@ -102,14 +106,20 @@ public class NewMenu {
         private MenuStyle s = MenuStyle.NUMBERED;
         private BorderStyle b = BorderStyle.SIMPLE;
         private String p = ">>>> ";
+        private boolean showLineNumbers = false;
 
         Builder(String title) { this.t = title; }
         public Builder addOption(String o, Handler h) { opts.add(o); hnds.add(h); return this; }
         public Builder style(MenuStyle s) { this.s = s; return this; }
         public Builder border(BorderStyle b) { this.b = b; return this; }
+        public Builder showNumbers(boolean show) { this.showLineNumbers = show; return this; }
+        
         public void run() {
             NewMenu m = new NewMenu(t, opts);
-            m.setMenuStyle(s); m.setBorderStyle(b); m.setPromptSymbol(p);
+            m.setMenuStyle(s); 
+            m.setBorderStyle(b); 
+            m.setPromptSymbol(p);
+            m.setShowLineNumbers(showLineNumbers); // Aplica a configuração ao menu
             m.registerHandlers(hnds.toArray(Handler[]::new));
             m.run();
         }

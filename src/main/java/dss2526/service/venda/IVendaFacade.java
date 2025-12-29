@@ -7,12 +7,22 @@ import dss2526.service.base.IBaseFacade;
 import java.util.List;
 
 public interface IVendaFacade extends IBaseFacade {
-    Pedido iniciarPedido(int restauranteId);
+    // Dados Base
+    List<Restaurante> listarRestaurantes();
     List<Ingrediente> listarAlergenicosDisponiveis();
+    
+    // Fluxo de Pedido
+    Pedido iniciarPedido(int restauranteId);
     List<Item> listarCatalogoFiltrado(int restauranteId, List<Integer> excluirAlergenicosIds);
     void adicionarItemAoPedido(int pedidoId, int itemId, TipoItem tipo, int qtd, String obs);
-    void removerItemDoPedido(int pedidoId, int linhaId);
+    void removerQuantidadeDoPedido(int pedidoId, int linhaId, int quantidade);
     void cancelarPedido(int pedidoId);
+    
+    // Pagamento e Monitorização
     Pagamento processarPagamento(int pedidoId, TipoPagamento tipo);
     List<Pedido> listarPedidosAtivos(int restauranteId);
+    Pedido obterPedido(int pedidoId);
+    
+    // Utilitários de UI
+    String obterNomeItem(int itemId, TipoItem tipo);
 }
