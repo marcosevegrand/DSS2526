@@ -33,6 +33,9 @@ public class Tarefa {
     public int getPedidoId() { return pedidoId; }
     public void setPedidoId(int pedidoId) { this.pedidoId = pedidoId; }
 
+    public int getEstacaoId() { return estacaoId; }
+    public void setEstacaoId(int estacaoId) { this.estacaoId = estacaoId; }
+
     public EstadoTarefa getEstado() { return estado; }
     public void setEstado(EstadoTarefa estado) { this.estado = estado; }
 

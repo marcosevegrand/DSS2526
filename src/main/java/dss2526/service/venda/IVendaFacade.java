@@ -4,6 +4,7 @@ import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.*;
 import dss2526.domain.contract.Item;
 import dss2526.service.base.IBaseFacade;
+import java.time.Duration; // Import necessário
 import java.util.List;
 
 public interface IVendaFacade extends IBaseFacade {
@@ -19,7 +20,9 @@ public interface IVendaFacade extends IBaseFacade {
     void cancelarPedido(int pedidoId);
     
     // Pagamento e Monitorização
-    Pagamento processarPagamento(int pedidoId, TipoPagamento tipo);
+    // Alterado para retornar Duration (estimativa) ou null se for pagamento na caixa
+    Duration processarPagamento(int pedidoId, TipoPagamento tipo);
+    
     List<Pedido> listarPedidosAtivos(int restauranteId);
     Pedido obterPedido(int pedidoId);
     

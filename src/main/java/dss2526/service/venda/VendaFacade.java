@@ -4,6 +4,7 @@ import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.*;
 import dss2526.domain.contract.Item;
 import dss2526.service.base.BaseFacade;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return instance;
     }
 
+    // ... (Métodos de filtragem e catálogo mantidos iguais à versão anterior) ...
     @Override
     public List<Ingrediente> listarAlergenicosDisponiveis() {
         return ingredienteDAO.findAll().stream()
@@ -33,16 +35,9 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         for (int id : c.getProdutoIds()) {
             Produto p = produtoDAO.findById(id);
             if (p == null) continue;
-
-            // CRÍTICO: Obter ingredientes através dos PASSOS (onde os dados estão no SQL)
             List<Integer> idsIngredientes = obterIdsIngredientesDeProduto(id);
-            
-            // Verificar Alergénios
             boolean temAlergenio = idsIngredientes.stream().anyMatch(excIds::contains);
-            
-            // Verificar Stock (Quantidade > 0 dos ingredientes necessários)
             boolean temStock = verificarStockPelosIngredientes(r, idsIngredientes);
-            
             if (!temAlergenio && temStock) res.add(p);
         }
         
@@ -50,46 +45,30 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         for (int id : c.getMenuIds()) {
             Menu m = menuDAO.findById(id);
             if (m == null) continue;
-
-            // Menu é inválido se algum dos seus produtos for inválido
             boolean menuInvalido = m.getLinhas().stream().anyMatch(lm -> {
                 int prodId = lm.getProdutoId();
                 List<Integer> idsIng = obterIdsIngredientesDeProduto(prodId);
-                
-                boolean pTemAlergenio = idsIng.stream().anyMatch(excIds::contains);
-                boolean pSemStock = !verificarStockPelosIngredientes(r, idsIng);
-                
-                return pTemAlergenio || pSemStock;
+                return idsIng.stream().anyMatch(excIds::contains) || !verificarStockPelosIngredientes(r, idsIng);
             });
-            
             if (!menuInvalido) res.add(m);
         }
         return res;
     }
 
-    /**
-     * Resolve a hierarquia Produto -> Passo -> Ingrediente utilizando as Entidades.
-     */
     private List<Integer> obterIdsIngredientesDeProduto(int produtoId) {
         List<Integer> ingIds = new ArrayList<>();
         Produto p = produtoDAO.findById(produtoId);
         if (p != null) {
-            // Percorre os Passos definidos no Produto
             for (int passoId : p.getPassoIds()) {
                 Passo passo = passoDAO.findById(passoId);
-                if (passo != null) {
-                    // Adiciona os ingredientes do Passo
-                    ingIds.addAll(passo.getIngredienteIds());
-                }
+                if (passo != null) ingIds.addAll(passo.getIngredienteIds());
             }
-            // Adiciona também ingredientes diretos (LinhaProduto) se existirem
             p.getLinhas().forEach(l -> ingIds.add(l.getIngredienteId()));
         }
         return ingIds;
     }
 
     private boolean verificarStockPelosIngredientes(Restaurante r, List<Integer> ingIdsNecessarios) {
-        // Verifica se o restaurante tem stock > 0 para todos os ingredientes da lista
         for (int iId : ingIdsNecessarios) {
             boolean disponivel = r.getStock().stream()
                     .anyMatch(ls -> ls.getIngredienteId() == iId && ls.getQuantidade() > 0);
@@ -131,20 +110,57 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
     }
 
     @Override
-    public Pagamento processarPagamento(int pId, TipoPagamento tipo) {
+    public Duration processarPagamento(int pId, TipoPagamento tipo) {
         Pedido p = pedidoDAO.findById(pId);
         Pagamento pag = new Pagamento();
         pag.setPedidoId(pId); pag.setTipo(tipo); pag.setValor(p.calcularPrecoTotal()); pag.setData(LocalDateTime.now());
+        
+        Duration estimativa = Duration.ZERO;
+
         if (tipo == TipoPagamento.TERMINAL) { 
             pag.setConfirmado(true); 
             p.setEstado(EstadoPedido.CONFIRMADO); 
+            // Calcular estimativa apenas se pago
+            estimativa = calcularEstimativaEspera(p);
         } else { 
             pag.setConfirmado(false); 
             p.setEstado(EstadoPedido.AGUARDA_PAGAMENTO); 
+            // Se for na caixa, a estimativa só é dada lá
         }
+        
         pagamentoDAO.create(pag);
         pedidoDAO.update(p);
-        return pag;
+        
+        return estimativa;
+    }
+
+    private Duration calcularEstimativaEspera(Pedido p) {
+        // Lógica similar à ProducaoFacade: Passo mais longo de todos os produtos + 5 min
+        long maxMinutos = 0;
+
+        for (LinhaPedido lp : p.getLinhas()) {
+            if (lp.getTipo() == TipoItem.PRODUTO) {
+                maxMinutos = Math.max(maxMinutos, obterDuracaoMaximaProduto(lp.getItemId()));
+            } else {
+                Menu m = menuDAO.findById(lp.getItemId());
+                if (m != null) {
+                    for (LinhaMenu lm : m.getLinhas()) {
+                        maxMinutos = Math.max(maxMinutos, obterDuracaoMaximaProduto(lm.getProdutoId()));
+                    }
+                }
+            }
+        }
+        return Duration.ofMinutes(maxMinutos + 5);
+    }
+
+    private long obterDuracaoMaximaProduto(int prodId) {
+        Produto pr = produtoDAO.findById(prodId);
+        if (pr == null) return 0;
+        return pr.getPassoIds().stream()
+                .map(pid -> passoDAO.findById(pid))
+                .filter(Objects::nonNull)
+                .mapToLong(passo -> passo.getDuracao().toMinutes())
+                .max().orElse(0);
     }
 
     @Override
@@ -170,6 +186,9 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
     @Override public Pedido obterPedido(int pId) { return pedidoDAO.findById(pId); }
     @Override public void cancelarPedido(int pId) { 
         Pedido p = pedidoDAO.findById(pId);
-        if(p != null) { p.setEstado(EstadoPedido.CANCELADO); pedidoDAO.update(p); }
+        if(p != null && p.getEstado() == EstadoPedido.INICIADO) { 
+            p.setEstado(EstadoPedido.CANCELADO); 
+            pedidoDAO.update(p); 
+        }
     }
 }
