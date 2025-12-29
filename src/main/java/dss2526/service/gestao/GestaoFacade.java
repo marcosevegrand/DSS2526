@@ -18,38 +18,54 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
     @Override
     public Funcionario autenticarFuncionario(String user, String pass) {
         Funcionario f = funcionarioDAO.findByUtilizador(user);
-        if (f != null && f.getPassword().equals(pass) && f.getFuncao() != Funcao.FUNCIONARIO) return f;
+        // Apenas GERENTE, COO ou SYSADMIN podem aceder ao módulo de gestão
+        if (f != null && f.getPassword().equals(pass) && f.getFuncao() != Funcao.FUNCIONARIO) {
+            return f;
+        }
         return null;
     }
 
     @Override
-    public void contratarFuncionario(int aId, Funcionario n) {
+    public void contratarFuncionario(int rId, Funcionario n) {
+        n.setRestauranteId(rId);
         funcionarioDAO.create(n);
     }
 
     @Override
-    public void demitirFuncionario(int aId, int fId) {
+    public void demitirFuncionario(int fId) {
         funcionarioDAO.delete(fId);
     }
 
     @Override
-    public void atualizarStockIngrediente(int aId, int rId, int iId, int delta) {
+    public void atualizarStockIngrediente(int rId, int iId, int delta) {
         Restaurante r = restauranteDAO.findById(rId);
-        r.getStock().stream().filter(s -> s.getIngredienteId() == iId).findFirst()
-            .ifPresentOrElse(s -> s.setQuantidade(s.getQuantidade() + delta), () -> {
-                LinhaStock ls = new LinhaStock(); ls.setRestauranteId(rId); ls.setIngredienteId(iId); ls.setQuantidade(delta);
-                r.addLinhaStock(ls);
-            });
+        if (r == null) return;
+
+        Optional<LinhaStock> linha = r.getStock().stream()
+            .filter(s -> s.getIngredienteId() == iId)
+            .findFirst();
+
+        if (linha.isPresent()) {
+            LinhaStock ls = linha.get();
+            int novaQtd = ls.getQuantidade() + delta;
+            ls.setQuantidade(Math.max(0, novaQtd)); // Impede stock negativo
+        } else if (delta > 0) {
+            LinhaStock ls = new LinhaStock(); 
+            ls.setRestauranteId(rId); 
+            ls.setIngredienteId(iId); 
+            ls.setQuantidade(delta);
+            r.addLinhaStock(ls);
+        }
         restauranteDAO.update(r);
     }
 
     @Override
-    public void adicionarEstacaoTrabalho(int aId, Estacao e) {
+    public void adicionarEstacaoTrabalho(Estacao e) {
         estacaoDAO.create(e);
     }
 
     @Override
-    public void removerEstacaoTrabalho(int aId, int eId) {
+    public void removerEstacaoTrabalho(int eId) {
         estacaoDAO.delete(eId);
     }
 
@@ -57,52 +73,54 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
     public String obterDashboardEstatisticas(int rId, LocalDateTime i, LocalDateTime f) {
         List<Pedido> peds = pedidoDAO.findAllByRestaurante(rId).stream()
             .filter(p -> p.getEstado() != EstadoPedido.CANCELADO)
-            .filter(p -> (i == null || p.getDataCriacao().isAfter(i)) && (f == null || p.getDataCriacao().isBefore(f)))
+            .filter(p -> (i == null || !p.getDataCriacao().isBefore(i)) && (f == null || !p.getDataCriacao().isAfter(f)))
             .collect(Collectors.toList());
         
         double fat = peds.stream().mapToDouble(Pedido::calcularPrecoTotal).sum();
         long vol = peds.size();
-        return "RELATÓRIO: Faturação Total: " + fat + "€ | Volume: " + vol + " pedidos finalizados.";
+        
+        // Contagem por estado
+        long entregues = peds.stream().filter(p -> p.getEstado() == EstadoPedido.ENTREGUE).count();
+        long emPrep = peds.stream().filter(p -> p.getEstado() == EstadoPedido.EM_PREPARACAO).count();
+
+        return String.format(
+            "=== RELATÓRIO DO RESTAURANTE #%d ===\n" +
+            "Faturação Total: %.2f€\n" +
+            "Volume Total: %d pedidos\n" +
+            "Entregues: %d | Em Preparação: %d", 
+            rId, fat, vol, entregues, emPrep);
     }
 
     @Override
-    public void enviarMensagemRestaurante(int aId, int rId, String texto) {
+    public void enviarMensagemRestaurante(int rId, String texto, String nomeAutor) {
         Mensagem m = new Mensagem();
         m.setRestauranteId(rId);
-        m.setTexto("[GERÊNCIA] " + texto);
+        // Formata o texto para incluir o autor, já que a entidade não tem campo específico
+        m.setTexto("[" + nomeAutor.toUpperCase() + "] " + texto);
         m.setDataHora(LocalDateTime.now());
         mensagemDAO.create(m);
     }
 
     @Override
-    public void difundirMensagemGlobal(int aId, String texto) {
-        Funcionario actor = funcionarioDAO.findById(aId);
-        if (actor.getFuncao() == Funcao.COO) {
-            restauranteDAO.findAll().forEach(r -> {
-                Mensagem m = new Mensagem(); m.setRestauranteId(r.getId());
-                m.setTexto("[GLOBAL - COO] " + texto); m.setDataHora(LocalDateTime.now());
-                mensagemDAO.create(m);
-            });
-        }
+    public void difundirMensagemGlobal(String texto, String nomeAutor) {
+        // Envia para TODOS os restaurantes
+        restauranteDAO.findAll().forEach(r -> {
+            Mensagem m = new Mensagem(); 
+            m.setRestauranteId(r.getId());
+            m.setTexto("[GLOBAL - " + nomeAutor.toUpperCase() + "] " + texto); 
+            m.setDataHora(LocalDateTime.now());
+            mensagemDAO.create(m);
+        });
     }
 
-    @Override
-    public List<Restaurante> listarRestaurantes() {
-        return restauranteDAO.findAll();
-    }
-
-    @Override
-    public List<Ingrediente> listarIngredientes() {
-        return ingredienteDAO.findAll();
-    }
+    @Override public List<Restaurante> listarRestaurantes() { return restauranteDAO.findAll(); }
+    @Override public List<Ingrediente> listarIngredientes() { return ingredienteDAO.findAll(); }
 
     @Override
     public List<Funcionario> listarFuncionariosPorRestaurante(int rId) {
-        // Se o rId for 0 (caso do COO a ver global), podemos retornar todos
-        if (rId == 0) return funcionarioDAO.findAll();
-        
         return funcionarioDAO.findAll().stream()
                 .filter(f -> f.getRestauranteId() != null && f.getRestauranteId() == rId)
+                // Excluir a si próprio ou admins globais se necessário, mas aqui listamos todos daquele restaurante
                 .collect(Collectors.toList());
     }
 
@@ -112,6 +130,4 @@ public class GestaoFacade extends BaseFacade implements IGestaoFacade {
                 .filter(e -> e.getRestauranteId() == rId)
                 .collect(Collectors.toList());
     }
-
-
 }

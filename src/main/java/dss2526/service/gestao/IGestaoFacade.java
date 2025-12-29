@@ -6,25 +6,30 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IGestaoFacade extends IBaseFacade {
+    // Autenticação
     Funcionario autenticarFuncionario(String user, String pass);
     
-    // Gestão de Equipa
-    void contratarFuncionario(int actorId, Funcionario novo);
-    void demitirFuncionario(int actorId, int funcionarioId);
+    // Gestão de Equipa (Específico ao Restaurante)
+    void contratarFuncionario(int restauranteId, Funcionario novo);
+    void demitirFuncionario(int funcionarioId);
     List<Funcionario> listarFuncionariosPorRestaurante(int rId);
+    
+    // Gestão de Estações (Específico ao Restaurante)
+    void adicionarEstacaoTrabalho(Estacao e);
+    void removerEstacaoTrabalho(int estacaoId);
     List<Estacao> listarEstacoesPorRestaurante(int rId);
 
-    // Gestão de Stock
-    void atualizarStockIngrediente(int actorId, int restauranteId, int ingredienteId, int delta);
+    // Gestão de Stock (Específico ao Restaurante)
+    void atualizarStockIngrediente(int restauranteId, int ingredienteId, int delta);
     
     // Dashboard
     String obterDashboardEstatisticas(int restauranteId, LocalDateTime inicio, LocalDateTime fim);
     
-    // Gestão de Estações
-    void adicionarEstacaoTrabalho(int actorId, Estacao e);
-    void removerEstacaoTrabalho(int actorId, int estacaoId);
-    
     // Comunicação
-    void enviarMensagemRestaurante(int actorId, int restauranteId, String texto);
-    void difundirMensagemGlobal(int actorId, String texto);
+    void enviarMensagemRestaurante(int restauranteId, String texto, String nomeAutor);
+    void difundirMensagemGlobal(String texto, String nomeAutor);
+    
+    // Listagens Gerais
+    List<Restaurante> listarRestaurantes();
+    List<Ingrediente> listarIngredientes();
 }

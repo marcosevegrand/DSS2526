@@ -3,83 +3,141 @@ package dss2526.ui.controller;
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.*;
 import dss2526.service.gestao.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class GestaoController {
     private final IGestaoFacade facade = GestaoFacade.getInstance();
+    
+    // Estado da Sessão
     private Funcionario sessao;
+    private int restauranteAtualId = -1;
+    
+    // Caches
     private List<Integer> cacheIngIds = new ArrayList<>();
     private List<Integer> cacheRestIds = new ArrayList<>();
     private List<Integer> cacheFuncIds = new ArrayList<>();
     private List<Integer> cacheEstIds = new ArrayList<>();
 
+    // --- Autenticação e Contexto ---
     public boolean autenticar(String u, String p) { 
         this.sessao = facade.autenticarFuncionario(u, p); 
+        if (this.sessao != null) {
+            if (this.sessao.getFuncao() == Funcao.GERENTE && this.sessao.getRestauranteId() != null) {
+                this.restauranteAtualId = this.sessao.getRestauranteId();
+            }
+        }
         return sessao != null; 
     }
     
     public boolean isCOO() { return sessao != null && sessao.getFuncao() == Funcao.COO; }
-    public int getRestauranteProprio() { return sessao.getRestauranteId() != null ? sessao.getRestauranteId() : 0; }
-
+    public String getNomeUtilizador() { return sessao != null ? sessao.getUtilizador() : "Desconhecido"; }
+    
     public List<String> getRestaurantes() { 
         List<Restaurante> l = facade.listarRestaurantes();
         cacheRestIds = l.stream().map(Restaurante::getId).collect(Collectors.toList());
-        return l.stream().map(Restaurante::getNome).collect(Collectors.toList()); 
+        return l.stream().map(r -> r.getNome() + " (" + r.getLocalizacao() + ")").collect(Collectors.toList()); 
     }
-    public int getRestauranteId(int idx) { return cacheRestIds.get(idx); }
+    
+    public void definirRestauranteAtual(int idx) {
+        if (idx >= 0 && idx < cacheRestIds.size()) {
+            this.restauranteAtualId = cacheRestIds.get(idx);
+        }
+    }
+    
+    public void limparRestauranteAtual() {
+        if (isCOO()) this.restauranteAtualId = -1;
+    }
 
+    public boolean temRestauranteSelecionado() { return this.restauranteAtualId != -1; }
+
+    // --- Listagens ---
     public List<String> getIngredientes() {
         List<Ingrediente> list = facade.listarIngredientes();
         cacheIngIds = list.stream().map(Ingrediente::getId).collect(Collectors.toList());
-        return list.stream().map(Ingrediente::getNome).collect(Collectors.toList());
+        return list.stream().map(i -> i.getNome() + " [" + i.getUnidade() + "]").collect(Collectors.toList());
     }
 
     public List<String> getNomesFuncionarios() {
-        int rid = (isCOO()) ? getRestauranteProprio() : sessao.getRestauranteId();
-        List<Funcionario> lista = facade.listarFuncionariosPorRestaurante(rid);
-        
+        if (restauranteAtualId == -1) return new ArrayList<>();
+        List<Funcionario> lista = facade.listarFuncionariosPorRestaurante(restauranteAtualId);
+        lista.removeIf(f -> f.getId() == sessao.getId());
         this.cacheFuncIds = lista.stream().map(Funcionario::getId).collect(Collectors.toList());
-        return lista.stream()
-                    .map(f -> f.getUtilizador() + " (" + f.getFuncao() + ")")
-                    .collect(Collectors.toList());
+        return lista.stream().map(f -> f.getUtilizador() + " (" + f.getFuncao() + ")").collect(Collectors.toList());
     }
 
-    public int getFuncionarioId(int idx) {
-        return cacheFuncIds.get(idx);
-    }
-
-    public List<String> getNomesEstacoes(int restauranteId) {
-        List<Estacao> lista = facade.listarEstacoesPorRestaurante(restauranteId);
-        
+    public List<String> getNomesEstacoes() {
+        if (restauranteAtualId == -1) return new ArrayList<>();
+        List<Estacao> lista = facade.listarEstacoesPorRestaurante(restauranteAtualId);
         this.cacheEstIds = lista.stream().map(Estacao::getId).collect(Collectors.toList());
-        return lista.stream()
-                    .map(e -> e.getNome() + (e instanceof Estacao.Caixa ? " [CAIXA]" : " [COZINHA]"))
-                    .collect(Collectors.toList());
+        return lista.stream().map(e -> e.getNome() + (e instanceof Estacao.Caixa ? " [CAIXA]" : " [COZINHA]")).collect(Collectors.toList());
     }
 
-    public int getEstacaoId(int idx) {
-        return cacheEstIds.get(idx);
+    // --- Ações ---
+    public void atualizarStock(int idx, int delta) {
+        if (idx >= 0 && idx < cacheIngIds.size() && restauranteAtualId != -1) {
+            facade.atualizarStockIngrediente(restauranteAtualId, cacheIngIds.get(idx), delta);
+        }
     }
 
+    /**
+     * Obtém o dashboard filtrado por datas.
+     * @param inicioStr Data inicio (AAAA-MM-DD) ou null/vazio para histórico completo
+     * @param fimStr Data fim (AAAA-MM-DD) ou null/vazio
+     */
+    public String obterDashboard(String inicioStr, String fimStr) {
+        if (restauranteAtualId == -1) return "Nenhum restaurante selecionado.";
+        
+        LocalDateTime inicio = null;
+        LocalDateTime fim = null;
+        
+        try {
+            if (inicioStr != null && !inicioStr.isBlank()) {
+                // Início do dia
+                inicio = LocalDate.parse(inicioStr.trim()).atStartOfDay();
+            }
+            if (fimStr != null && !fimStr.isBlank()) {
+                // Final do dia (23:59:59)
+                fim = LocalDate.parse(fimStr.trim()).atTime(23, 59, 59);
+            }
+        } catch (DateTimeParseException e) {
+            return "Erro: Formato de data inválido. Utilize o formato AAAA-MM-DD (ex: 2025-10-30).";
+        }
 
-    public void stock(int rid, int idx, int d) { facade.atualizarStockIngrediente(sessao.getId(), rid, cacheIngIds.get(idx), d); }
-    public String stats(int rid, LocalDateTime i, LocalDateTime f) { return facade.obterDashboardEstatisticas(rid, i, f); }
-
-    public void contratar(String u, String p, Funcao f, Integer rid) {
-        Funcionario n = new Funcionario(); n.setUtilizador(u); n.setPassword(p); n.setFuncao(f); n.setRestauranteId(rid);
-        facade.contratarFuncionario(sessao.getId(), n);
+        return facade.obterDashboardEstatisticas(restauranteAtualId, inicio, fim);
     }
-    public void demitir(int fid) { facade.demitirFuncionario(sessao.getId(), fid); }
 
-    public void addEstacao(int rid, String n, boolean isCaixa) {
-        Estacao e = isCaixa ? new Estacao.Caixa() : new Estacao.Cozinha();
-        e.setNome(n); e.setRestauranteId(rid);
-        facade.adicionarEstacaoTrabalho(sessao.getId(), e);
+    public void contratarFuncionario(String u, String p, Funcao f) {
+        if (restauranteAtualId != -1) {
+            Funcionario n = new Funcionario(); n.setUtilizador(u); n.setPassword(p); n.setFuncao(f);
+            facade.contratarFuncionario(restauranteAtualId, n);
+        }
     }
-    public void remEstacao(int eid) { facade.removerEstacaoTrabalho(sessao.getId(), eid); }
+    
+    public void demitirFuncionario(int idx) {
+        if (idx >= 0 && idx < cacheFuncIds.size()) facade.demitirFuncionario(cacheFuncIds.get(idx));
+    }
 
-    public void msgRest(int rid, String t) { facade.enviarMensagemRestaurante(sessao.getId(), rid, t); }
-    public void msgGlobal(String t) { facade.difundirMensagemGlobal(sessao.getId(), t); }
+    public void adicionarEstacao(String n, boolean isCaixa) {
+        if (restauranteAtualId != -1) {
+            Estacao e = isCaixa ? new Estacao.Caixa() : new Estacao.Cozinha();
+            e.setNome(n); e.setRestauranteId(restauranteAtualId);
+            facade.adicionarEstacaoTrabalho(e);
+        }
+    }
+    
+    public void removerEstacao(int idx) {
+        if (idx >= 0 && idx < cacheEstIds.size()) facade.removerEstacaoTrabalho(cacheEstIds.get(idx));
+    }
+
+    public void enviarMensagemLocal(String texto) {
+        if (restauranteAtualId != -1) facade.enviarMensagemRestaurante(restauranteAtualId, texto, sessao.getUtilizador());
+    }
+    
+    public void enviarMensagemGlobal(String texto) {
+        if (isCOO()) facade.difundirMensagemGlobal(texto, sessao.getUtilizador());
+    }
 }
