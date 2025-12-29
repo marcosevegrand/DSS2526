@@ -17,7 +17,6 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return instance;
     }
 
-    // ... (Métodos de filtragem e catálogo mantidos iguais à versão anterior) ...
     @Override
     public List<Ingrediente> listarAlergenicosDisponiveis() {
         return ingredienteDAO.findAll().stream()
@@ -182,8 +181,6 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return m != null ? m.getNome() : "Desconhecido";
     }
 
-    @Override public List<Restaurante> listarRestaurantes() { return restauranteDAO.findAll(); }
-    @Override public Pedido obterPedido(int pId) { return pedidoDAO.findById(pId); }
     @Override public void cancelarPedido(int pId) { 
         Pedido p = pedidoDAO.findById(pId);
         if(p != null && p.getEstado() == EstadoPedido.INICIADO) { 

@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface IVendaFacade extends IBaseFacade {
     // Dados Base
-    List<Restaurante> listarRestaurantes();
     List<Ingrediente> listarAlergenicosDisponiveis();
     
     // Fluxo de Pedido
@@ -20,11 +19,9 @@ public interface IVendaFacade extends IBaseFacade {
     void cancelarPedido(int pedidoId);
     
     // Pagamento e Monitorização
-    // Alterado para retornar Duration (estimativa) ou null se for pagamento na caixa
     Duration processarPagamento(int pedidoId, TipoPagamento tipo);
     
     List<Pedido> listarPedidosAtivos(int restauranteId);
-    Pedido obterPedido(int pedidoId);
     
     // Utilitários de UI
     String obterNomeItem(int itemId, TipoItem tipo);
