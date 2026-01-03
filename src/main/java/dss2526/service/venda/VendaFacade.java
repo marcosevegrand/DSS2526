@@ -1,33 +1,85 @@
 package dss2526.service.venda;
 
+import dss2526.data.contract.*;
+import dss2526.data.impl.*;
 import dss2526.domain.entity.*;
 import dss2526.domain.enumeration.*;
 import dss2526.domain.contract.Item;
-import dss2526.service.base.BaseFacade;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VendaFacade extends BaseFacade implements IVendaFacade {
+/**
+ * Facade para o módulo de Venda/Ponto de Venda.
+ * Singleton que oferece operações de venda, gestão de pedidos e processamento de pagamentos.
+ * 
+ * Esta classe implementa APENAS os métodos necessários, não herdando de BaseFacade.
+ */
+public class VendaFacade implements IVendaFacade {
     private static VendaFacade instance;
+    
+    // ============ DAOs NECESSÁRIOS (7 de 12) ============
+    protected final IngredienteDAO ingredienteDAO = IngredienteDAOImpl.getInstance();
+    protected final RestauranteDAO restauranteDAO = RestauranteDAOImpl.getInstance();
+    protected final CatalogoDAO catalogoDAO = CatalogoDAOImpl.getInstance();
+    protected final ProdutoDAO produtoDAO = ProdutoDAOImpl.getInstance();
+    protected final MenuDAO menuDAO = MenuDAOImpl.getInstance();
+    protected final PassoDAO passoDAO = PassoDAOImpl.getInstance();
+    protected final PedidoDAO pedidoDAO = PedidoDAOImpl.getInstance();
+    protected final PagamentoDAO pagamentoDAO = PagamentoDAOImpl.getInstance();
+    
+    /**
+     * Construtor privado (padrão Singleton).
+     */
     private VendaFacade() {}
+    
+    /**
+     * Obtém a instância única (thread-safe).
+     */
     public static synchronized VendaFacade getInstance() {
-        if (instance == null) instance = new VendaFacade();
+        if (instance == null) {
+            instance = new VendaFacade();
+        }
         return instance;
     }
 
+    // ============ IMPLEMENTAÇÃO DOS MÉTODOS ============
+    
     @Override
     public List<Ingrediente> listarAlergenicosDisponiveis() {
         return ingredienteDAO.findAll().stream()
                 .filter(i -> i.getAlergenico() != null && !i.getAlergenico().isBlank())
                 .collect(Collectors.toList());
     }
+    
+    @Override
+    public List<Restaurante> listarRestaurantes() {
+        return restauranteDAO.findAll();
+    }
+
+    @Override
+    public Pedido iniciarPedido(int restauranteId) {
+        Pedido p = new Pedido();
+        p.setRestauranteId(restauranteId);
+        p.setEstado(EstadoPedido.INICIADO);
+        p.setDataCriacao(LocalDateTime.now());
+        return pedidoDAO.create(p);
+    }
+    
+    @Override
+    public Pedido obterPedido(int pedidoId) {
+        return pedidoDAO.findById(pedidoId);
+    }
 
     @Override
     public List<Item> listarCatalogoFiltrado(int rId, List<Integer> excIds) {
         Restaurante r = restauranteDAO.findById(rId);
+        if (r == null) return Collections.emptyList();
+        
         Catalogo c = catalogoDAO.findById(r.getCatalogoId());
+        if (c == null) return Collections.emptyList();
+        
         List<Item> res = new ArrayList<>();
         
         // 1. Filtrar Produtos
@@ -54,6 +106,9 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return res;
     }
 
+    /**
+     * Auxiliar privado: Obtém IDs de ingredientes de um produto.
+     */
     private List<Integer> obterIdsIngredientesDeProduto(int produtoId) {
         List<Integer> ingIds = new ArrayList<>();
         Produto p = produtoDAO.findById(produtoId);
@@ -67,6 +122,9 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return ingIds;
     }
 
+    /**
+     * Auxiliar privado: Verifica se há stock para todos os ingredientes.
+     */
     private boolean verificarStockPelosIngredientes(Restaurante r, List<Integer> ingIdsNecessarios) {
         for (int iId : ingIdsNecessarios) {
             boolean disponivel = r.getStock().stream()
@@ -77,21 +135,18 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
     }
 
     @Override
-    public Pedido iniciarPedido(int restauranteId) {
-        Pedido p = new Pedido();
-        p.setRestauranteId(restauranteId);
-        p.setEstado(EstadoPedido.INICIADO);
-        p.setDataCriacao(LocalDateTime.now());
-        return pedidoDAO.create(p);
-    }
-
-    @Override
     public void adicionarItemAoPedido(int pId, int iId, TipoItem t, int q, String o) {
         Pedido p = pedidoDAO.findById(pId);
         if (p == null) return;
         LinhaPedido lp = new LinhaPedido();
-        lp.setPedidoId(pId); lp.setItemId(iId); lp.setTipo(t); lp.setQuantidade(q); lp.setObservacao(o);
-        double preco = (t == TipoItem.PRODUTO) ? produtoDAO.findById(iId).getPreco() : menuDAO.findById(iId).getPreco();
+        lp.setPedidoId(pId);
+        lp.setItemId(iId);
+        lp.setTipo(t);
+        lp.setQuantidade(q);
+        lp.setObservacao(o);
+        double preco = (t == TipoItem.PRODUTO) ? 
+            produtoDAO.findById(iId).getPreco() : 
+            menuDAO.findById(iId).getPreco();
         lp.setPrecoUnitario(preco);
         p.addLinha(lp);
         pedidoDAO.update(p);
@@ -101,29 +156,49 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
     public void removerQuantidadeDoPedido(int pId, int lId, int qtd) {
         Pedido p = pedidoDAO.findById(pId);
         if (p == null) return;
-        p.getLinhas().stream().filter(l -> l.getId() == lId).findFirst().ifPresent(lp -> {
-            if (lp.getQuantidade() <= qtd) p.getLinhas().remove(lp);
-            else lp.setQuantidade(lp.getQuantidade() - qtd);
+        p.getLinhas().stream()
+            .filter(l -> l.getId() == lId)
+            .findFirst()
+            .ifPresent(lp -> {
+                if (lp.getQuantidade() <= qtd) {
+                    p.getLinhas().remove(lp);
+                } else {
+                    lp.setQuantidade(lp.getQuantidade() - qtd);
+                }
+                pedidoDAO.update(p);
+            });
+    }
+
+    @Override
+    public void cancelarPedido(int pId) {
+        Pedido p = pedidoDAO.findById(pId);
+        if (p != null && p.getEstado() == EstadoPedido.INICIADO) {
+            p.setEstado(EstadoPedido.CANCELADO);
             pedidoDAO.update(p);
-        });
+        }
     }
 
     @Override
     public Duration processarPagamento(int pId, TipoPagamento tipo) {
         Pedido p = pedidoDAO.findById(pId);
+        if (p == null) return null;
+        
         Pagamento pag = new Pagamento();
-        pag.setPedidoId(pId); pag.setTipo(tipo); pag.setValor(p.calcularPrecoTotal()); pag.setData(LocalDateTime.now());
+        pag.setPedidoId(pId);
+        pag.setTipo(tipo);
+        pag.setValor(p.calcularPrecoTotal());
+        pag.setData(LocalDateTime.now());
         
         Duration estimativa = Duration.ZERO;
 
-        if (tipo == TipoPagamento.TERMINAL) { 
-            pag.setConfirmado(true); 
-            p.setEstado(EstadoPedido.CONFIRMADO); 
+        if (tipo == TipoPagamento.TERMINAL) {
+            pag.setConfirmado(true);
+            p.setEstado(EstadoPedido.CONFIRMADO);
             // Calcular estimativa apenas se pago
             estimativa = calcularEstimativaEspera(p);
-        } else { 
-            pag.setConfirmado(false); 
-            p.setEstado(EstadoPedido.AGUARDA_PAGAMENTO); 
+        } else {
+            pag.setConfirmado(false);
+            p.setEstado(EstadoPedido.AGUARDA_PAGAMENTO);
             // Se for na caixa, a estimativa só é dada lá
         }
         
@@ -133,8 +208,10 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return estimativa;
     }
 
+    /**
+     * Auxiliar privado: Calcula estimação de espera.
+     */
     private Duration calcularEstimativaEspera(Pedido p) {
-        // Lógica similar à ProducaoFacade: Passo mais longo de todos os produtos + 5 min
         long maxMinutos = 0;
 
         for (LinhaPedido lp : p.getLinhas()) {
@@ -152,11 +229,14 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         return Duration.ofMinutes(maxMinutos + 5);
     }
 
+    /**
+     * Auxiliar privado: Obtém duração máxima de um produto.
+     */
     private long obterDuracaoMaximaProduto(int prodId) {
         Produto pr = produtoDAO.findById(prodId);
         if (pr == null) return 0;
         return pr.getPassoIds().stream()
-                .map(pid -> passoDAO.findById(pid))
+                .map(passoDAO::findById)
                 .filter(Objects::nonNull)
                 .mapToLong(passo -> passo.getDuracao().toMinutes())
                 .max().orElse(0);
@@ -165,8 +245,8 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
     @Override
     public List<Pedido> listarPedidosAtivos(int rId) {
         return pedidoDAO.findAllByRestaurante(rId).stream()
-                .filter(p -> p.getEstado() == EstadoPedido.CONFIRMADO || 
-                             p.getEstado() == EstadoPedido.EM_PREPARACAO || 
+                .filter(p -> p.getEstado() == EstadoPedido.CONFIRMADO ||
+                             p.getEstado() == EstadoPedido.EM_PREPARACAO ||
                              p.getEstado() == EstadoPedido.PRONTO)
                 .collect(Collectors.toList());
     }
@@ -179,13 +259,5 @@ public class VendaFacade extends BaseFacade implements IVendaFacade {
         }
         Menu m = menuDAO.findById(itemId);
         return m != null ? m.getNome() : "Desconhecido";
-    }
-
-    @Override public void cancelarPedido(int pId) { 
-        Pedido p = pedidoDAO.findById(pId);
-        if(p != null && p.getEstado() == EstadoPedido.INICIADO) { 
-            p.setEstado(EstadoPedido.CANCELADO); 
-            pedidoDAO.update(p); 
-        }
     }
 }
