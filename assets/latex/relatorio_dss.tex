@@ -83,7 +83,7 @@
 
 O sistema desenvolvido para a gest\~ao de restaurantes permite a coordena\c{c}\~ao centralizada de uma cadeia de fast-food, ligando o momento da escolha do cliente ao processo de confec\c{c}\~ao na cozinha. Atrav\'es de uma an\'alise cuidada das necessidades operacionais, estrutur\'amos a aplica\c{c}\~ao para garantir que o fluxo de informa\c{c}\~ao entre o balc\~ao e a produ\c{c}\~ao seja cont\'inuo e organizado.
 
-Um dos resultados mais significativos foi a separa\c{c}\~ao do sistema em tr\^es subsistemas distintos, mas complementares, cada um com a sua pr\'opria fachada especializada. O subsistema de venda (\textit{VendaFacade}) gere a intera\c{c}\~ao direta com o cliente, permitindo a personaliza\c{c}\~ao de produtos. O subsistema de produ\c{c}\~ao (\textit{ProducaoFacade}) organiza as tarefas nas esta\c{c}\~oes de trabalho, calculando tempos de espera reais. Por fim, o subsistema de gest\~ao (\textit{GestaoFacade}) oferece as ferramentas administrativas para o controlo de pessoal e stocks.
+Um dos resultados mais significativos foi a separa\c{c}\~ao do sistema em tr\^es subsistemas distintos, mas complementares, cada um com a sua pr\'opria fachada especializada. O subsistema de venda (\textit{VendaFacade}) gere a intera\c{c}\~ao direta com o cliente, permitindo a visualiza\c{c}\~ao do cat\'alogo e a personaliza\c{c}\~ao de produtos. O subsistema de produ\c{c}\~ao (\textit{ProducaoFacade}) organiza as tarefas nas esta\c{c}\~oes de trabalho, calculando tempos de espera reais. Por fim, o subsistema de gest\~ao (\textit{GestaoFacade}) oferece as ferramentas administrativas para o controlo de pessoal, stocks e configura\c{c}\~ao do sistema.
 
 Do ponto de vista arquitetural, o projeto destaca-se pelo isolamento das responsabilidades. A l\'ogica de persist\^encia, baseada em SQL, est\'a completamente separada da l\'ogica de neg\'ocio atrav\'es de objetos de acesso a dados (DAOs). Cada fachada \'e independente e utiliza apenas os DAOs necess\'arios para o seu subsistema, eliminando depend\^encias desnecess\'arias. Esta decis\~ao permite que o sistema lide com volumes maiores de informa\c{c}\~ao sem perder desempenho e facilita futuras atualiza\c{c}\~oes na estrutura de dados ou na interface de utilizador.
 
@@ -101,7 +101,7 @@ O modelo de dom\'inio identifica conceitos centrais como \textit{Pedido}, \texti
 \end{figure}
 
 \subsection{Diagramas de Casos de Uso}
-Estes diagramas ilustram as intera\c{c}\~oes entre os atores (Cliente, Cozinheiro, Gestor) e o sistema, detalhando funcionalidades como a finaliza\c{c}\~ao de pagamentos ou o envio de mensagens administrativas.
+Estes diagramas ilustram as intera\c{c}\~oes entre os atores (Cliente, Cozinheiro, Gestor) e o sistema.
 
 \begin{figure}[H]
     \centering
@@ -118,10 +118,10 @@ A modela\c{c}\~ao conceptual define a estrutura das fachadas especializadas (\te
 
 \begin{figure}[H]
     \centering
-    \framebox{\parbox{0.8\textwidth}{\centering \vspace{2.5cm} \textbf{Diagramas de Classe (Conceptual)} \\ \small (Placeholder) \vspace{2.5cm}}}
+    \framebox{\parbox{0.8\textwidth}{\centering \vspace{2.5cm} \textbf{Diagrama de Classe} \\ \small (Placeholder) \vspace{2.5cm}}}
     \quad
-    \framebox{\parbox{0.8\textwidth}{\centering \vspace{2.5cm} \textbf{Diagramas de Sequ\^encia (Conceptual)} \\ \small (Placeholder) \vspace{2.5cm}}}
-    \caption{Estrutura conceptual da solu\c{c}\~ao proposta.}
+    \framebox{\parbox{0.8\textwidth}{\centering \vspace{2.5cm} \textbf{Diagrama de Sequ\^encia} \\ \small (Placeholder) \vspace{2.5cm}}}
+    \caption{Estrutura da solu\c{c}\~ao implementada.}
 \end{figure}
 
 \section{Solu\c{c}\~ao Implementada}
@@ -152,8 +152,8 @@ A persist\^encia de dados \'e gerida por DAOs especializados (IngredienteDAO, Re
     \centering
     \framebox{\parbox{0.45\textwidth}{\centering \vspace{2cm} \textbf{Packages e Componentes} \\ \small (Placeholder) \vspace{2cm}}}
     \hfill
-    \framebox{\parbox{0.45\textwidth}{\centering \vspace{2cm} \textbf{Diagramas de Sequ\^encia Reais} \\ \small (Placeholder) \vspace{2cm}}}
-    \caption{Detalhamento da solu\c{c}\~ao efetivamente implementada.}
+    \framebox{\parbox{0.45\textwidth}{\centering \vspace{2cm} \textbf{Diagrama de Sequ\^encia} \\ \small (Placeholder) \vspace{2cm}}}
+    \caption{Detalhamento da solu\c{c}\~ao implementada.}
 \end{figure}
 
 \section{Manual de Utiliza\c{c}\~ao}
@@ -161,18 +161,23 @@ A persist\^encia de dados \'e gerida por DAOs especializados (IngredienteDAO, Re
 O manual descreve o percurso t\'ipico de cada utilizador dentro do sistema.
 
 \subsection{Subsistema de Venda (Terminal do Cliente)}
-Ao aceder ao terminal, o cliente seleciona o seu modo de consumo. Ap\'os escolher os produtos e realizar eventuais personaliza\c{c}\~oes, o sistema solicita o pagamento e emite um identificador de pedido, acompanhado do tempo de espera previsto.
+O cliente interage com o terminal de venda para gerir os seus pedidos. As principais funcionalidades s\~ao:
 
-A \textit{VendaFacade} coordena:
 \begin{itemize}
-    \item Listagem filtrada do cat\'alogo (com exclus\~oes por alerg\'enicos)
-    \item Adi\c{c}\~ao e remo\c{c}\~ao de itens do pedido
-    \item Processamento de pagamento (terminal ou caixa)
-    \item C\'alculo de estimativas de espera baseado na dura\c{c}\~ao dos passos
+    \item Visualizar os pedidos ativos do restaurante
+    \item Iniciar um novo pedido
+    \item Consultar os itens dispon\'iveis no cat\'alogo
+    \item Adicionar itens ao pedido
+    \item Remover itens do pedido
+    \item Finalizar o pedido e escolher o local de pagamento
+    \item Receber um recibo com o n\'umero do pedido e o tempo estimado de entrega
+    \item Consultar as estat\'isticas do restaurante
 \end{itemize}
 
+A \textit{VendaFacade} coordena todas estas opera\c{c}\~oes, gerenciando o fluxo de cria\c{c}\~ao e manipula\c{c}\~ao de pedidos at\'e \`a finaliza\c{c}\~ao.
+
 \subsection{Subsistema de Produ\c{c}\~ao (Cozinha)}
-O funcion\'ario escolhe o restaurante e a sua esta\c{c}\~ao espec\'ifica. O sistema apresenta as tarefas a realizar. Ao concluir um item, o estado \'e atualizado em tempo real, permitindo que o ecr\~a de entregas informe o cliente quando o pedido est\'a completo.
+O funcion\'ario na cozinha utiliza este subsistema para gerir a produ\c{c}\~ao dos pedidos. O funcion\'ario escolhe o restaurante e a sua esta\c{c}\~ao espec\'ifica. O sistema apresenta as tarefas a realizar. Ao concluir um item, o estado \'e atualizado em tempo real, permitindo que o cliente seja informado quando o pedido est\'a pronto para entrega.
 
 A \textit{ProducaoFacade} gerencia:
 \begin{itemize}
@@ -183,14 +188,14 @@ A \textit{ProducaoFacade} gerencia:
 \end{itemize}
 
 \subsection{Subsistema de Gest\~ao (Administra\c{c}\~ao)}
-O gestor pode monitorizar o invent\'ario atrav\'es da \textit{LinhaStock}, enviar mensagens para os funcion\'arios na cozinha e gerir a configura\c{c}\~ao das unidades. Esta \'area centraliza as decis\~oes que afetam o funcionamento global do restaurante.
+O gestor utiliza este subsistema para gerenciar os aspetos operacionais e administrativos do restaurante. Pode monitorizar o invent\'ario de ingredientes, gerir os funcion\'arios e suas permiss\~oes, configurar cat\'alogos e menus, e acompanhar o desempenho do restaurante.
 
 A \textit{GestaoFacade} oferece:
 \begin{itemize}
     \item Controlo de stocks e ingredientes
-    \item Gest\~ao de funcion\'arios e permiss\~oes
+    \item Gest\~ao de funcion\'arios e defini\c{c}\~ao de permiss\~oes
     \item Configura\c{c}\~ao de cat\'alogos e menus
-    \item Monitoriza\c{c}\~ao de pedidos e relatorios
+    \item Monitoriza\c{c}\~ao de pedidos e relatorios operacionais
 \end{itemize}
 
 \section{Conclus\~ao}
