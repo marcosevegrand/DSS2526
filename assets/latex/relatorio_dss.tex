@@ -1,8 +1,7 @@
 \documentclass[11pt,a4paper]{article}
 
-% --- BLOCO UNIVERSAL DE PREÂMBULO (Compatível com pdflatex) ---
+% --- BLOCO UNIVERSAL DE PREAMBULO (Compativel com pdflatex basico) ---
 \usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
-\usepackage[utf-8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[portuguese]{babel}
 
@@ -16,13 +15,13 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning}
 \usepackage{hyperref}
-\usepackage{indentfirst} % Garante indentação no primeiro parágrafo das secções
+\usepackage{indentfirst} % Garante indentacao no primeiro paragrafo das secoes
 
-% Configuração de Parágrafos
+% Configuracao de Paragrafos
 \setlength{\parindent}{1.5em}
 \setlength{\parskip}{0.5em}
 
-% Configuração de Listagens de Código
+% Configuracao de Listagens de Codigo
 \lstset{
     basicstyle=\tiny\ttfamily,
     breaklines=true,
@@ -35,18 +34,18 @@
 
 \begin{document}
 
-% ==== PRIMEIRA PÁGINA: CAPA PRINCIPAL ====
+% ==== PRIMEIRA PAGINA: CAPA PRINCIPAL ====
 \begin{titlepage}
     \begin{center}
         \vspace*{1.5cm}
         {\huge \textbf{Universidade do Minho}} \\
-        {\large Escola de Engenharia | Departamento de Informática}\\[1cm]
+        {\large Escola de Engenharia | Departamento de Inform\'atica}\\[1cm]
         {\Large \textbf{Desenvolvimento de Sistemas de Software}}\\[2cm]
         
-        {\huge \textit{Sistema de Gestão de Restaurantes Fast-Food}}\\[1cm]
-        {\Large \textbf{Projeto Prático - Grupo TP-28}}\\[3cm]
+        {\huge \textit{Sistema de Gest\~ao de Restaurantes Fast-Food}}\\[1cm]
+        {\Large \textbf{Projeto Pr\'atico - Grupo TP-28}}\\[3cm]
         
-        \textbf{URL do Repositório:} \\
+        \textbf{URL do Reposit\'orio:} \\
         \url{https://github.com/marcosevegrand/DSS2526}
         
         \vfill
@@ -54,11 +53,11 @@
     \end{center}
 \end{titlepage}
 
-% ==== SEGUNDA PÁGINA: IDENTIFICAÇÃO DOS ALUNOS ====
+% ==== SEGUNDA PAGINA: IDENTIFICACAO DOS ALUNOS ====
 \begin{titlepage}
     \begin{center}
         \vspace*{1cm}
-        {\Large \textbf{Identificação dos Elementos do Grupo}}\\[2cm]
+        {\Large \textbf{Identifica\c{c}\~ao dos Elementos do Grupo}}\\[2cm]
         
         \begin{tabular}{cc}
             \framebox{\parbox{4cm}{\centering \vspace{2cm} \textbf{Foto} \\ \small Francisco \vspace{2cm}}} & 
@@ -73,36 +72,36 @@
         \end{tabular}
         
         \vfill
-        \textit{Documento de apoio à análise do sistema desenvolvido.}
+        \textit{Documento de apoio \`a an\'alise do sistema desenvolvido.}
     \end{center}
 \end{titlepage}
 
 \tableofcontents
 \newpage
 
-\section{Descrição dos Resultados Obtidos}
+\section{Descri\c{c}\~ao dos Resultados Obtidos}
 
-O sistema desenvolvido para a gestão de restaurantes permite a coordenação centralizada de uma cadeia de fast-food, ligando o momento da escolha do cliente ao processo de confeção na cozinha. Através de uma análise cuidada das necessidades operacionais, estruturámos a aplicação para garantir que o fluxo de informação entre o balcão e a produção seja contínuo e organizado.
+O sistema desenvolvido para a gest\~ao de restaurantes permite a coordena\c{c}\~ao centralizada de uma cadeia de fast-food, ligando o momento da escolha do cliente ao processo de confec\c{c}\~ao na cozinha. Atrav\'es de uma an\'alise cuidada das necessidades operacionais, estrutur\'amos a aplica\c{c}\~ao para garantir que o fluxo de informa\c{c}\~ao entre o balc\~ao e a produ\c{c}\~ao seja cont\'inuo e organizado.
 
-Um dos resultados mais significativos foi a separação do sistema em três subsistemas distintos, mas complementares, cada um com a sua própria fachada especializada. O subsistema de venda (\textit{VendaFacade}) gere a interação direta com o cliente, permitindo a personalização de produtos. O subsistema de produção (\textit{ProducaoFacade}) organiza as tarefas nas estações de trabalho, calculando tempos de espera reais. Por fim, o subsistema de gestão (\textit{GestaoFacade}) oferece as ferramentas administrativas para o controlo de pessoal e stocks.
+Um dos resultados mais significativos foi a separa\c{c}\~ao do sistema em tr\^es subsistemas distintos, mas complementares, cada um com a sua pr\'opria fachada especializada. O subsistema de venda (\textit{VendaFacade}) gere a intera\c{c}\~ao direta com o cliente, permitindo a personaliza\c{c}\~ao de produtos. O subsistema de produ\c{c}\~ao (\textit{ProducaoFacade}) organiza as tarefas nas esta\c{c}\~oes de trabalho, calculando tempos de espera reais. Por fim, o subsistema de gest\~ao (\textit{GestaoFacade}) oferece as ferramentas administrativas para o controlo de pessoal e stocks.
 
-Do ponto de vista arquitetural, o projeto destaca-se pelo isolamento das responsabilidades. A lógica de persistência, baseada em SQL, está completamente separada da lógica de negócio através de objetos de acesso a dados (DAOs). Cada fachada é independente e utiliza apenas os DAOs necessários para o seu subsistema, eliminando dependências desnecessárias. Esta decisão permite que o sistema lide com volumes maiores de informação sem perder desempenho e facilita futuras atualizações na estrutura de dados ou na interface de utilizador.
+Do ponto de vista arquitetural, o projeto destaca-se pelo isolamento das responsabilidades. A l\'ogica de persist\^encia, baseada em SQL, est\'a completamente separada da l\'ogica de neg\'ocio atrav\'es de objetos de acesso a dados (DAOs). Cada fachada \'e independente e utiliza apenas os DAOs necess\'arios para o seu subsistema, eliminando depend\^encias desnecess\'arias. Esta decis\~ao permite que o sistema lide com volumes maiores de informa\c{c}\~ao sem perder desempenho e facilita futuras atualiza\c{c}\~oes na estrutura de dados ou na interface de utilizador.
 
-\section{Análise de Requisitos}
+\section{An\'alise de Requisitos}
 
-A análise focou-se na identificação clara dos processos de negócio e na forma como as entidades se relacionam no contexto de vários restaurantes.
+A an\'alise focou-se na identifica\c{c}\~ao clara dos processos de neg\'ocio e na forma como as entidades se relacionam no contexto de v\'arios restaurantes.
 
-\subsection{Modelação de Domínio}
-O modelo de domínio identifica conceitos centrais como \textit{Pedido}, \textit{Estacao}, \textit{Funcionario} e \textit{Ingrediente}. As relações estabelecidas permitem que o sistema saiba, por exemplo, quais os ingredientes necessários para cada \textit{Produto} e em que \textit{Estacao} devem ser processados.
+\subsection{Modela\c{c}\~ao de Dom\'inio}
+O modelo de dom\'inio identifica conceitos centrais como \textit{Pedido}, \textit{Estacao}, \textit{Funcionario} e \textit{Ingrediente}. As rela\c{c}\~oes estabelecidas permitem que o sistema saiba, por exemplo, quais os ingredientes necess\'arios para cada \textit{Produto} e em que \textit{Estacao} devem ser processados.
 
 \begin{figure}[H]
     \centering
-    \framebox{\parbox{0.8\textwidth}{\centering \vspace{3cm} \textbf{Diagrama de Modelação de Domínio} \\ \small assets/diagrams/modelo\_de\_dominio.png \vspace{3cm}}}
-    \caption{Representação das entidades e relações do domínio.}
+    \framebox{\parbox{0.8\textwidth}{\centering \vspace{3cm} \textbf{Diagrama de Modela\c{c}\~ao de Dom\'inio} \\ \small assets/diagrams/modelo\_de\_dominio.png \vspace{3cm}}}
+    \caption{Representa\c{c}\~ao das entidades e rela\c{c}\~oes do dom\'inio.}
 \end{figure}
 
 \subsection{Diagramas de Casos de Uso}
-Estes diagramas ilustram as interações entre os atores (Cliente, Cozinheiro, Gestor) e o sistema, detalhando funcionalidades como a finalização de pagamentos ou o envio de mensagens administrativas.
+Estes diagramas ilustram as intera\c{c}\~oes entre os atores (Cliente, Cozinheiro, Gestor) e o sistema, detalhando funcionalidades como a finaliza\c{c}\~ao de pagamentos ou o envio de mensagens administrativas.
 
 \begin{figure}[H]
     \centering
@@ -110,94 +109,94 @@ Estes diagramas ilustram as interações entre os atores (Cliente, Cozinheiro, G
     \caption{Casos de uso principais do sistema.}
 \end{figure}
 
-\section{Modelação Conceptual}
+\section{Modela\c{c}\~ao Conceptual}
 
-A transição da análise para a solução técnica baseou-se na definição de como as classes colaboram entre si para cumprir as regras de negócio.
+A transi\c{c}\~ao da an\'alise para a solu\c{c}\~ao t\'ecnica baseou-se na defini\c{c}\~ao de como as classes colaboram entre si para cumprir as regras de neg\'ocio.
 
-\subsection{Diagramas de Classe e de Sequência}
-A modelação conceptual define a estrutura das fachadas especializadas (\textit{VendaFacade}, \textit{ProducaoFacade}, \textit{GestaoFacade}) e como estas utilizam as entidades de domínio e os DAOs para processar pedidos. O foco recai sobre a coordenação entre os controladores de interface e a lógica centralizada em cada serviço.
+\subsection{Diagramas de Classe e de Sequ\^encia}
+A modela\c{c}\~ao conceptual define a estrutura das fachadas especializadas (\textit{VendaFacade}, \textit{ProducaoFacade}, \textit{GestaoFacade}) e como estas utilizam as entidades de dom\'inio e os DAOs para processar pedidos. O foco recai sobre a coordena\c{c}\~ao entre os controladores de interface e a l\'ogica centralizada em cada servi\c{c}o.
 
 \begin{figure}[H]
     \centering
     \framebox{\parbox{0.8\textwidth}{\centering \vspace{2.5cm} \textbf{Diagramas de Classe (Conceptual)} \\ \small (Placeholder) \vspace{2.5cm}}}
     \quad
-    \framebox{\parbox{0.8\textwidth}{\centering \vspace{2.5cm} \textbf{Diagramas de Sequência (Conceptual)} \\ \small (Placeholder) \vspace{2.5cm}}}
-    \caption{Estrutura conceptual da solução proposta.}
+    \framebox{\parbox{0.8\textwidth}{\centering \vspace{2.5cm} \textbf{Diagramas de Sequ\^encia (Conceptual)} \\ \small (Placeholder) \vspace{2.5cm}}}
+    \caption{Estrutura conceptual da solu\c{c}\~ao proposta.}
 \end{figure}
 
-\section{Solução Implementada}
+\section{Solu\c{c}\~ao Implementada}
 
-A implementação reflete as decisões tomadas durante o planeamento, utilizando uma arquitetura em camadas bem definida.
+A implementa\c{c}\~ao reflete as decis\~oes tomadas durante o planeamento, utilizando uma arquitetura em camadas bem definida.
 
 \subsection{Arquitetura, Componentes e Pacotes}
-O código está organizado em pacotes que refletem a sua função:
+O c\'odigo est\'a organizado em pacotes que refletem a sua fun\c{c}\~ao:
 
 \begin{itemize}
-    \item \textit{dss2526.ui} --- Apresentação (interfaces de utilizador para cada subsistema)
-    \item \textit{dss2526.service} --- Lógica de negócio, dividida em três sub-pacotes:
+    \item \textit{dss2526.ui} --- Apresenta\c{c}\~ao (interfaces de utilizador para cada subsistema)
+    \item \textit{dss2526.service} --- L\'ogica de neg\'ocio, dividida em tr\^es sub-pacotes:
         \begin{itemize}
-            \item \textit{dss2526.service.venda} --- VendaFacade e operações de venda
-            \item \textit{dss2526.service.producao} --- ProducaoFacade e operações de produção
-            \item \textit{dss2526.service.gestao} --- GestaoFacade e operações de gestão
+            \item \textit{dss2526.service.venda} --- VendaFacade e opera\c{c}\~oes de venda
+            \item \textit{dss2526.service.producao} --- ProducaoFacade e opera\c{c}\~oes de produ\c{c}\~ao
+            \item \textit{dss2526.service.gestao} --- GestaoFacade e opera\c{c}\~oes de gest\~ao
         \end{itemize}
-    \item \textit{dss2526.data} --- Persistência de dados através de DAOs e implementações (SQL)
-    \item \textit{dss2526.domain} --- Entidades de domínio e abstrações
-    \item \textit{dss2526.app} --- Configuração e inicialização da aplicação
+    \item \textit{dss2526.data} --- Persist\^encia de dados atrav\'es de DAOs e implementa\c{c}\~oes (SQL)
+    \item \textit{dss2526.domain} --- Entidades de dom\'inio e abstra\c{c}\~oes
+    \item \textit{dss2526.app} --- Configura\c{c}\~ao e inicializa\c{c}\~ao da aplica\c{c}\~ao
 \end{itemize}
 
-Cada fachada especializada implementa a sua interface correspondente (\textit{IVendaFacade}, \textit{IProducaoFacade}, \textit{IGestaoFacade}), oferecendo um contrato claro das operações disponíveis. As fachadas utilizam o padrão Singleton para garantir uma única instância durante a execução da aplicação.
+Cada fachada especializada implementa a sua interface correspondente (\textit{IVendaFacade}, \textit{IProducaoFacade}, \textit{IGestaoFacade}), oferecendo um contrato claro das opera\c{c}\~oes dispon\'iveis. As fachadas utilizam o padr\~ao Singleton para garantir uma \'unica inst\^ancia durante a execu\c{c}\~ao da aplica\c{c}\~ao.
 
-A persistência de dados é gerida por DAOs especializados (IngredienteDAO, RestauranteDAO, ProdutoDAO, PedidoDAO, etc.), que abstraem os detalhes de acesso à base de dados SQL. Cada fachada utiliza apenas os DAOs necessários para o seu subsistema, promovendo baixo acoplamento.
+A persist\^encia de dados \'e gerida por DAOs especializados (IngredienteDAO, RestauranteDAO, ProdutoDAO, PedidoDAO, etc.), que abstraem os detalhes de acesso \`a base de dados SQL. Cada fachada utiliza apenas os DAOs necess\'arios para o seu subsistema, promovendo baixo acoplamento.
 
 \begin{figure}[H]
     \centering
     \framebox{\parbox{0.45\textwidth}{\centering \vspace{2cm} \textbf{Packages e Componentes} \\ \small (Placeholder) \vspace{2cm}}}
     \hfill
-    \framebox{\parbox{0.45\textwidth}{\centering \vspace{2cm} \textbf{Diagramas de Sequência Reais} \\ \small (Placeholder) \vspace{2cm}}}
-    \caption{Detalhamento da solução efetivamente implementada.}
+    \framebox{\parbox{0.45\textwidth}{\centering \vspace{2cm} \textbf{Diagramas de Sequ\^encia Reais} \\ \small (Placeholder) \vspace{2cm}}}
+    \caption{Detalhamento da solu\c{c}\~ao efetivamente implementada.}
 \end{figure}
 
-\section{Manual de Utilização}
+\section{Manual de Utiliza\c{c}\~ao}
 
-O manual descreve o percurso típico de cada utilizador dentro do sistema.
+O manual descreve o percurso t\'ipico de cada utilizador dentro do sistema.
 
 \subsection{Subsistema de Venda (Terminal do Cliente)}
-Ao aceder ao terminal, o cliente seleciona o seu modo de consumo. Após escolher os produtos e realizar eventuais personalizações, o sistema solicita o pagamento e emite um identificador de pedido, acompanhado do tempo de espera previsto.
+Ao aceder ao terminal, o cliente seleciona o seu modo de consumo. Ap\'os escolher os produtos e realizar eventuais personaliza\c{c}\~oes, o sistema solicita o pagamento e emite um identificador de pedido, acompanhado do tempo de espera previsto.
 
 A \textit{VendaFacade} coordena:
 \begin{itemize}
-    \item Listagem filtrada do catálogo (com exclusões por alergénicos)
-    \item Adição e remoção de itens do pedido
+    \item Listagem filtrada do cat\'alogo (com exclus\~oes por alerg\'enicos)
+    \item Adi\c{c}\~ao e remo\c{c}\~ao de itens do pedido
     \item Processamento de pagamento (terminal ou caixa)
-    \item Cálculo de estimativas de espera baseado na duração dos passos
+    \item C\'alculo de estimativas de espera baseado na dura\c{c}\~ao dos passos
 \end{itemize}
 
-\subsection{Subsistema de Produção (Cozinha)}
-O funcionário escolhe o restaurante e a sua estação específica. O sistema apresenta as tarefas a realizar. Ao concluir um item, o estado é atualizado em tempo real, permitindo que o ecrã de entregas informe o cliente quando o pedido está completo.
+\subsection{Subsistema de Produ\c{c}\~ao (Cozinha)}
+O funcion\'ario escolhe o restaurante e a sua esta\c{c}\~ao espec\'ifica. O sistema apresenta as tarefas a realizar. Ao concluir um item, o estado \'e atualizado em tempo real, permitindo que o ecr\~a de entregas informe o cliente quando o pedido est\'a completo.
 
 A \textit{ProducaoFacade} gerencia:
 \begin{itemize}
-    \item Distribuição de tarefas por estação
-    \item Atualização de estados de produção
-    \item Cálculo de tempos reais de processamento
-    \item Sincronização com o subsistema de venda
+    \item Distribui\c{c}\~ao de tarefas por esta\c{c}\~ao
+    \item Atualiza\c{c}\~ao de estados de produ\c{c}\~ao
+    \item C\'alculo de tempos reais de processamento
+    \item Sincroniza\c{c}\~ao com o subsistema de venda
 \end{itemize}
 
-\subsection{Subsistema de Gestão (Administração)}
-O gestor pode monitorizar o inventário através da \textit{LinhaStock}, enviar mensagens para os funcionários na cozinha e gerir a configuração das unidades. Esta área centraliza as decisões que afetam o funcionamento global do restaurante.
+\subsection{Subsistema de Gest\~ao (Administra\c{c}\~ao)}
+O gestor pode monitorizar o invent\'ario atrav\'es da \textit{LinhaStock}, enviar mensagens para os funcion\'arios na cozinha e gerir a configura\c{c}\~ao das unidades. Esta \'area centraliza as decis\~oes que afetam o funcionamento global do restaurante.
 
 A \textit{GestaoFacade} oferece:
 \begin{itemize}
     \item Controlo de stocks e ingredientes
-    \item Gestão de funcionários e permissões
-    \item Configuração de catálogos e menus
-    \item Monitorização de pedidos e relatorios
+    \item Gest\~ao de funcion\'arios e permiss\~oes
+    \item Configura\c{c}\~ao de cat\'alogos e menus
+    \item Monitoriza\c{c}\~ao de pedidos e relatorios
 \end{itemize}
 
-\section{Conclusão}
+\section{Conclus\~ao}
 
-O projeto desenvolvido demonstra como uma arquitetura bem planeada facilita a gestão de fluxos operacionais complexos. Ao separar a interface da lógica e esta dos dados através de fachadas independentes e DAOs especializados, conseguimos criar um sistema onde a rapidez no atendimento é suportada por uma organização eficiente da produção.
+O projeto desenvolvido demonstra como uma arquitetura bem planeada facilita a gest\~ao de fluxos operacionais complexos. Ao separar a interface da l\'ogica e esta dos dados atrav\'es de fachadas independentes e DAOs especializados, conseguimos criar um sistema onde a rapidez no atendimento \'e suportada por uma organiza\c{c}\~ao eficiente da produ\c{c}\~ao.
 
-A estrutura em três subsistemas especializados, cada um com a sua própria fachada e responsabilidades bem definidas, garante que o sistema está preparado para ser utilizado em ambientes reais, oferecendo uma base estável para o crescimento da cadeia de restaurantes. O padrão de DAOs para persistência baseado em SQL assegura a escalabilidade e a facilidade de manutenção futura.
+A estrutura em tr\^es subsistemas especializados, cada um com a sua pr\'opria fachada e responsabilidades bem definidas, garante que o sistema est\'a preparado para ser utilizado em ambientes reais, oferecendo uma base est\'avel para o crescimento da cadeia de restaurantes. O padr\~ao de DAOs para persist\^encia baseado em SQL assegura a escalabilidade e a facilidade de manuten\c{c}\~ao futura.
 
 \end{document}
