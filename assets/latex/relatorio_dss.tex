@@ -1,17 +1,10 @@
 \documentclass[11pt,a4paper]{article}
 
-% --- BLOCO UNIVERSAL DE PREÂMBULO ---
+% --- BLOCO UNIVERSAL DE PREÂMBULO (Compatível com pdflatex) ---
 \usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
-\usepackage{fontspec}
-\usepackage[portuguese, bidi=basic, provide=*]{babel}
-
-% Configuração de fontes Noto - Serifado para aspeto padrão LaTeX
-\babelprovide[import, onchar=ids fonts]{portuguese}
-\babelprovide[import, onchar=ids fonts]{english}
-
-\babelfont{rm}{Noto Serif}
-\babelfont{sf}{Noto Sans}
-\babelfont{tt}{Noto Sans Mono}
+\usepackage[utf-8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
 
 % Pacotes Adicionais
 \usepackage{amsmath}
