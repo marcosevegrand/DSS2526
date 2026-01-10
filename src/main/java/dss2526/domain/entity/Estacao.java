@@ -5,7 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Classe base para as Estações de Trabalho.
+ * Classe base abstrata para as Estações de Trabalho.
+ * Implementa polimorfismo através das subclasses Cozinha e Caixa.
  */
 public abstract class Estacao {
     private int id;

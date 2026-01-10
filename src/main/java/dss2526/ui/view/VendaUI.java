@@ -2,191 +2,265 @@ package dss2526.ui.view;
 
 import dss2526.ui.controller.VendaController;
 import dss2526.ui.util.NewMenu;
+
 import java.util.*;
 
 public class VendaUI {
-    private final VendaController controller = new VendaController();
-    private final Scanner sc = new Scanner(System.in);
-    
-    private boolean pedidoFinalizadoComSucesso = false;
+    private final VendaController ctrl = new VendaController();
+    private final Scanner scanner = new Scanner(System.in);
 
     public void run() {
-        List<String> rests = controller.getRestaurantes();
-        int restIdx = pick("SELECIONE O RESTAURANTE", rests);
-        if (restIdx == -1) return; // Utilizador escolheu Sair
-        
-        controller.selecionarRestaurante(restIdx);
+        if (!selecionarRestaurante()) {
+            System.out.println("Nenhum restaurante disponível.");
+            return;
+        }
 
-        NewMenu.builder("MODO VENDA")
-            .addOption("Iniciar Novo Pedido", this::fluxoNovoPedido)
-            .addOption("Consultar Pedidos Ativos", this::fluxoConsultarAtivos)
-            .run();
+        NewMenu.builder("=== TERMINAL DE PEDIDOS ===")
+                .addOption("Novo Pedido", this::fluxoNovoPedido)
+                .addOption("Ver Pedidos Ativos", this::verPedidosAtivos)
+                .run();
     }
 
-    private boolean fluxoNovoPedido() {
-        controller.iniciarNovoPedido();
-        this.pedidoFinalizadoComSucesso = false;
+    private boolean selecionarRestaurante() {
+        List<String> restaurantes = ctrl.getRestaurantes();
+        if (restaurantes.isEmpty()) return false;
 
-        // --- Filtragem de Alergénios ---
-        List<String> alergNames = controller.getListaAlergenicos();
-        if (!alergNames.isEmpty()) {
-            System.out.println("\n--- ALERGÉNIOS DETECTADOS ---");
-            for (int i = 0; i < alergNames.size(); i++) System.out.println((i + 1) + ". " + alergNames.get(i));
-            System.out.print("Números a excluir (ex: 1 3) ou ENTER para nenhum: ");
-            String input = sc.nextLine();
-            
-            if (!input.isBlank()) {
-                try {
-                    List<String> selecionados = Arrays.stream(input.split(" "))
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .map(s -> {
-                            try { return Integer.parseInt(s) - 1; } catch (NumberFormatException e) { return -1; }
-                        })
-                        // Proteção: Filtra apenas índices que existem na lista
-                        .filter(i -> i >= 0 && i < alergNames.size()) 
-                        .map(alergNames::get)
-                        .toList();
-                    
-                    controller.definirExclusoes(selecionados);
-                } catch (Exception e) { 
-                    System.out.println("Erro ao processar filtros. Prosseguindo sem filtros."); 
-                }
+        System.out.println("\n===== SELECIONAR RESTAURANTE =====");
+        for (int i = 0; i < restaurantes.size(); i++) {
+            System.out.println((i + 1) + ". " + restaurantes.get(i));
+        }
+        System.out.print("Escolha: ");
+
+        try {
+            int escolha = Integer.parseInt(scanner.nextLine().trim());
+            if (escolha >= 1 && escolha <= restaurantes.size()) {
+                ctrl.selecionarRestaurante(escolha - 1);
+                return true;
             }
-        }
+        } catch (NumberFormatException ignored) { }
 
-        // --- Menu de Gestão do Pedido ---
-        NewMenu.builder("GESTÃO DO PEDIDO")
-            .addOption("Adicionar Item", this::adicionarItem)
-            .addOption("Remover Item", this::removerItem)
-            .addOption("Finalizar Pedido", this::finalizarPedido)
-            .run();
-        
-        // Se o menu fechou e não foi sucesso, cancela.
-        if (!pedidoFinalizadoComSucesso) {
-            controller.cancelar();
-            System.out.println("Pedido abortado/cancelado.");
-        }
-        
         return false;
     }
 
-    private boolean adicionarItem() {
-        List<String> cat = controller.getCatalogo();
-        if (cat.isEmpty()) {
-            System.out.println("Nenhum item disponível com os filtros/stock atuais.");
+    private boolean fluxoNovoPedido() {
+        ctrl.iniciarNovoPedido();
+        System.out.println("\n>> Novo pedido iniciado!");
+
+        if (perguntarAlergenicos()) {
+            System.out.println(">> Filtros de alergénicos aplicados.");
+        }
+
+        NewMenu menuPedido = new NewMenu("--- CONSTRUIR PEDIDO ---", List.of(
+                "Adicionar Item", "Ver Carrinho", "Remover Item", "Finalizar Pedido", "Cancelar Pedido"
+        ));
+
+        menuPedido.setHandler(1, this::adicionarItem);
+        menuPedido.setHandler(2, this::verCarrinho);
+        menuPedido.setHandler(3, this::removerItem);
+
+        // Exit menu only if finalizarPedido() returns true (pedido pago/confirmado)
+        menuPedido.setHandler(4, this::finalizarPedido);
+
+        // Cancel always exits this menu
+        menuPedido.setHandler(5, () -> {
+            ctrl.cancelar();
+            System.out.println(">> Pedido cancelado.");
+            return true;
+        });
+
+        menuPedido.run();
+
+        // Return false so the main terminal menu keeps running
+        return false;
+    }
+
+    private boolean perguntarAlergenicos() {
+        System.out.print("\nDeseja filtrar alergénicos? (S/N): ");
+        String resposta = scanner.nextLine().trim().toUpperCase();
+
+        if (!resposta.equals("S")) return false;
+
+        List<String> alergenicos = ctrl.getListaAlergenicos();
+        if (alergenicos.isEmpty()) {
+            System.out.println("Não existem alergénicos registados no sistema.");
             return false;
         }
-        
-        int idx = pick("CATÁLOGO", cat);
-        if (idx == -1) return false; // Voltar
 
-        try {
-            System.out.print("Quantidade: ");
-            int qtd = Integer.parseInt(sc.nextLine().trim());
-            if (qtd <= 0) { 
-                System.out.println("Quantidade deve ser superior a 0."); 
-                return false; 
-            }
-            
-            System.out.print("Observação: ");
-            String obs = sc.nextLine();
-            
-            // O Controller valida se idx é válido internamente também
-            if (controller.adicionarItem(idx, qtd, obs)) {
-                System.out.println("Item adicionado.");
-            } else {
-                System.out.println("Erro ao adicionar item (Índice inválido).");
-            }
-        } catch (NumberFormatException e) { 
-            System.out.println("Entrada inválida. Digite um número."); 
+        System.out.println("\n--- ALERGÉNICOS DISPONÍVEIS ---");
+        for (int i = 0; i < alergenicos.size(); i++) {
+            System.out.println((i + 1) + ". " + alergenicos.get(i));
         }
+        System.out.println("Introduza os números separados por vírgula (ex: 1,3,5) ou 0 para nenhum:");
+        System.out.print(">>> ");
+
+        String input = scanner.nextLine().trim();
+        if (input.equals("0") || input.isEmpty()) return false;
+
+        List<String> selecionados = new ArrayList<>();
+        try {
+            for (String s : input.split(",")) {
+                int idx = Integer.parseInt(s.trim()) - 1;
+                if (idx >= 0 && idx < alergenicos.size()) {
+                    selecionados.add(alergenicos.get(idx));
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida. Nenhum filtro aplicado.");
+            return false;
+        }
+
+        ctrl.definirExclusoes(selecionados);
+        return !selecionados.isEmpty();
+    }
+
+    private boolean adicionarItem() {
+        List<String> catalogo = ctrl.getCatalogo();
+
+        if (catalogo.isEmpty()) {
+            System.out.println("\nNenhum item disponível no catálogo (verifique stock ou filtros).");
+            return false;
+        }
+
+        System.out.println("\n--- CATÁLOGO DISPONÍVEL ---");
+        for (int i = 0; i < catalogo.size(); i++) {
+            System.out.println((i + 1) + ". " + catalogo.get(i));
+        }
+
+        System.out.print("\nEscolha o item (0 para voltar): ");
+        try {
+            int escolha = Integer.parseInt(scanner.nextLine().trim());
+            if (escolha == 0) return false;
+            if (escolha < 1 || escolha > catalogo.size()) {
+                System.out.println("Opção inválida.");
+                return false;
+            }
+
+            System.out.print("Quantidade: ");
+            int qtd = Integer.parseInt(scanner.nextLine().trim());
+            if (qtd <= 0) {
+                System.out.println("Quantidade inválida.");
+                return false;
+            }
+
+            System.out.print("Observação (Enter para nenhuma): ");
+            String obs = scanner.nextLine().trim();
+
+            if (ctrl.adicionarItem(escolha - 1, qtd, obs)) {
+                System.out.println(">> Item adicionado ao pedido!");
+            } else {
+                System.out.println(">> Erro ao adicionar item.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida.");
+        }
+
+        return false;
+    }
+
+    private boolean verCarrinho() {
+        List<String> linhas = ctrl.getLinhasCarrinho();
+
+        System.out.println("\n--- CARRINHO ATUAL ---");
+        if (linhas.isEmpty()) {
+            System.out.println("(vazio)");
+        } else {
+            for (int i = 0; i < linhas.size(); i++) {
+                System.out.println((i + 1) + ". " + linhas.get(i));
+            }
+        }
+
         return false;
     }
 
     private boolean removerItem() {
-        List<String> cart = controller.getLinhasCarrinho();
-        if (cart.isEmpty()) { 
-            System.out.println("O carrinho está vazio."); 
-            return false; 
-        }
-        
-        int idx = pick("REMOVER ITEM", cart);
-        if (idx == -1) return false; // Voltar
+        List<String> linhas = ctrl.getLinhasCarrinho();
 
+        if (linhas.isEmpty()) {
+            System.out.println("\nCarrinho vazio.");
+            return false;
+        }
+
+        System.out.println("\n--- REMOVER ITEM ---");
+        for (int i = 0; i < linhas.size(); i++) {
+            System.out.println((i + 1) + ". " + linhas.get(i));
+        }
+
+        System.out.print("Escolha o item a remover (0 para voltar): ");
         try {
-            System.out.print("Quantidade a remover: ");
-            int q = Integer.parseInt(sc.nextLine().trim());
-            if (q <= 0) {
-                System.out.println("Quantidade deve ser positiva.");
+            int escolha = Integer.parseInt(scanner.nextLine().trim());
+            if (escolha == 0) return false;
+            if (escolha < 1 || escolha > linhas.size()) {
+                System.out.println("Opção inválida.");
                 return false;
             }
-            controller.removerItem(idx, q);
-        } catch (NumberFormatException e) { 
-            System.out.println("Valor inválido."); 
+
+            System.out.print("Quantidade a remover: ");
+            int qtd = Integer.parseInt(scanner.nextLine().trim());
+
+            ctrl.removerItem(escolha - 1, qtd);
+            System.out.println(">> Item(s) removido(s).");
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida.");
         }
+
         return false;
     }
 
     private boolean finalizarPedido() {
-        List<String> resumo = controller.getResumoDetalhado();
-        // Verifica se só tem as linhas de rodapé (significa carrinho vazio)
-        if (resumo.size() <= 2) { 
-            System.out.println("(Carrinho vazio - adicione itens antes de finalizar)");
-            return false;
+        List<String> resumo = ctrl.getResumoDetalhado();
+
+        if (resumo.size() <= 2) {
+            System.out.println("\nO carrinho está vazio. Adicione itens antes de finalizar.");
+            return false; // stay in menu
         }
-        
-        System.out.println("\n===== RESUMO DO PEDIDO =====");
+
+        System.out.println("\n========== RESUMO DO PEDIDO ==========");
         resumo.forEach(System.out::println);
-        
-        System.out.print("\nDeseja confirmar a finalização? (S/N): ");
-        if (sc.nextLine().trim().equalsIgnoreCase("s")) {
-            int pay = pick("OPÇÃO DE PAGAMENTO", List.of("TERMINAL (Direto)", "CAIXA (Balcão)"));
-            if (pay == -1) return false; // Voltar
-            
-            String mensagemFinal = controller.pagar(pay == 0 ? 1 : 2);
-            System.out.println("\n" + mensagemFinal);
-            
-            this.pedidoFinalizadoComSucesso = true;
-            return true; // Encerra o loop do menu "GESTÃO DO PEDIDO"
+        System.out.println("=======================================");
+
+        System.out.print("\nConfirmar pedido? (S/N): ");
+        String confirma = scanner.nextLine().trim().toUpperCase();
+
+        if (!confirma.equals("S")) {
+            System.out.println(">> Pedido não confirmado. Volte ao menu para continuar a editar.");
+            return false; // stay in menu
         }
-        return false;
-    }
 
-    private boolean fluxoConsultarAtivos() {
-        List<String> ativos = controller.getEcraPedidosAtivos();
-        System.out.println("\n--- PEDIDOS EM PROCESSAMENTO ---");
-        if (ativos.isEmpty()) System.out.println("Nenhum pedido ativo.");
-        else ativos.forEach(System.out::println);
-        return false;
-    }
+        System.out.println("\n--- MÉTODO DE PAGAMENTO ---");
+        System.out.println("1. Pagar no Terminal (imediato)");
+        System.out.println("2. Pagar na Caixa (balcão)");
+        System.out.print("Escolha: ");
 
-    /**
-     * Método seguro para seleção em listas.
-     * @return índice baseado em 0 (0..size-1) ou -1 se escolher Sair/Inválido
-     */
-    private int pick(String t, List<String> l) {
-        System.out.println("\n--- " + t + " ---");
-        for (int i = 0; i < l.size(); i++) System.out.println((i + 1) + ". " + l.get(i));
-        System.out.println("0. Voltar Atrás");
-        System.out.print("Seleção > ");
         try {
-            String line = sc.nextLine().trim();
-            if (line.isEmpty()) return -1;
-            
-            int ch = Integer.parseInt(line);
-            
-            // Lógica Crítica de Limites
-            if (ch == 0) return -1; // Sair
-            if (ch > 0 && ch <= l.size()) {
-                return ch - 1; // Converter para índice 0-based
+            int opcao = Integer.parseInt(scanner.nextLine().trim());
+            if (opcao != 1 && opcao != 2) {
+                System.out.println("Opção inválida.");
+                return false; // stay in menu
             }
-            
-            System.out.println("Opção inválida.");
-            return -1;
-        } catch (NumberFormatException e) { 
-            System.out.println("Entrada inválida."); 
-            return -1; 
+
+            String resultado = ctrl.pagar(opcao);
+            System.out.println("\n========================================");
+            System.out.println(resultado);
+            System.out.println("========================================");
+            System.out.println("\nObrigado pela preferência!");
+
+            return true; // exit menuPedido
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida.");
+            return false; // stay in menu
         }
+    }
+
+    private boolean verPedidosAtivos() {
+        List<String> pedidos = ctrl.getEcraPedidosAtivos();
+
+        System.out.println("\n===== PEDIDOS ATIVOS =====");
+        if (pedidos.isEmpty()) {
+            System.out.println("Nenhum pedido ativo no momento.");
+        } else {
+            pedidos.forEach(System.out::println);
+        }
+
+        return false;
     }
 }

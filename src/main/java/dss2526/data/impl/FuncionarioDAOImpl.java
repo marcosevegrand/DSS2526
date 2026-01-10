@@ -10,14 +10,10 @@ import java.util.*;
 
 public class FuncionarioDAOImpl implements FuncionarioDAO {
     private static FuncionarioDAOImpl instance;
-    private DBConfig dbConfig;
+    private final DBConfig dbConfig;
+    private final Map<Integer, Funcionario> funcionarioMap = new HashMap<>();
 
-    // Identity Map for Funcionario
-    private Map<Integer, Funcionario> funcionarioMap = new HashMap<>();
-
-    private FuncionarioDAOImpl() {
-        this.dbConfig = DBConfig.getInstance();
-    }
+    private FuncionarioDAOImpl() { this.dbConfig = DBConfig.getInstance(); }
 
     public static synchronized FuncionarioDAOImpl getInstance() {
         if (instance == null) instance = new FuncionarioDAOImpl();
@@ -36,14 +32,9 @@ public class FuncionarioDAOImpl implements FuncionarioDAO {
             ps.setString(4, entity.getFuncao().name());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    entity.setId(rs.getInt(1));
-                    funcionarioMap.put(entity.getId(), entity);
-                }
+                if (rs.next()) { entity.setId(rs.getInt(1)); funcionarioMap.put(entity.getId(), entity); }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return entity;
     }
 
@@ -60,32 +51,21 @@ public class FuncionarioDAOImpl implements FuncionarioDAO {
             ps.setInt(5, entity.getId());
             ps.executeUpdate();
             funcionarioMap.put(entity.getId(), entity);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return entity;
     }
 
     @Override
     public Funcionario findById(Integer id) {
-        if (funcionarioMap.containsKey(id)) {
-            return funcionarioMap.get(id);
-        }
-
+        if (funcionarioMap.containsKey(id)) return funcionarioMap.get(id);
         String sql = "SELECT * FROM Funcionario WHERE id = ?";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Funcionario f = map(rs);
-                    funcionarioMap.put(f.getId(), f);
-                    return f;
-                }
+                if (rs.next()) { Funcionario f = map(rs); funcionarioMap.put(f.getId(), f); return f; }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
@@ -100,91 +80,40 @@ public class FuncionarioDAOImpl implements FuncionarioDAO {
         return f;
     }
 
-    @Override
-    public List<Funcionario> findAll() {
+    @Override public List<Funcionario> findAll() {
         List<Funcionario> list = new ArrayList<>();
         String sql = "SELECT * FROM Funcionario ORDER BY id";
-        try (Connection conn = dbConfig.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                if (funcionarioMap.containsKey(id)) {
-                    list.add(funcionarioMap.get(id));
-                } else {
-                    Funcionario f = map(rs);
-                    funcionarioMap.put(f.getId(), f);
-                    list.add(f);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        try (Connection conn = dbConfig.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) { int id = rs.getInt("id"); if (funcionarioMap.containsKey(id)) list.add(funcionarioMap.get(id)); else { Funcionario f = map(rs); funcionarioMap.put(f.getId(), f); list.add(f); } }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
-    @Override
-    public List<Funcionario> findAllByRestaurante(int restauranteId) {
+    @Override public List<Funcionario> findAllByRestaurante(int restauranteId) {
         List<Funcionario> list = new ArrayList<>();
         String sql = "SELECT * FROM Funcionario WHERE restaurante_id = ? ORDER BY id";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dbConfig.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restauranteId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    int id = rs.getInt("id");
-                    if (funcionarioMap.containsKey(id)) {
-                        list.add(funcionarioMap.get(id));
-                    } else {
-                        Funcionario f = map(rs);
-                        funcionarioMap.put(f.getId(), f);
-                        list.add(f);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) { int id = rs.getInt("id"); if (funcionarioMap.containsKey(id)) list.add(funcionarioMap.get(id)); else { Funcionario f = map(rs); funcionarioMap.put(f.getId(), f); list.add(f); } } }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
-    @Override
-    public Funcionario findByUtilizador(String utilizador) {
-        // Warning: This doesn't use the Identity Map for lookup, 
-        // but it should populate it if found.
+    @Override public Funcionario findByUtilizador(String utilizador) {
         String sql = "SELECT * FROM Funcionario WHERE utilizador = ?";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dbConfig.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, utilizador);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    int id = rs.getInt("id");
-                    if (funcionarioMap.containsKey(id)) {
-                        return funcionarioMap.get(id);
-                    }
-                    Funcionario f = map(rs);
-                    funcionarioMap.put(f.getId(), f);
-                    return f;
-                }
+                if (rs.next()) { int id = rs.getInt("id"); if (funcionarioMap.containsKey(id)) return funcionarioMap.get(id); Funcionario f = map(rs); funcionarioMap.put(f.getId(), f); return f; }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
-    @Override
-    public boolean delete(Integer id) {
+    @Override public boolean delete(Integer id) {
         String sql = "DELETE FROM Funcionario WHERE id = ?";
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            int rows = ps.executeUpdate();
-            if (rows > 0) funcionarioMap.remove(id);
-            return rows > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+        try (Connection conn = dbConfig.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id); int rows = ps.executeUpdate(); if (rows > 0) funcionarioMap.remove(id); return rows > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 }

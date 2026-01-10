@@ -9,28 +9,19 @@ import java.util.*;
 
 public class CatalogoDAOImpl implements CatalogoDAO {
     private static CatalogoDAOImpl instance;
-    private DBConfig dbConfig;
+    private final DBConfig dbConfig;
+    private final Map<Integer, Catalogo> catalogoMap = new HashMap<>();
 
-    // Identity Map for Catalogo
-    private Map<Integer, Catalogo> catalogoMap = new HashMap<>();
-
-    private CatalogoDAOImpl() {
-        this.dbConfig = DBConfig.getInstance();
-    }
+    private CatalogoDAOImpl() { this.dbConfig = DBConfig.getInstance(); }
 
     public static synchronized CatalogoDAOImpl getInstance() {
-        if (instance == null) {
-            instance = new CatalogoDAOImpl();
-        }
+        if (instance == null) instance = new CatalogoDAOImpl();
         return instance;
     }
 
     @Override
     public Catalogo create(Catalogo entity) {
         String sql = "INSERT INTO Catalogo (nome) VALUES (?)";
-        String sqlMenu = "INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES (?, ?)";
-        String sqlProd = "INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES (?, ?)";
-
         try (Connection conn = dbConfig.getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -42,26 +33,20 @@ public class CatalogoDAOImpl implements CatalogoDAO {
                         catalogoMap.put(entity.getId(), entity);
                     }
                 }
-
-                insertRelations(conn, sqlMenu, entity.getId(), entity.getMenuIds());
-                insertRelations(conn, sqlProd, entity.getId(), entity.getProdutoIds());
-
+                insertRelations(conn, "Catalogo_Menu", "catalogo_id", "menu_id", entity.getId(), entity.getMenuIds());
+                insertRelations(conn, "Catalogo_Produto", "catalogo_id", "produto_id", entity.getId(), entity.getProdutoIds());
                 conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            } catch (SQLException e) { conn.rollback(); throw e; }
+        } catch (SQLException e) { e.printStackTrace(); }
         return entity;
     }
 
-    private void insertRelations(Connection conn, String sql, int catId, List<Integer> ids) throws SQLException {
+    private void insertRelations(Connection conn, String table, String fk1, String fk2, int id, List<Integer> ids) throws SQLException {
+        String sql = "INSERT INTO " + table + " (" + fk1 + ", " + fk2 + ") VALUES (?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (Integer id : ids) {
-                ps.setInt(1, catId);
-                ps.setInt(2, id);
+            for (Integer targetId : ids) {
+                ps.setInt(1, id);
+                ps.setInt(2, targetId);
                 ps.executeUpdate();
             }
         }
@@ -76,23 +61,13 @@ public class CatalogoDAOImpl implements CatalogoDAO {
                 ps.setString(1, entity.getNome());
                 ps.setInt(2, entity.getId());
                 ps.executeUpdate();
-
                 deleteRelations(conn, entity.getId());
-                String sqlMenu = "INSERT INTO Catalogo_Menu (catalogo_id, menu_id) VALUES (?, ?)";
-                String sqlProd = "INSERT INTO Catalogo_Produto (catalogo_id, produto_id) VALUES (?, ?)";
-                insertRelations(conn, sqlMenu, entity.getId(), entity.getMenuIds());
-                insertRelations(conn, sqlProd, entity.getId(), entity.getProdutoIds());
-
+                insertRelations(conn, "Catalogo_Menu", "catalogo_id", "menu_id", entity.getId(), entity.getMenuIds());
+                insertRelations(conn, "Catalogo_Produto", "catalogo_id", "produto_id", entity.getId(), entity.getProdutoIds());
                 conn.commit();
-                // Update map reference just in case, though it should be the same object
                 catalogoMap.put(entity.getId(), entity);
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            } catch (SQLException e) { conn.rollback(); throw e; }
+        } catch (SQLException e) { e.printStackTrace(); }
         return entity;
     }
 
@@ -105,10 +80,7 @@ public class CatalogoDAOImpl implements CatalogoDAO {
 
     @Override
     public Catalogo findById(Integer id) {
-        if (catalogoMap.containsKey(id)) {
-            return catalogoMap.get(id);
-        }
-
+        if (catalogoMap.containsKey(id)) return catalogoMap.get(id);
         String sql = "SELECT * FROM Catalogo WHERE id = ?";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -120,14 +92,11 @@ public class CatalogoDAOImpl implements CatalogoDAO {
                     c.setNome(rs.getString("nome"));
                     c.setMenuIds(findIds(conn, "Catalogo_Menu", "catalogo_id", "menu_id", id));
                     c.setProdutoIds(findIds(conn, "Catalogo_Produto", "catalogo_id", "produto_id", id));
-                    
                     catalogoMap.put(c.getId(), c);
                     return c;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
@@ -150,36 +119,25 @@ public class CatalogoDAOImpl implements CatalogoDAO {
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                list.add(findById(rs.getInt("id")));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            while (rs.next()) list.add(findById(rs.getInt("id")));
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
     @Override
     public boolean delete(Integer id) {
-        String sql = "DELETE FROM Catalogo WHERE id = ?";
         try (Connection conn = dbConfig.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 deleteRelations(conn, id);
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Catalogo WHERE id = ?")) {
                     ps.setInt(1, id);
                     ps.executeUpdate();
                 }
                 conn.commit();
                 catalogoMap.remove(id);
                 return true;
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+            } catch (SQLException e) { conn.rollback(); throw e; }
+        } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 }

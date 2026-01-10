@@ -10,26 +10,18 @@ public class Produto implements Item {
     private List<Integer> passoIds = new ArrayList<>();
     private List<LinhaProduto> linhas = new ArrayList<>();
 
-    // Construtores
-
     public Produto() {}
-
-    // Getters e Setters
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
-
     public double getPreco() { return preco; }
     public void setPreco(double preco) { this.preco = preco; }
-
     public List<Integer> getPassoIds() { return passoIds; }
     public void setPassoIds(List<Integer> passoIds) { this.passoIds = passoIds; }
     public void addPassoId(Integer passoId) { this.passoIds.add(passoId); }
     public void removePassoId(Integer passoId) { this.passoIds.remove(passoId); }
-
     public List<LinhaProduto> getLinhas() { return linhas; }
     public void setLinhas(List<LinhaProduto> linhas) { this.linhas = linhas; }
     public void addLinha(LinhaProduto linha) { this.linhas.add(linha); }

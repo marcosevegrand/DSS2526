@@ -4,5 +4,4 @@ public enum Funcao {
     FUNCIONARIO,
     GERENTE,
     COO,
-    SYSADMIN
 }
